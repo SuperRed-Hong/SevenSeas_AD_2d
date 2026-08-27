@@ -1,0 +1,12 @@
+# ninja log v5
+0	2076	8094915212048899	GameActivity/CMakeFiles/game.dir/UGAConfiguration.cpp.o	26d9ba1c244930f
+244	2095	8094915215657418	GameActivity/CMakeFiles/game.dir/UGAApplication.cpp.o	6e8824c41d7e9430
+481	2096	8094915214415564	GameActivity/CMakeFiles/game.dir/UGAEntry.cpp.o	3b7b7ec92325bbc9
+696	2097	8094915218482106	GameActivity/CMakeFiles/game.dir/UGAInput.cpp.o	43fce403e47a5cbb
+912	2099	8094915219810437	GameActivity/CMakeFiles/game.dir/UGADebug.cpp.o	72ef971950457784
+1176	2100	8094915221324936	GameActivity/CMakeFiles/game.dir/UGAInputKeyEvent.cpp.o	c5c03a53e90af6e3
+1419	2252	8094915223658799	GameActivity/CMakeFiles/game.dir/UGAInputMotionEvent.cpp.o	fb51a5616d761283
+1855	2360	8094915224777386	FramePacing/CMakeFiles/swappywrapper.dir/UnitySwappyWrapper.cpp.o	ae0e696d4b9c68fa
+1636	2658	8094915227717274	GameActivity/CMakeFiles/game.dir/UGASoftKeyboard.cpp.o	e756d7404396a5db
+2360	2927	8094915230338884	C:/Users/u1591680/Seven Seas/SevenSeas_AD_2d/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/6945h4a4/obj/arm64-v8a/libswappywrapper.so	34db832ded5296e3
+2658	3152	8094915232609618	C:/Users/u1591680/Seven Seas/SevenSeas_AD_2d/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/6945h4a4/obj/arm64-v8a/libgame.so	bdff53c5504f1363

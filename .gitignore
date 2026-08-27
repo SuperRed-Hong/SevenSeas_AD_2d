@@ -1,0 +1,50 @@
+# Unity generated
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+
+# Memory captures
+[Mm]emoryCaptures/
+
+# Asset store tools
+[Aa]ssets/AssetStoreTools*
+
+# Visual Studio / Rider / IDE
+.vs/
+.vscode/
+.idea/
+*.csproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+.vsconfig
+*.slnx
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Unity crash / profiler
+sysinfo.txt
+*.stackdump
+
+# Builds and packages
+*.apk
+*.aab
+*.unitypackage
+*.app
+
+# Addressables build data
+[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/*.bin*
