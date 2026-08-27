@@ -10,8 +10,8 @@ public static class GameViewPresetInitializer
     private static readonly Preset[] Presets =
     {
 
-        new("GalaxyPad Lanscape 2304x1440", 2304, 1440, false),
-        new("GalaxyPad Portrait 1440x2304", 1440, 2304, true),
+        new("GalaxyPad Landscape 2304x1440", 2304, 1440, false),
+        new("GalaxyPad Portrait 1440x2304", 1440, 2304, false),
     };
 
     static GameViewPresetInitializer()
@@ -64,7 +64,8 @@ public static class GameViewPresetInitializer
                 "instance",
                 BindingFlags.Static |
                 BindingFlags.Public |
-                BindingFlags.NonPublic)
+                BindingFlags.NonPublic |
+                BindingFlags.FlattenHierarchy)
             ?.GetValue(null);
 
         if (singleton == null)
@@ -73,8 +74,8 @@ public static class GameViewPresetInitializer
                 "Unity GameViewSizes instance was not found.");
         }
 
-        // Standalone 是编辑器中最常用的 Game View 分组。
-        object standaloneGroup = Enum.Parse(groupTypeEnum, "Standalone");
+        // Android 是编辑器中最常用的 Game View 分组。
+        object standaloneGroup = Enum.Parse(groupTypeEnum, "Android");
 
         object group = sizesType
             .GetMethod(
