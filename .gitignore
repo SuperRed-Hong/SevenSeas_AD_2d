@@ -5,7 +5,11 @@
 [Bb]uild/
 [Bb]uilds/
 [Ll]ogs/
-[Uu]ser[Ss]ettings/
+[Uu]ser[Ss]ettings/*
+![Uu]ser[Ss]ettings/
+![Uu]ser[Ss]ettings/[Ll]ayouts/
+[Uu]ser[Ss]ettings/[Ll]ayouts/*
+![Uu]ser[Ss]ettings/[Ll]ayouts/*.dwlt
 
 # Memory captures
 [Mm]emoryCaptures/
