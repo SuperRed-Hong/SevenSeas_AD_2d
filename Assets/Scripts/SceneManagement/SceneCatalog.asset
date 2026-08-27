@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SceneCatalog
   sceneEntries:
   - id: 0
-    sceneName: SampleScene
+    sceneName: MainMenu
   - id: 1
     sceneName: Scene1
   - id: 2
