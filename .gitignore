@@ -45,6 +45,7 @@ sysinfo.txt
 *.aab
 *.unitypackage
 *.app
+.utmp/
 
 # Addressables build data
 [Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/*.bin*
