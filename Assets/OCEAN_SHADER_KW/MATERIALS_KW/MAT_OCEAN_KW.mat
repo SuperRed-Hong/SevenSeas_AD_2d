@@ -71,7 +71,7 @@ Material:
     - _QueueControl: 0
     - _QueueOffset: 0
     - _ZWrite: 0
-    - _caustics_density: 50
+    - _caustics_density: 5
     - _caustics_speed: 1
     - _caustics_thickness: 0
     m_Colors:
