@@ -48,7 +48,9 @@ Two sensor-driven prototypes already exist and are tested in the Unity Editor:
   curve, and launches a `Rigidbody2D` with matching velocity.
 
 Neither prototype is wired into an actual game loop yet — no fish, no scoring, no
-lives, no obstacles. This design specifies that loop.
+lives, no obstacles. This design specifies that loop. (For a full explainer of
+how these two prototypes and their HUDs actually work, see
+[`docs/reference/motion-input-guide.md`](../reference/motion-input-guide.md).)
 
 ### Original game reference
 

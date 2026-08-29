@@ -68,6 +68,23 @@ matters, re-read the design doc, this plan, and these three files before
 re-reading chat history — they are the source of truth, the conversation is
 not.
 
+## Required reading before M1
+
+The student does not yet fully understand the two existing sensor prototypes
+this plan reuses — `AttitudeReader`, `GyroscopeReader`,
+`AttitudeCircleController`, `CastGestureDetector`, `CastTuningProfile`, and how
+the debug HUDs got built. That gap needs to close before M2 and M5 lean on that
+code, not after.
+
+[`docs/reference/motion-input-guide.md`](../reference/motion-input-guide.md) is
+a full explainer of exactly that code (written separately, not part of this
+plan). Have the student read it — at least Ch.0–6 (the sensor/controller/detector
+chapters) before M2, and Ch.5/Ch.9.2 again before M5 — before treating those
+scripts as black boxes to just reuse. Check their understanding with a question
+or two rather than assuming the reading happened; this is the same "think
+first" discipline as everywhere else in this plan, just applied to existing
+code instead of new code.
+
 ## Milestones
 
 Work through these in order; each depends on the previous one existing. Treat
