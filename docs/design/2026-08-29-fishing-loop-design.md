@@ -1,15 +1,24 @@
 # Fishing Loop Design — Cast, Fly, Reel (MVP)
 
-Status: revision 2, pending user re-review
+Status: revision 3, pending user re-review
 Date: 2026-08-29
 
-**Revision 2 changes (this pass):** added a `Baiting` state between `Casting` and
-`Reeling` (fish actively swim toward the bait, tilt can wiggle the bait, first
-fish to arrive wins, times out to an empty reel if none arrive); brought back a
+**Revision 2 changes:** added a `Baiting` state between `Casting` and `Reeling`
+(fish actively swim toward the bait, tilt can wiggle the bait, first fish to
+arrive wins, times out to an empty reel if none arrive); brought back a
 tension/line-snap mechanic in `Reeling`, but shaped differently from the
 original — reeling is still auto constant-speed by default, with an optional
 single-button "accelerate" that risks a snap the longer it's held, shown on a
-tension bar. Both changes came from user review of revision 1 (see §5, updated).
+tension bar. Both changes came from user review of revision 1 (see §5).
+
+**Revision 3 changes (this pass):** renamed `Baited` → `Baiting` for naming
+consistency with `Casting`/`Reeling` (both name the state after the ongoing
+action, not a completed one). Added a new `Striking` state between a successful
+bite in `Baiting` and `Reeling`: the player has a short reaction window to flick
+the phone in the *opposite* rotational direction from the cast flick (a
+"backward"/counter-clockwise wrist snap, mirroring the cast's outward/clockwise
+snap) to set the hook. Missing the window fails the attempt and costs a hook
+without ever entering `Reeling`. See §3 and §5.
 
 ## Process note (read this first)
 
@@ -76,9 +85,11 @@ already validated by the team (see `findings.md`, `progress.md` at the repo root
 ## 3. State machine
 
 ```
-ReadyToCast --(flick detected)--> Casting --(flight time elapsed)--> Baiting
-Baiting --(a fish reaches the bait)--> Reeling (with fish)
+ReadyToCast --(outward flick detected)--> Casting --(flight time elapsed)--> Baiting
+Baiting --(a fish reaches the bait)--> Striking
 Baiting --(wait timeout, no fish arrived)--> Reeling (empty)
+Striking --(backward flick within window)--> Reeling (with fish)
+Striking --(window timeout, no backward flick)--> lose one hook --> ReadyToCast (or GameOver)
 Reeling --(reaches shore, has fish)--> catch scored --> ReadyToCast
 Reeling --(reaches shore, no fish)--> empty reel, no score --> ReadyToCast
 Reeling --(hits rock)--> lose one hook --> ReadyToCast (or GameOver if hooks == 0)
@@ -94,7 +105,10 @@ Reeling --(tension maxes out)--> line snaps, lose one hook --> ReadyToCast (or G
   logic already proven in `AttitudeCircleController`.
 - A flick (`CastGestureDetector.CastDetected`) reads the current character lane
   position, reads the flick's power value (already computed by
-  `CastTuningProfile.EvaluatePower`), and transitions to Casting.
+  `CastTuningProfile.EvaluatePower`), and transitions to Casting. This is the
+  **outward** wrist snap (clockwise, per the user's description) — its
+  direction matters now, because `Striking` (§below) uses the opposite
+  direction on the same axis, and the two must not be confused with each other.
 
 ### Casting
 
@@ -123,7 +137,29 @@ Reeling --(tension maxes out)--> line snaps, lose one hook --> ReadyToCast (or G
   see §6.)
 - **Timeout:** if no fish reaches the bait within **8 seconds** (default,
   tunable), the bait is retrieved with nothing hooked and Reeling starts empty.
-- On a successful bite: Reeling starts "with a fish attached."
+- On a successful bite: enters `Striking` (below) — biting does not immediately
+  start Reeling.
+
+### Striking (new in this revision)
+
+- Entered the instant a fish reaches the bait in `Baiting`. This is the
+  "hook-set" reaction moment: in real fishing (and the original's press-a-button
+  bite response) you have to react to the bite, not just wait it out.
+- **Player input:** a flick in the **opposite rotational direction** from the
+  `ReadyToCast` cast flick — a backward/counter-clockwise wrist snap, mirroring
+  the outward/clockwise cast snap. This is *not* just "any flick"; direction is
+  the whole point, so the fish doesn't get hooked by the same motion that cast
+  the line in the first place.
+- **Window:** the player has **0.7 seconds** (default, tunable) to perform that
+  backward flick.
+- **Success:** the backward flick lands within the window → hook is set →
+  enters `Reeling` "with a fish attached."
+- **Failure:** the window expires with no backward flick detected → the attempt
+  fails outright — lose one hook, return to `ReadyToCast` (or `GameOver` if that
+  was the last hook). `Reeling` is never entered in this case; there is nothing
+  to reel back, the fish is simply gone.
+- No other input applies during this state (no tilt) — it is a single reflex
+  check, not a positioning task.
 
 ### Reeling
 
@@ -153,9 +189,9 @@ Reeling --(tension maxes out)--> line snaps, lose one hook --> ReadyToCast (or G
   it reaches 0.
 - `GameOver` shows total score and stops accepting input.
 
-*(5 hooks / 90 seconds / 8s bait-wait timeout / ~2.5s to snap / ~1s tension decay
-are starting defaults, easy to retune later — flag during implementation if they
-feel wrong in playtesting.)*
+*(5 hooks / 90 seconds / 8s bait-wait timeout / 0.7s strike window / ~2.5s to
+snap / ~1s tension decay are starting defaults, easy to retune later — flag
+during implementation if they feel wrong in playtesting.)*
 
 ## 4. Components
 
@@ -165,7 +201,12 @@ feel wrong in playtesting.)*
   `ReadyToCast`, the bait-wiggle control in `Baiting`, and the dodge control in
   `Reeling`.
 - `GyroscopeReader.cs` + `CastGestureDetector.cs` — flick detection and power
-  value for `ReadyToCast`.
+  value for `ReadyToCast`. Likely reusable for `Striking` too: since
+  `CastGestureDetector` already reads a signed directed velocity on a
+  configurable axis with an `InvertAxis` option, a second instance/profile with
+  the axis inverted would naturally trigger on the opposite (backward) flick
+  direction instead of new detection code — worth checking during
+  implementation rather than writing a second detector from scratch.
 - `CastTuningProfile.cs` — power curve and launch-velocity curve.
 
 ### Reused with changes
@@ -178,8 +219,9 @@ feel wrong in playtesting.)*
 ### New (conceptual — not implemented by Claude)
 
 - A fishing-loop state machine component, replacing/expanding
-  `CastTestController.cs`, owning the `ReadyToCast → Casting → Baiting → Reeling`
-  flow above and the transitions to `GameOver`.
+  `CastTestController.cs`, owning the
+  `ReadyToCast → Casting → Baiting → Striking → Reeling` flow above and the
+  transitions to `GameOver`.
 - Shore-lane character control (reads `AttitudeReader`, outputs a lane position;
   same shape as `AttitudeCircleController` but constrained to one axis and to the
   shore, not the full screen).
@@ -187,6 +229,8 @@ feel wrong in playtesting.)*
   a small radius — same sensor as the lane control, different scale/clamp).
 - Fish "race to the bait" behavior: detection range, swim-toward-bait steering,
   first-arrival-wins resolution, losers return to idle.
+- Strike-window timer + backward-flick check for `Striking` (see the
+  `CastGestureDetector` reuse note above).
 - Reeling dodge control (reads `AttitudeReader` during `Reeling`, moves the hook
   left/right along the retrieval path).
 - Reel-accelerate + tension component (reads the single button, raises retrieval
@@ -221,7 +265,15 @@ don't get "corrected" back by accident during implementation:
 3. **Biting is an active fish race, not an instant proximity check.** (Revision 1
    had this as an instant check at the landing point with no separate waiting
    state — that missed a state the user had already been picturing. Corrected in
-   this revision: see the new `Baiting` state in §3.)
+   revision 2: see the `Baiting` state in §3.)
+4. **A bite must be reacted to, not just accepted.** (Revision 2 went straight
+   from a successful bite into `Reeling`. That missed another state the user had
+   pictured: a short reflex window — `Striking` — where the player must flick
+   backward to set the hook, or lose the hook entirely without ever reeling.
+   Added in revision 3, see §3.) The directional pairing — outward flick to
+   cast, backward flick to strike — is a deliberate physical echo of the
+   original's separate "cast" and "reel" button presses, done with gesture
+   direction instead of two different buttons.
 
 ## 6. MVP content for today
 
@@ -248,16 +300,20 @@ it changes today's scope, not just the design's fidelity to the original.
 - Manual test checklist (to be run by the user, not automated today):
   1. Tilt moves the shore character; flick casts from the current lane.
   2. After landing, tilt wiggles the bait; whichever of the 2 fish reaches it
-     first hooks itself and Reeling starts "with a fish attached."
-  3. Letting the 8-second wait expire with no fish arriving starts Reeling
-     "empty."
-  4. During Reeling, tilt moves the hook; touching a rock costs a hook and ends
+     first hooks itself and enters `Striking`.
+  3. Letting the 8-second `Baiting` wait expire with no fish arriving skips
+     `Striking` entirely and starts Reeling "empty."
+  4. In `Striking`, a backward flick within 0.7s enters `Reeling` "with a fish
+     attached"; letting the window expire (or flicking the wrong/outward
+     direction) fails the attempt, costs a hook, and returns to `ReadyToCast`
+     without ever entering `Reeling`.
+  5. During Reeling, tilt moves the hook; touching a rock costs a hook and ends
      the attempt.
-  5. Holding the accelerate button speeds up retrieval and fills the tension
+  6. Holding the accelerate button speeds up retrieval and fills the tension
      bar; releasing before max lets it drain; holding to max snaps the line and
      costs a hook, same as a rock hit.
-  6. Reaching shore with a fish attached adds score; without one, no score.
-  7. Hooks reaching 0 or the timer reaching 0 ends the game and shows the score.
+  7. Reaching shore with a fish attached adds score; without one, no score.
+  8. Hooks reaching 0 or the timer reaching 0 ends the game and shows the score.
 
 ## 8. Follow-ups (explicitly not today)
 
