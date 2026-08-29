@@ -45,6 +45,19 @@ then follow their call if they insist — but don't offer the shortcut yourself.
 Work through these in order; each depends on the previous one existing. Treat
 each as its own teaching session — don't chain them into one long dump.
 
+**Time checkpoint after M3, not just at the end.** Revision 3 of the design
+(Baiting's fish race, Striking's reversed flick, Reeling's tension/accelerate)
+is more than a small one-day slice — this was flagged explicitly in the design
+doc's §6 and confirmed again in review. M1–M3 (state machine skeleton, cast
+lane/flick, flight-to-landing) are the stability floor: get those solid first.
+Once M3 works end to end, stop and check the clock with the student together —
+don't silently cut scope. If time is short, the two cheapest things to simplify
+are M4 (drop the fish race to a single fish + instant bite, no timeout logic)
+and M6 (drop the accelerate/tension mechanic, keep pure auto-reel + dodge). Any
+simplification is the student's call, made explicitly, not an assumption Codex
+makes on its own — and it should come back to Claude for a quick design-doc
+update before being treated as final, not just quietly diverge from the spec.
+
 ### M1 — State machine skeleton
 
 No gameplay logic yet: just the six states from the design (`ReadyToCast`,
@@ -136,8 +149,25 @@ before any real behavior exists.
   "which direction" mode flag inside the existing detector. Ask the student
   which they'd pick and why *before* confirming; the "two instances, no new
   detection code" route is recommended, but let them reason to it.
+- **Known risk to walk through explicitly (confirmed against the source, not
+  hypothetical):** both detector instances would run their own independent
+  `Ready → Sampling → CastDetected → Cooldown` state machine every frame if
+  left always-enabled, each reading the same `GyroscopeReader` but not sharing
+  state with each other — so cross-instance interference isn't the issue. The
+  real issue: if the "backward" detector sits enabled during `ReadyToCast` or
+  `Baiting`, ordinary hand jitter could trip its own threshold early, drop it
+  into `Cooldown`, and leave it unable to respond right when `Striking` actually
+  needs it — a false negative on a real strike attempt. Fix: don't leave either
+  detector always-on. Toggle each one's `enabled` to match its relevant state
+  (cast detector only during `ReadyToCast`, strike detector only during
+  `Striking`) — `CastGestureDetector.OnEnable()` already calls
+  `ResetDetector()`, so enabling it fresh at the right moment is the reset, no
+  new reset code needed. Have the student verify this reasoning against the
+  actual script before relying on it, the same way you're telling them to
+  verify everything else.
 - **Implementation steps:** create the inverted tuning profile asset, add the
-  second detector instance, start a 0.7s window timer on entering `Striking`,
+  second detector instance (disabled by default), start a 0.7s window timer and
+  enable the strike detector on entering `Striking` (disable it again on exit),
   transition to `Reeling` (with fish) on a successful backward flick within the
   window, or fail (lose a hook, back to `ReadyToCast`/`GameOver`) on timeout.
 
