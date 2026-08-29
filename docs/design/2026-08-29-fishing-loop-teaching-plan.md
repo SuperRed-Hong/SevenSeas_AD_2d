@@ -42,7 +42,8 @@ then follow their call if they insist — but don't offer the shortcut yourself.
 
 ## Step 0 — Before teaching anything, write it down
 
-Do this before M1's "think first" question, not after. Read this plan and its
+Do this before M0's "think first" question, not after — before any teaching
+happens at all, full stop. Read this plan and its
 companion design doc in full, then repurpose this repo's existing
 `task_plan.md` / `findings.md` / `progress.md` (root of `SevenSeas_AD_2d/` —
 the same three files already used for the earlier gyroscope-HUD task) for this
