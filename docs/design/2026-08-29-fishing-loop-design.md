@@ -3,7 +3,7 @@
 Status: revision 2, pending user re-review
 Date: 2026-08-29
 
-**Revision 2 changes (this pass):** added a `Baited` state between `Casting` and
+**Revision 2 changes (this pass):** added a `Baiting` state between `Casting` and
 `Reeling` (fish actively swim toward the bait, tilt can wiggle the bait, first
 fish to arrive wins, times out to an empty reel if none arrive); brought back a
 tension/line-snap mechanic in `Reeling`, but shaped differently from the
@@ -76,9 +76,9 @@ already validated by the team (see `findings.md`, `progress.md` at the repo root
 ## 3. State machine
 
 ```
-ReadyToCast --(flick detected)--> Casting --(flight time elapsed)--> Baited
-Baited --(a fish reaches the bait)--> Reeling (with fish)
-Baited --(wait timeout, no fish arrived)--> Reeling (empty)
+ReadyToCast --(flick detected)--> Casting --(flight time elapsed)--> Baiting
+Baiting --(a fish reaches the bait)--> Reeling (with fish)
+Baiting --(wait timeout, no fish arrived)--> Reeling (empty)
 Reeling --(reaches shore, has fish)--> catch scored --> ReadyToCast
 Reeling --(reaches shore, no fish)--> empty reel, no score --> ReadyToCast
 Reeling --(hits rock)--> lose one hook --> ReadyToCast (or GameOver if hooks == 0)
@@ -108,7 +108,7 @@ Reeling --(tension maxes out)--> line snaps, lose one hook --> ReadyToCast (or G
   The landing point is a 2D position: (shore lane X from `ReadyToCast`, distance
   from cast power).
 
-### Baited (new in this revision)
+### Baiting (new in this revision)
 
 - Entered the instant the hook/bait lands in the water at the landing point
   above.
@@ -162,7 +162,7 @@ feel wrong in playtesting.)*
 ### Reused as-is
 
 - `AttitudeReader.cs` — tilt input source for the shore-lane control in
-  `ReadyToCast`, the bait-wiggle control in `Baited`, and the dodge control in
+  `ReadyToCast`, the bait-wiggle control in `Baiting`, and the dodge control in
   `Reeling`.
 - `GyroscopeReader.cs` + `CastGestureDetector.cs` — flick detection and power
   value for `ReadyToCast`.
@@ -173,17 +173,17 @@ feel wrong in playtesting.)*
 - `CastBallController.cs` — keep the parabolic `Launch(power)` flight and
   ground-contact detection, but its role changes: today it treats "landed" as
   the end of the test. In the new loop, "landed" is the trigger that ends
-  `Casting` and starts `Baited`, not the end of the attempt.
+  `Casting` and starts `Baiting`, not the end of the attempt.
 
 ### New (conceptual — not implemented by Claude)
 
 - A fishing-loop state machine component, replacing/expanding
-  `CastTestController.cs`, owning the `ReadyToCast → Casting → Baited → Reeling`
+  `CastTestController.cs`, owning the `ReadyToCast → Casting → Baiting → Reeling`
   flow above and the transitions to `GameOver`.
 - Shore-lane character control (reads `AttitudeReader`, outputs a lane position;
   same shape as `AttitudeCircleController` but constrained to one axis and to the
   shore, not the full screen).
-- Bait-wiggle control for `Baited` (reads `AttitudeReader`, nudges the bait within
+- Bait-wiggle control for `Baiting` (reads `AttitudeReader`, nudges the bait within
   a small radius — same sensor as the lane control, different scale/clamp).
 - Fish "race to the bait" behavior: detection range, swim-toward-bait steering,
   first-arrival-wins resolution, losers return to idle.
@@ -221,11 +221,11 @@ don't get "corrected" back by accident during implementation:
 3. **Biting is an active fish race, not an instant proximity check.** (Revision 1
    had this as an instant check at the landing point with no separate waiting
    state — that missed a state the user had already been picturing. Corrected in
-   this revision: see the new `Baited` state in §3.)
+   this revision: see the new `Baiting` state in §3.)
 
 ## 6. MVP content for today
 
-- **2 fish** per attempt, positioned so the `Baited` race is meaningful (both
+- **2 fish** per attempt, positioned so the `Baiting` race is meaningful (both
   within reach of at least some lane/power combinations, at slightly different
   distances from likely landing points so the race has a real outcome instead of
   always being a tie).
@@ -235,7 +235,7 @@ don't get "corrected" back by accident during implementation:
   fish, fish variety, randomized rocks, real art, menu integration) is explicitly
   deferred (§2).
 
-This revision is more work than revision 1's MVP (adds the `Baited` state, fish
+This revision is more work than revision 1's MVP (adds the `Baiting` state, fish
 race behavior, and the tension/accelerate mechanic) — flagging that plainly since
 it changes today's scope, not just the design's fidelity to the original.
 
