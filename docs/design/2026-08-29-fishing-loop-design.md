@@ -17,7 +17,7 @@ not a delivery.
 
 This project ("Seven Seas") is a university rapid-prototyping assignment: iterate
 on a pre-1984 coin-operated arcade game. The chosen base game is **Angler Dangler
-(1982, Data East)**. Rules from [README.md](../../../README.md): single-player,
+(1982, Data East)**. Rules from [README.md](../../README.md): single-player,
 no bombs, directional-pad + single-button controls, one mobile-specific mechanic,
 HD retro sprite art, ship as HTML5/WebGL on itch.io.
 
