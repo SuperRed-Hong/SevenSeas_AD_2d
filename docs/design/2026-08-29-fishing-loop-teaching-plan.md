@@ -74,61 +74,40 @@ Work through these in order, starting from M0; each depends on the previous one
 existing. Treat each as its own teaching session — don't chain them into one
 long dump.
 
-### M0 — Understand the existing sensor prototypes (coached, not a reading assignment)
+### M0 — Quick orientation (keep this short — the deep dives happen later, in M2 and M5)
 
-The student does not yet fully understand the two existing sensor prototypes
-this plan reuses — `AttitudeReader`, `GyroscopeReader`,
-`AttitudeCircleController`, `CastGestureDetector`, `CastTuningProfile`, and how
-the debug HUDs got built (Codex built the originals; the student wants to
-actually understand them now, not just inherit them). Closing that gap is real
-work, not a preamble — handing over
-[`docs/reference/motion-input-guide.md`](../reference/motion-input-guide.md)
-and saying "read this" is not sufficient on its own; that document is the
-source material for this milestone, not a substitute for it. Apply the exact
-same three-step discipline from the top of this plan here too.
+The student doesn't yet fully understand the existing sensor prototypes this
+plan reuses (Codex built the originals; the student wants to actually
+understand them, not just inherit them) — but M1 right after this doesn't
+touch that code at all, it's just an empty state machine. Don't front-load the
+whole knowledge debt here; that would burn time before anything is even
+running. M0 is deliberately small: just enough grounding for M1 to make sense.
+The full deep dives on `AttitudeCircleController` and `CastGestureDetector` are
+scheduled just-in-time, right before M2 and M5, the milestones that actually
+build on them (see those sections below) — learning something right before
+using it sticks better than learning it in the abstract, days before it's
+needed.
 
-- **Thinking prompts (ask before explaining, don't lecture straight from the
-  doc):** "Why does this project use two separate reader components
-  (`AttitudeReader` for orientation, `GyroscopeReader` for angular velocity)
-  instead of one? What would go wrong if you tried to drive the flick detector
-  off `AttitudeReader` instead?" / "A naive flick detector would be
-  `if (angularVelocity > threshold) Launch();`. What breaks with that, and why
-  does `CastGestureDetector` need a whole state machine instead?" / "What is
-  `rearmThreshold` for, separate from `triggerThreshold` — what would happen
-  with just one threshold?" / "Why does `CastPower` get computed from
-  `FilteredPeak` instead of `RawPeak`?" Pull more of these from the reference
-  doc's own structure (§1 sensor distinction, §5.1 "why a state machine",
-  §5.6 filtered-vs-raw peak) as needed — the doc is well-organized for exactly
-  this.
-- **Architecture discussion:** where the student's attempt misses something,
-  explain it — hysteresis/Schmitt-trigger pattern, framerate-independent
-  exponential smoothing (`1 - e^(-k·dt)`), the reader/controller/view
-  three-layer split — but make them restate it back in their own words before
-  moving on. The reference doc has all of this written out; use it as backup,
-  not as something to read aloud.
-- **Hands-on verification (this milestone's version of "implementation
-  steps"):** run `AttitudeControlTest.unity` and `GyroscopeCastTest.unity` in
-  Play Mode, watch the debug HUDs live, and have the student connect what they
-  see on screen — tilt moving the Circle, the RAW/FILTERED/PEAK numbers, the
-  `STATE` label cycling `Ready → Sampling → CastDetected → Cooldown` — to what
-  the reference doc says those numbers mean. Watching the real numbers move
-  while actually flicking the phone builds a connection that reading alone
-  doesn't.
-- **Checkpoint before moving to M1:** the student should be able to explain,
-  unprompted, at least: (a) why attitude and angular velocity are different
-  quantities that can't substitute for each other, (b) what the
-  `triggerThreshold`/`rearmThreshold` pair does and why a single threshold
-  isn't enough, (c) why `CastPower` uses `FilteredPeak` rather than `RawPeak`.
-  If they can't, go back into the material rather than moving on because the
-  reading technically happened.
+- **Thinking prompt:** "Why does this project use two separate reader
+  components — `AttitudeReader` for orientation, `GyroscopeReader` for angular
+  velocity — instead of one?"
+- **Architecture discussion (brief):** the reader/controller/view three-layer
+  split, and the core position-vs-speed distinction between attitude
+  (`Quaternion`, a state) and angular velocity (`Vector3` rad/s, a rate).
+  Source: [`docs/reference/motion-input-guide.md`](../reference/motion-input-guide.md)
+  §0–1 — this should be a short conversation grounded in that material, not a
+  read-the-whole-doc assignment.
+- **Checkpoint:** the student can state, in their own words, why attitude and
+  angular velocity aren't interchangeable. That's the entire bar for M0 —
+  nothing about thresholds, filtering, or the gesture state machine belongs
+  here; those get their own checkpoints later, attached to M2 and M5.
 
 **Time checkpoint after M3, not just at the end.** Revision 3 of the design
 (Baiting's fish race, Striking's reversed flick, Reeling's tension/accelerate)
 is more than a small one-day slice — this was flagged explicitly in the design
-doc's §6 and confirmed again in review. M0–M3 (understanding the existing
-prototypes, state machine skeleton, cast lane/flick, flight-to-landing) are the
-stability floor: get those solid first — M0 isn't optional preamble, skipping
-it just moves the confusion later.
+doc's §6 and confirmed again in review. M0–M3 (quick orientation, state
+machine skeleton, cast lane/flick — including its `AttitudeCircleController`
+deep-dive, flight-to-landing) are the stability floor: get those solid first.
 Once M3 works end to end, stop and check the clock with the student together —
 don't silently cut scope. If time is short, the two cheapest things to simplify
 are M4 (drop the fish race to a single fish + instant bite, no timeout logic)
@@ -163,6 +142,21 @@ before any real behavior exists.
 
 ### M2 — ReadyToCast: shore-lane tilt control + reading the cast flick
 
+- **Before anything else — `AttitudeReader`/`AttitudeCircleController` deep
+  dive (coached, not a reading assignment):** this milestone's new component is
+  a variant of exactly this existing code, so understand it for real first.
+  Source: [`docs/reference/motion-input-guide.md`](../reference/motion-input-guide.md)
+  §2–3. Ask before explaining: "what's the dead zone (`deadZoneDegrees`) for,
+  and what would the control feel like without it?" / "why does axis-locking
+  need hysteresis (`axisSwitchHysteresisDegrees`) instead of just picking
+  whichever axis has the bigger value each frame?" / "the smoothing formula is
+  `1 - e^(-k·dt)`, not a flat `Lerp(current, target, 0.1f)` — what goes wrong
+  with the flat version?" Have the student restate the answers, then run
+  `AttitudeControlTest.unity` in Play Mode and actually tilt the phone while
+  watching the Circle and the debug HUD, connecting what moves on screen to
+  what they just discussed. Don't move to the thinking prompts below until
+  this is solid — treating `AttitudeCircleController` as a black box to copy
+  from here will just produce cargo-culted code.
 - **Thinking prompts:** "`AttitudeCircleController` turns tilt into a
   normalized 2D screen position. This new control only needs one axis and a
   shore-width range, not the full screen. What would you keep from that script,
@@ -228,6 +222,23 @@ before any real behavior exists.
 
 ### M5 — Striking: the reversed flick + reaction window
 
+- **Before anything else — `CastGestureDetector` deep dive (coached, not a
+  reading assignment):** this milestone reuses that detector directly, so
+  understand its state machine for real before touching it. Source:
+  [`docs/reference/motion-input-guide.md`](../reference/motion-input-guide.md)
+  §5 and §9.2. Ask before explaining: "a naive flick detector would be
+  `if (angularVelocity > threshold) Launch();` — what breaks with that, and
+  why does `CastGestureDetector` need a whole state machine instead?" / "what
+  is `rearmThreshold` for, separate from `triggerThreshold` — what would
+  happen with just one threshold?" / "why does `CastPower` get computed from
+  `FilteredPeak` instead of `RawPeak`?" Have the student restate the
+  hysteresis/Schmitt-trigger idea and the noise-filtering purpose of the
+  exponential smoothing (same formula shape as M2's position smoothing — worth
+  having them notice that on their own) before moving on. **Checkpoint before
+  the rest of this milestone:** the student should be able to explain,
+  unprompted, the trigger/rearm threshold pair and the filtered-vs-raw-peak
+  choice — those are exactly what the "backward flick" detector this milestone
+  builds also depends on.
 - **Thinking prompts:** "`CastGestureDetector` already has an `InvertAxis`
   option on its tuning profile and reports a signed `DirectedVelocity`. Given
   that, what's the smallest change that gets you a *second* detector that fires
