@@ -40,6 +40,34 @@ If the student wants to skip 1 or 2 and jump to "just tell me what to type,"
 push back once and explain why (this is the whole point of doing it this way),
 then follow their call if they insist — but don't offer the shortcut yourself.
 
+## Step 0 — Before teaching anything, write it down
+
+Do this before M1's "think first" question, not after. Read this plan and its
+companion design doc in full, then repurpose this repo's existing
+`task_plan.md` / `findings.md` / `progress.md` (root of `SevenSeas_AD_2d/` —
+the same three files already used for the earlier gyroscope-HUD task) for this
+fishing-loop implementation:
+
+- **`task_plan.md`** — a checklist mirroring M1–M8 and their sub-steps from
+  this document, each marked not-started / in-progress / complete as work
+  actually happens. This is the big-picture anchor.
+- **`findings.md`** — running discoveries made along the way (the
+  `TriggerThreshold` re-tuning need flagged in M2 is the first entry that
+  already belongs here).
+- **`progress.md`** — a dated log of what actually got done, session by
+  session.
+
+**Why this matters, explicitly:** a long teaching conversation can drift —
+getting absorbed in one milestone's details for many turns risks losing track
+of the overall architecture, and the original design doc's guidance can quietly
+lose weight against a growing chat history. These three files are an external
+anchor that doesn't degrade the way conversation context does. Update them as
+you go — don't write them once and let them go stale. If you (Codex) ever
+notice the thread of a conversation has wandered from why a sub-decision
+matters, re-read the design doc, this plan, and these three files before
+re-reading chat history — they are the source of truth, the conversation is
+not.
+
 ## Milestones
 
 Work through these in order; each depends on the previous one existing. Treat
