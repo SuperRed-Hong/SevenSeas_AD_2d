@@ -48,7 +48,7 @@ companion design doc in full, then repurpose this repo's existing
 the same three files already used for the earlier gyroscope-HUD task) for this
 fishing-loop implementation:
 
-- **`task_plan.md`** — a checklist mirroring M1–M8 and their sub-steps from
+- **`task_plan.md`** — a checklist mirroring M0–M8 and their sub-steps from
   this document, each marked not-started / in-progress / complete as work
   actually happens. This is the big-picture anchor.
 - **`findings.md`** — running discoveries made along the way (the
@@ -68,33 +68,67 @@ matters, re-read the design doc, this plan, and these three files before
 re-reading chat history — they are the source of truth, the conversation is
 not.
 
-## Required reading before M1
+## Milestones
+
+Work through these in order, starting from M0; each depends on the previous one
+existing. Treat each as its own teaching session — don't chain them into one
+long dump.
+
+### M0 — Understand the existing sensor prototypes (coached, not a reading assignment)
 
 The student does not yet fully understand the two existing sensor prototypes
 this plan reuses — `AttitudeReader`, `GyroscopeReader`,
 `AttitudeCircleController`, `CastGestureDetector`, `CastTuningProfile`, and how
-the debug HUDs got built. That gap needs to close before M2 and M5 lean on that
-code, not after.
+the debug HUDs got built (Codex built the originals; the student wants to
+actually understand them now, not just inherit them). Closing that gap is real
+work, not a preamble — handing over
+[`docs/reference/motion-input-guide.md`](../reference/motion-input-guide.md)
+and saying "read this" is not sufficient on its own; that document is the
+source material for this milestone, not a substitute for it. Apply the exact
+same three-step discipline from the top of this plan here too.
 
-[`docs/reference/motion-input-guide.md`](../reference/motion-input-guide.md) is
-a full explainer of exactly that code (written separately, not part of this
-plan). Have the student read it — at least Ch.0–6 (the sensor/controller/detector
-chapters) before M2, and Ch.5/Ch.9.2 again before M5 — before treating those
-scripts as black boxes to just reuse. Check their understanding with a question
-or two rather than assuming the reading happened; this is the same "think
-first" discipline as everywhere else in this plan, just applied to existing
-code instead of new code.
-
-## Milestones
-
-Work through these in order; each depends on the previous one existing. Treat
-each as its own teaching session — don't chain them into one long dump.
+- **Thinking prompts (ask before explaining, don't lecture straight from the
+  doc):** "Why does this project use two separate reader components
+  (`AttitudeReader` for orientation, `GyroscopeReader` for angular velocity)
+  instead of one? What would go wrong if you tried to drive the flick detector
+  off `AttitudeReader` instead?" / "A naive flick detector would be
+  `if (angularVelocity > threshold) Launch();`. What breaks with that, and why
+  does `CastGestureDetector` need a whole state machine instead?" / "What is
+  `rearmThreshold` for, separate from `triggerThreshold` — what would happen
+  with just one threshold?" / "Why does `CastPower` get computed from
+  `FilteredPeak` instead of `RawPeak`?" Pull more of these from the reference
+  doc's own structure (§1 sensor distinction, §5.1 "why a state machine",
+  §5.6 filtered-vs-raw peak) as needed — the doc is well-organized for exactly
+  this.
+- **Architecture discussion:** where the student's attempt misses something,
+  explain it — hysteresis/Schmitt-trigger pattern, framerate-independent
+  exponential smoothing (`1 - e^(-k·dt)`), the reader/controller/view
+  three-layer split — but make them restate it back in their own words before
+  moving on. The reference doc has all of this written out; use it as backup,
+  not as something to read aloud.
+- **Hands-on verification (this milestone's version of "implementation
+  steps"):** run `AttitudeControlTest.unity` and `GyroscopeCastTest.unity` in
+  Play Mode, watch the debug HUDs live, and have the student connect what they
+  see on screen — tilt moving the Circle, the RAW/FILTERED/PEAK numbers, the
+  `STATE` label cycling `Ready → Sampling → CastDetected → Cooldown` — to what
+  the reference doc says those numbers mean. Watching the real numbers move
+  while actually flicking the phone builds a connection that reading alone
+  doesn't.
+- **Checkpoint before moving to M1:** the student should be able to explain,
+  unprompted, at least: (a) why attitude and angular velocity are different
+  quantities that can't substitute for each other, (b) what the
+  `triggerThreshold`/`rearmThreshold` pair does and why a single threshold
+  isn't enough, (c) why `CastPower` uses `FilteredPeak` rather than `RawPeak`.
+  If they can't, go back into the material rather than moving on because the
+  reading technically happened.
 
 **Time checkpoint after M3, not just at the end.** Revision 3 of the design
 (Baiting's fish race, Striking's reversed flick, Reeling's tension/accelerate)
 is more than a small one-day slice — this was flagged explicitly in the design
-doc's §6 and confirmed again in review. M1–M3 (state machine skeleton, cast
-lane/flick, flight-to-landing) are the stability floor: get those solid first.
+doc's §6 and confirmed again in review. M0–M3 (understanding the existing
+prototypes, state machine skeleton, cast lane/flick, flight-to-landing) are the
+stability floor: get those solid first — M0 isn't optional preamble, skipping
+it just moves the confusion later.
 Once M3 works end to end, stop and check the clock with the student together —
 don't silently cut scope. If time is short, the two cheapest things to simplify
 are M4 (drop the fish race to a single fish + instant bite, no timeout logic)
