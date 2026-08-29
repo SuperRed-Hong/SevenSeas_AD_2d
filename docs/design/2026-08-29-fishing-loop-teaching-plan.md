@@ -99,6 +99,17 @@ before any real behavior exists.
   `AttitudeReader`, clamped/normalized to a lane range, exposed for the state
   machine to read; wire the existing `CastGestureDetector.CastDetected` event to
   read the current lane + power and transition to `Casting`.
+- **Don't skip this verification step:** once tilt-driven lane control and the
+  flick detector are running at the same time, have the student actively play
+  with lane selection — normal, maybe slightly quick tilting — and confirm it
+  does *not* accidentally fire `CastDetected`. This combination never existed
+  before (the two prototypes were tested in separate scenes), so the current
+  `CastTuningProfile.TriggerThreshold` (1.25, tuned in isolation in
+  `GyroscopeCastTest.unity`) is not trustworthy here without re-checking. Use
+  the existing `GyroscopeDebugHUD.cs` to watch the live angular-velocity value
+  while doing ordinary lane adjustments, and raise `TriggerThreshold` until
+  only a clearly deliberate flick crosses it — this is a real user-review
+  finding (see the design doc §3), not a hypothetical.
 
 ### M3 — Casting: reuse the flight, redefine what "landed" means
 

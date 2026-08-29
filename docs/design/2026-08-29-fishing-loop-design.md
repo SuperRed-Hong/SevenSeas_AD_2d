@@ -109,6 +109,18 @@ Reeling --(tension maxes out)--> line snaps, lose one hook --> ReadyToCast (or G
   **outward** wrist snap (clockwise, per the user's description) — its
   direction matters now, because `Striking` (§below) uses the opposite
   direction on the same axis, and the two must not be confused with each other.
+- **`TriggerThreshold` must be re-tuned higher for this combined context.** The
+  existing `CastTuningProfile.TriggerThreshold` (1.25, per the current asset)
+  was tuned in `GyroscopeCastTest.unity`, a scene where flicking was the *only*
+  thing happening. In `ReadyToCast`, tilt-driven lane selection is running
+  continuously at the same time, and ordinary quick tilt adjustments can
+  produce angular-velocity spikes too. If the threshold isn't clearly above
+  that everyday-tilt noise floor, casting will trigger by accident while the
+  player is just choosing a lane. The threshold needs to sit high enough that
+  only a deliberate, obvious flick crosses it — verify this empirically with
+  the existing debug HUD tooling (`GyroscopeDebugHUD.cs`) while performing
+  normal lane-selection tilting, not just by picking a number that feels right
+  on paper.
 
 ### Casting
 
