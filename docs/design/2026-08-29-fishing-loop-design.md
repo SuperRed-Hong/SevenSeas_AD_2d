@@ -1,6 +1,6 @@
 # Fishing Loop Design — Cast, Fly, Reel (MVP)
 
-Status: revision 3, pending user re-review
+Status: revision 4, pending user re-review
 Date: 2026-08-29
 
 **Revision 2 changes:** added a `Baiting` state between `Casting` and `Reeling`
@@ -67,8 +67,8 @@ tension hazard, reshaped to fit the auto-reel structure (see §5).
 
 ## 2. Goals / Non-goals for this spec
 
-**Goals:** a complete, playable cast → fly → wait-for-bite → reel loop, in a
-single test scene, using placeholder shapes (no final art), that runs end-to-end
+**Goals:** a complete, playable cast → fly → wait-for-bite → strike → reel loop,
+in a single test scene, using placeholder shapes (no final art), that runs end-to-end
 in the Unity Editor using the existing gyroscope/attitude simulation workflow
 already validated by the team (see `findings.md`, `progress.md` at the repo root).
 
@@ -85,7 +85,7 @@ already validated by the team (see `findings.md`, `progress.md` at the repo root
 ## 3. State machine
 
 ```
-ReadyToCast --(outward flick detected)--> Casting --(flight time elapsed)--> Baiting
+ReadyToCast --(outward flick detected)--> Casting --(hook lands)--> Baiting
 Baiting --(a fish reaches the bait)--> Striking
 Baiting --(wait timeout, no fish arrived)--> Reeling (empty)
 Striking --(backward flick within window)--> Reeling (with fish)
@@ -286,6 +286,14 @@ don't get "corrected" back by accident during implementation:
    cast, backward flick to strike — is a deliberate physical echo of the
    original's separate "cast" and "reel" button presses, done with gesture
    direction instead of two different buttons.
+
+**Revision 4 changes (this pass):** final consistency check, not a design
+change — fixed the state diagram's `Casting → Baiting` transition label (was
+"flight time elapsed," which contradicted the `Casting` section's own text;
+it's actually the existing ground-contact/landing detection in
+`CastBallController`), and folded the `TriggerThreshold` re-tuning requirement
+(added earlier in this pass to §3) into the Goals line and this changelog for
+completeness.
 
 ## 6. MVP content for today
 
