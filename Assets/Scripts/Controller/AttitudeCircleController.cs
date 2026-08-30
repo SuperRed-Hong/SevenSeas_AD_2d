@@ -21,10 +21,10 @@ public sealed class AttitudeCircleController : MonoBehaviour
     [SerializeField] private GyroscopeAxis verticalAxis = GyroscopeAxis.X;
     [SerializeField] private bool invertHorizontal;
     [SerializeField] private bool invertVertical = true;
-    [SerializeField, Min(0f)] private float deadZoneDegrees = 1.5f;
+    [SerializeField, Min(0f)] private float deadZoneDegrees = 3f;
     [SerializeField, Range(1f, 90f)] private float maxTiltDegrees = 25f;
     [SerializeField, Range(45f, 89f)] private float maxSupportedTiltDegrees = 75f;
-    [SerializeField, Range(0f, 10f)] private float axisSwitchHysteresisDegrees = 2f;
+    [SerializeField, Range(0f, 10f)] private float axisSwitchHysteresisDegrees = 4f;
     [SerializeField, Range(0.1f, 1f)] private float movementRange = 0.85f;
     [SerializeField, Min(0f)] private float smoothing = 12f;
     [SerializeField, Min(0f)] private float autoCalibrationDelay = 0.5f;

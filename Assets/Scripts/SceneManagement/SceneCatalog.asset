@@ -16,7 +16,7 @@ MonoBehaviour:
   - id: 0
     sceneName: MainMenu
   - id: 1
-    sceneName: Scene1
+    sceneName: FishingLoopTest
   - id: 2
     sceneName: 
   - id: 3
