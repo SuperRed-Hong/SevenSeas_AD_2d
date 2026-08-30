@@ -185,21 +185,43 @@ before any real behavior exists.
   only a clearly deliberate flick crosses it — this is a real user-review
   finding (see the design doc §3), not a hypothetical.
 
-### M3 — Casting: reuse the flight, redefine what "landed" means
+### M3 — Casting: a new flight for the production scene, generic "landed" event
 
-- **Thinking prompts:** "`CastBallController.Landed` currently means 'the test
-  trial is over' (see how `CastTestController` uses it today). In the new loop
-  it needs to mean something else. What, and does `CastBallController` itself
-  need to know the difference?"
-- **Architecture discussion:** this is a good place to talk about decoupling via
-  events — `CastBallController` doesn't need to know anything about `Baiting`;
-  it just reports "I landed, here's the distance," same event as today. The
-  *state machine* is the thing that reinterprets that event differently.
-  Reinforce this as a general principle: a reusable component shouldn't need to
-  change just because what happens *after* it changes.
-- **Implementation steps:** launch from the M2 lane position at cast power, keep
-  the existing `Landed` event, wire it in the state machine to compute the
-  landing point (lane X + distance) and transition to `Baiting`.
+**Design correction found while implementing this milestone (now reflected in
+design doc revision 5, §3/§4):** `CastBallController`/`GyroscopeCastTest.unity`
+is a horizontal side-view parabola; the production scene casts vertically on
+screen into the water. That's a real orientation mismatch, not something to
+force through — `CastBallController` and its test scene stay exactly as they
+are, untouched and isolated. Build a **new** flight component for the
+production scene instead.
+
+- **Thinking prompts:** "`CastBallController` gives you a working example of a
+  flight component's *public shape* — a `Launch(power)` entry point and a
+  generic landing event — even though its actual trajectory physics don't fit
+  the production scene's vertical orientation. What should the new component
+  keep from that shape, and what has to be rebuilt from scratch for the
+  vertical layout?" / "`CastTuningProfile.EvaluatePower(peak)` turns a flick's
+  peak into a 0–1 power value, independent of any orientation — does that
+  still apply here? What about `EvaluateLaunchVelocity(power)` and its current
+  tuned min/max vectors — do those numbers mean anything in a vertical cast, or
+  do they need to be re-derived for the new layout?"
+- **Architecture discussion:** decoupling via events, same as originally
+  planned — the *state machine* (`FishingLoopController`) reinterprets a
+  generic landing event as "end `Casting`, start `Baiting`," and doesn't need
+  to know or care which concrete flight component raised it. Reinforce this as
+  a general principle: it's exactly this decoupling that makes swapping in a
+  new flight implementation safe without touching the state machine at all.
+  Also worth a beat on *why* to keep `CastBallController` isolated rather than
+  editing it in place: it's still a working, useful distance-test scene on its
+  own, and bending it to fit a second, incompatible use case would make both
+  worse.
+- **Implementation steps:** design the new flight component's trajectory
+  physics for the vertical-cast orientation (working out the velocity/gravity
+  mapping is real design work here, not a given — do it together, don't just
+  hand over numbers), reuse `CastTuningProfile.EvaluatePower` for the power
+  value, launch from the M2 lane position, raise a generic landing event,
+  wire it in the state machine to compute the landing point (lane position +
+  cast power) and transition to `Baiting`.
 
 ### M4 — Baiting: fish race + bait wiggle
 

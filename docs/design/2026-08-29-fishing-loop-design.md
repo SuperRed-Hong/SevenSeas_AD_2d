@@ -1,7 +1,7 @@
 # Fishing Loop Design — Cast, Fly, Reel (MVP)
 
-Status: revision 4, pending user re-review
-Date: 2026-08-29
+Status: revision 5, pending user re-review
+Date: 2026-08-29 (revision 5 added 2026-08-30)
 
 **Revision 2 changes:** added a `Baiting` state between `Casting` and `Reeling`
 (fish actively swim toward the bait, tilt can wiggle the bait, first fish to
@@ -19,6 +19,25 @@ the phone in the *opposite* rotational direction from the cast flick (a
 "backward"/counter-clockwise wrist snap, mirroring the cast's outward/clockwise
 snap) to set the hook. Missing the window fails the attempt and costs a hook
 without ever entering `Reeling`. See §3 and §5.
+
+**Revision 4 changes:** final consistency check, not a design change — fixed
+the state diagram's `Casting → Baiting` transition label (was "flight time
+elapsed," which contradicted the `Casting` section's own text; it's actually
+the landing detection), and folded the `TriggerThreshold` re-tuning
+requirement (added earlier in that pass to §3) into the Goals line and this
+changelog for completeness.
+
+**Revision 5 changes (this pass, found during M3 implementation):**
+`CastBallController.cs`/`GyroscopeCastTest.unity` is **not** reused for the
+production cast flight after all — that scene's flight is a horizontal
+side-view parabola, but the production scene casts vertically on screen into
+the water, a different orientation the existing physics don't transplant into.
+`CastBallController` and its test scene stay untouched and isolated; a new
+flight component gets built for the production scene instead, matching its
+public shape (a `Launch(power)`-style entry point, a generic landing event)
+without being the same component. `FishingLoopController` still owns the
+`Casting → Baiting` transition off that generic event, unchanged. See §3 and
+§4.
 
 ## Process note (read this first)
 
@@ -126,15 +145,31 @@ Reeling --(tension maxes out)--> line snaps, lose one hook --> ReadyToCast (or G
 
 ### Casting
 
-- Non-interactive. The hook/lure launches from the chosen shore lane using the
-  existing `CastBallController` parabolic flight (reuse `Launch(power)` /
-  `CastTuningProfile.EvaluateLaunchVelocity(power)`).
-- Player input has **no effect** during this phase — it is purely the flight
-  animation playing out, exactly as the user specified.
-- Ends when the hook lands (existing ground-contact detection in
-  `CastBallController`, currently used for the distance-test's "landed" event).
-  The landing point is a 2D position: (shore lane X from `ReadyToCast`, distance
-  from cast power).
+- Non-interactive. Player input has **no effect** during this phase — it is
+  purely the flight animation playing out, exactly as the user specified.
+- Ends when the hook lands. The landing point is a 2D position: (shore lane X
+  from `ReadyToCast`, distance from cast power).
+- **Not a direct reuse of `CastBallController`.** `GyroscopeCastTest.unity`'s
+  flight is a horizontal side-view parabola (Rigidbody2D arcing across flat
+  ground). The production fishing scene's camera/layout casts **vertically
+  upward on screen into the water**, a different orientation entirely — the
+  existing component's physics don't transplant as-is. `CastBallController`
+  and `GyroscopeCastTest.unity` stay exactly as they are, untouched, as an
+  isolated distance-test scene. A **new** flight component is built for the
+  production scene, matching `CastBallController`'s public shape (a
+  `Launch(power)`-style entry point, a generic landing event) but with
+  velocity/trajectory physics appropriate to the vertical orientation.
+  `CastTuningProfile.EvaluatePower(peak)` (peak angular velocity → 0–1 power)
+  is orientation-agnostic and stays reusable as-is; whether
+  `EvaluateLaunchVelocity(power)`'s current min/max velocity vectors carry over
+  or need new values for the vertical layout is an open question for M3's
+  architecture discussion, not resolved here.
+- The landing event stays **generic** — `FishingLoopController` (the state
+  machine) owns the transition to `Baiting` when it fires, and doesn't need to
+  know or care which flight component raised it. This is the same
+  decoupling-via-events principle already called out for `CastBallController`
+  in §4 below, just reinforced now that two different flight implementations
+  exist side by side.
 
 ### Baiting (new in this revision)
 
@@ -221,21 +256,32 @@ during implementation if they feel wrong in playtesting.)*
   the axis inverted would naturally trigger on the opposite (backward) flick
   direction instead of new detection code — worth checking during
   implementation rather than writing a second detector from scratch.
-- `CastTuningProfile.cs` — power curve and launch-velocity curve.
+- `CastTuningProfile.cs` — `EvaluatePower(peak)` reused as-is (orientation-
+  agnostic). `EvaluateLaunchVelocity(power)`'s current values are tuned for the
+  horizontal test layout; whether they carry over to the vertical production
+  cast is open, see the new flight component note below.
 
-### Reused with changes
+### Not reused — stays isolated
 
-- `CastBallController.cs` — keep the parabolic `Launch(power)` flight and
-  ground-contact detection, but its role changes: today it treats "landed" as
-  the end of the test. In the new loop, "landed" is the trigger that ends
-  `Casting` and starts `Baiting`, not the end of the attempt.
+- `CastBallController.cs` and `GyroscopeCastTest.unity` — **unchanged**. This
+  was originally planned as a direct reuse for the production cast flight, but
+  it's a horizontal side-view parabola and the production scene casts
+  vertically on screen — the orientations don't match, so the component isn't
+  transplantable as-is. It stays exactly as it is, as its own isolated
+  distance-test scene; nothing here should be edited for this feature.
 
 ### New (conceptual — not implemented by Claude)
 
-- A fishing-loop state machine component, replacing/expanding
-  `CastTestController.cs`, owning the
+- A gameplay hook-flight component for the production scene: vertical-cast
+  trajectory physics, matching `CastBallController`'s public shape (a
+  `Launch(power)`-style entry point, a generic landing event) without being
+  the same component. See the `Casting` section above for what's already
+  decided versus still open here.
+- A fishing-loop state machine component (`FishingLoopController` or similar),
+  replacing/expanding `CastTestController.cs`, owning the
   `ReadyToCast → Casting → Baiting → Striking → Reeling` flow above and the
-  transitions to `GameOver`.
+  transitions to `GameOver`. Subscribes to the landing event generically —
+  doesn't need to know which flight component raised it.
 - Shore-lane character control (reads `AttitudeReader`, outputs a lane position;
   same shape as `AttitudeCircleController` but constrained to one axis and to the
   shore, not the full screen).
@@ -288,14 +334,6 @@ don't get "corrected" back by accident during implementation:
    cast, backward flick to strike — is a deliberate physical echo of the
    original's separate "cast" and "reel" button presses, done with gesture
    direction instead of two different buttons.
-
-**Revision 4 changes (this pass):** final consistency check, not a design
-change — fixed the state diagram's `Casting → Baiting` transition label (was
-"flight time elapsed," which contradicted the `Casting` section's own text;
-it's actually the existing ground-contact/landing detection in
-`CastBallController`), and folded the `TriggerThreshold` re-tuning requirement
-(added earlier in this pass to §3) into the Goals line and this changelog for
-completeness.
 
 ## 6. MVP content for today
 
