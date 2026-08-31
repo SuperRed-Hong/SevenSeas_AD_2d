@@ -68,42 +68,45 @@ Status: **in-progress**
 - [complete] Run `AttitudeControlTest.unity` and connect phone/HUD observations to the code.
 - [complete] Think first: identify what a one-axis shore controller keeps and drops.
 - [complete] Discuss a new small component versus generalizing `AttitudeCircleController`.
-- [in-progress] Student implements and wires the lane controller.
+- [complete] Student implements and wires the position-target lane controller (variant A).
 - [complete] Student designs and implements a shared 3-second motion-calibration service that survives scene changes through `AppRoot`.
 - [in-progress] Student adds explicit calibration entry points in the main menu and pause menu, with hold-still progress and retry feedback. Main-menu entry and mandatory fishing-scene fallback are complete; pause-menu reuse remains pending until pause UI exists.
-- [not-started] Student implements a velocity-controlled lane variant B using the same calibration, dead-zone, and normalization pipeline.
-- [not-started] Student runs an A/B playtest of position-target control versus tilt-as-velocity control and explicitly selects the final lane scheme.
-- [not-started] Student subscribes to cast detection and captures lane + power.
-- [not-started] Student verifies ordinary lane tilting does not cast accidentally.
-- [not-started] Student measures the lane-tilt noise floor with `GyroscopeDebugHUD`.
-- [not-started] Student empirically raises `TriggerThreshold` so only a deliberate flick casts.
+- [deferred] Student implements a velocity-controlled lane variant B using the same calibration, dead-zone, and normalization pipeline.
+- [deferred] Student runs an A/B playtest of position-target control versus tilt-as-velocity control and explicitly selects the final lane scheme.
+- [complete] Student subscribes to cast detection and captures lane + power.
+- [complete] Student verifies ordinary lane tilting does not cast accidentally.
+- [complete] Student checks lane-motion input against the cast detector and confirms direction, rather than threshold magnitude, caused the observed backswing false trigger.
+- [complete] Student corrects the detection direction with `InvertAxis` and verifies the existing `TriggerThreshold` accepts deliberate forward flicks without ordinary-tilt false positives.
 
 ## M3 — Casting: flight and landing transition
 
-Status: **not-started**
+Status: **core state flow verified — final parabola deferred**
 
-- [not-started] Think first: reinterpret `CastBallController.Landed` for the new loop.
-- [not-started] Discuss event decoupling and why the ball need not know about `Baiting`.
-- [not-started] Student launches from the selected lane using cast power.
-- [not-started] Student uses the existing `Landed` event to compute the landing point.
-- [not-started] Student transitions from `Casting` to `Baiting` on landing.
-- [not-started] Verify M0–M3 end to end.
-- [not-started] Mandatory time checkpoint with the student before M4.
+- [complete] Think first: reinterpret `CastBallController.Landed` for the new loop.
+- [complete] Discuss event decoupling and why the flight object need not know about `Baiting`.
+- [complete] Separate the formal vertical gameplay flight from the horizontal gyroscope test projectile.
+- [complete] Student builds a minimal vertical flat-flight controller with Docked/Flying/Landed lifecycle and a landing event.
+- [deferred] Replace the minimal flat trajectory with the final vertical, 2D-simulated-3D parabolic presentation.
+- [complete] Student launches from the selected lane using cast power.
+- [complete] Student uses the new vertical flight's `Landed(Vector2)` event to preserve the landing point.
+- [complete] Student transitions from `Casting` to `Baiting` on landing.
+- [complete] Verify the M0–M3 core state flow end to end using the temporary flat trajectory.
+- [complete] Mandatory time checkpoint: student chose to continue without simplifying M4 or M6.
 
 If time is short, only the student may choose to simplify M4 and/or M6. Any chosen
 simplification must go back to Claude for a design-doc update before implementation diverges.
 
 ## M4 — Baiting: fish race + bait wiggle
 
-Status: **not-started**
+Status: **in-progress — fish race implementation and integration**
 
-- [not-started] Think first: prevent two fish from claiming the same bite.
-- [not-started] Discuss per-fish state and a single authority for first-writer-wins resolution.
-- [not-started] Student implements `Fish` state and score data.
-- [not-started] Student implements detection range and approach movement.
+- [complete] Think first: prevent two fish from claiming the same bite.
+- [complete] Discuss per-fish state and a single authority for first-writer-wins resolution.
+- [complete] Student implements `Fish` state and score data.
+- [complete] Student implements detection range and approach movement.
 - [not-started] Student implements tilt-driven bait wiggle within a small radius.
-- [not-started] Student implements deterministic winner resolution and loser reset.
-- [not-started] Student implements the 8-second timeout.
+- [in-progress] Student implements deterministic winner resolution and loser reset; code exists, formal event-path verification remains.
+- [in-progress] Student implements the 8-second timeout; code exists, formal state-transition verification remains.
 - [not-started] Student transitions to `Striking` on a bite or empty `Reeling` on timeout.
 
 ## M5 — Striking: reversed flick + reaction window
@@ -164,7 +167,7 @@ Status: **not-started**
 
 ## Current next action
 
-Run the pre-calibrated cross-scene entry test, then verify shared calibration drives `ShoreLaneController` in `FishingLoopTest`. If it passes, proceed to the velocity-controlled lane variant B and the planned A/B comparison.
+Subscribe `FishingLoopController` to `FishBiteRaceController.FishHooked` and `TimedOut`, preserve the winning fish for later score/reeling logic, and verify the transitions to `Striking` or empty `Reeling`. Continue the full M4/M6 scope unless the student later explicitly chooses and documents a simplification. The final 2D-simulated-3D parabola remains a deferred internal M3 trajectory upgrade.
 
 ## Errors
 

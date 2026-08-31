@@ -102,31 +102,31 @@ public class ShoreLaneController : MonoBehaviour
 
         float normalizedTilt = NormalizeTilt(laneTiltDegrees);
 
-        //Convert [-1,1] into [0,1]
-        // -1 represents the left limit, 0 the center, 1 the right limit
-        float laneposition01 = (normalizedTilt + 1f) * 0.5f;
+        ApplyNormalizedLaneInput(normalizedTilt);
+    }
+    private void ApplyNormalizedLaneInput(float normalizedInput)
+    {
+        // Convert the normalized input from [-1, 1] into [0, 1].
+        float lanePosition01 =
+            (Mathf.Clamp(normalizedInput, -1f, 1f) + 1f) * 0.5f;
 
-        //Interpolate between the two world-space lane limits
-        // to calculate the target x position
+        // Map the normalized position onto the world-space lane limits.
         float targetX = Mathf.Lerp(
             leftLaneLimit.position.x,
             rightLaneLimit.position.x,
-            laneposition01);
-
+            lanePosition01);
 
         Vector3 targetPosition = transform.position;
         targetPosition.x = targetX;
 
-// Use frame-rate-independent exponential smoothing.
-// High frame rates use smaller steps, while low frame rates use larger steps,
-// producing approximately the same response speed per second.
+        // Use frame-rate-independent exponential smoothing.
         float blend = smoothing > 0f
             ? 1f - Mathf.Exp(-smoothing * Time.deltaTime)
             : 1f;
+
         transform.position =
             Vector3.Lerp(transform.position, targetPosition, blend);
     }
-
     private float NormalizeTilt(float degrees)
     {
         // Separate the tilt magnitude from its direction.

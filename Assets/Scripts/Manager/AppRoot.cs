@@ -1,5 +1,5 @@
 using UnityEngine;
-
+[RequireComponent(typeof(GyroscopeReader))]
 [RequireComponent(
     typeof(SceneLoader),
     typeof(AttitudeReader),
@@ -10,7 +10,7 @@ public sealed class AppRoot : MonoBehaviour
 
     public SceneLoader SceneLoader { get; private set; }
     public AttitudeReader AttitudeReader { get; private set; }
-
+    public GyroscopeReader GyroscopeReader { get; private set; }
     public AttitudeCalibrationService AttitudeCalibration
     {
         get;
@@ -30,7 +30,7 @@ public sealed class AppRoot : MonoBehaviour
 
         AttitudeCalibration =
             GetComponent<AttitudeCalibrationService>();
-        
+        GyroscopeReader = GetComponent<GyroscopeReader>();
         DontDestroyOnLoad(gameObject);
     }
     private void Start()

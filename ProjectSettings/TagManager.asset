@@ -11,7 +11,7 @@ TagManager:
   - 
   - Water
   - UI
-  - 
+  - Fish
   - 
   - 
   - 
@@ -46,6 +46,9 @@ TagManager:
     locked: 0
   - name: Front
     uniqueID: 4004067461
+    locked: 0
+  - name: Fish
+    uniqueID: 1567055959
     locked: 0
   - name: Player
     uniqueID: 3537888399
