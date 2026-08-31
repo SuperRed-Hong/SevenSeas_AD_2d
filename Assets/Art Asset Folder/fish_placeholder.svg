@@ -1,0 +1,22 @@
+<svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <g stroke="#1a2b3c" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
+    <!-- tail -->
+    <polygon points="52,128 8,86 8,170" fill="#e8622c"/>
+    <!-- body -->
+    <ellipse cx="140" cy="128" rx="88" ry="54" fill="#ff8c42"/>
+    <!-- dorsal fin -->
+    <polygon points="120,76 150,30 178,78" fill="#e8622c"/>
+    <!-- belly fin -->
+    <polygon points="126,176 150,214 172,178" fill="#e8622c"/>
+    <!-- pectoral fin -->
+    <path d="M 158 150 Q 190 168 176 190 Q 150 178 148 156 Z" fill="#ffb066"/>
+    <!-- gill line -->
+    <path d="M 176 96 Q 164 128 176 160" fill="none" stroke-width="5"/>
+  </g>
+  <!-- belly highlight -->
+  <ellipse cx="150" cy="150" rx="58" ry="26" fill="#ffd08a" opacity="0.85"/>
+  <!-- eye -->
+  <circle cx="196" cy="112" r="16" fill="#fffdf5" stroke="#1a2b3c" stroke-width="4"/>
+  <circle cx="200" cy="112" r="7" fill="#1a2b3c"/>
+  <circle cx="197" cy="108" r="2.5" fill="#fffdf5"/>
+</svg>

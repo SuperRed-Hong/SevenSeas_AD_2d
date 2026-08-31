@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 [RequireComponent(typeof(Rigidbody2D), typeof(Collider2D))]
 public sealed class CastBallController : MonoBehaviour
@@ -11,7 +12,7 @@ public sealed class CastBallController : MonoBehaviour
     private Rigidbody2D body;
     private Vector3 startPosition;
     private float launchTime;
-
+    
     public event Action<float> Landed;
 
     public bool IsFlying { get; private set; }
@@ -22,7 +23,7 @@ public sealed class CastBallController : MonoBehaviour
     {
         body = GetComponent<Rigidbody2D>();
         startPosition = transform.position;
-        ResetBall();
+        ResetHook();
     }
 
     public void Configure(CastTuningProfile profile)
@@ -45,7 +46,7 @@ public sealed class CastBallController : MonoBehaviour
         IsFlying = true;
     }
 
-    public void ResetBall()
+    public void ResetHook()
     {
         if (body == null)
         {

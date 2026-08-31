@@ -1451,8 +1451,10 @@ MonoBehaviour:
   verticalAxis: 0
   invertHorizontal: 0
   invertVertical: 1
-  deadZoneDegrees: 1.5
+  deadZoneDegrees: 3
   maxTiltDegrees: 25
+  maxSupportedTiltDegrees: 75
+  axisSwitchHysteresisDegrees: 10
   movementRange: 0.85
   smoothing: 12
   autoCalibrationDelay: 0.5

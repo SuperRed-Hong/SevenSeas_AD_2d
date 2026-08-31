@@ -57,9 +57,9 @@ public sealed class GyroscopeDebugHUD : MonoBehaviour
 
         statusText.text =
             $"GYRO ONLINE  |  {reader.SamplingFrequency:0} Hz  |  SCALE +/-{displayRange:0.#} rad/s";
-        xValueText.text = $"X  {value.x:+0.00;-0.00; 0.00}";
-        yValueText.text = $"Y  {value.y:+0.00;-0.00; 0.00}";
-        zValueText.text = $"Z  {value.z:+0.00;-0.00; 0.00}";
+        xValueText.text = $"X-PITCH  {value.x:+0.00;-0.00; 0.00}";
+        yValueText.text = $"Y-YAW  {value.y:+0.00;-0.00; 0.00}";
+        zValueText.text = $"Z-ROLL  {value.z:+0.00;-0.00; 0.00}";
         magnitudeText.text = $"MAG  {reader.AngularSpeed:0.00}";
         peakText.text = $"PEAK  {peak:0.00}";
 
@@ -71,9 +71,9 @@ public sealed class GyroscopeDebugHUD : MonoBehaviour
     private void SetOfflineState()
     {
         statusText.text = "GYRO OFFLINE";
-        xValueText.text = "X   0.00";
-        yValueText.text = "Y   0.00";
-        zValueText.text = "Z   0.00";
+        xValueText.text = "X-PITCH   0.00";
+        yValueText.text = "Y-YAW   0.00";
+        zValueText.text = "Z-ROLL   0.00";
         magnitudeText.text = "MAG  0.00";
         peakText.text = "PEAK  0.00";
         SetCenteredBar(xBar, 0f);
