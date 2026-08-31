@@ -635,7 +635,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WaterRippleSpawner
   ripplePrefab: {fileID: 8974494646716309886, guid: 1184a2685e281dc4f9aab8537659e790, type: 3}
-  spawnInterval: 0.75
+  spawnInterval: 0.5
 --- !u!23 &1037736645
 MeshRenderer:
   m_ObjectHideFlags: 0
