@@ -99,6 +99,16 @@ public sealed class FishBiteRaceController : MonoBehaviour
         }
     }
 
+    private void OnDrawGizmosSelected()
+    {
+        if (attractionRadius <= 0f)
+        {
+            return;
+        }
+
+        Gizmos.color = new Color(0.2f, 0.8f, 1f, 0.9f);
+        Gizmos.DrawWireSphere(transform.position, attractionRadius);
+    }
     private void CompleteWithWinner(FishController winner)
     {
         isRaceActive = false;
