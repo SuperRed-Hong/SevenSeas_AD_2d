@@ -1,10 +1,16 @@
 fileFormatVersion: 2
-guid: 1103e56c4c28bd548a2c9bf41cef7666
+guid: 9dad5a494d833d840be92a93cd894ff5
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -5225540622116197949
-    second: 02_0
+      213: 7335592434182581646
+    second: splash03_0
+  - first:
+      213: 6150608762871428044
+    second: splash03_1
+  - first:
+      213: -2620570201450636981
+    second: splash03_2
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -51,7 +57,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 14
+  spritePixelsToUnits: 16
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -113,11 +119,33 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: 02_0
+      name: splash03_0
+      rect:
+        serializedVersion: 2
+        x: 7
+        y: 19
+        width: 18
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e8dee7804724dc560800000000000000
+      internalID: 7335592434182581646
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: splash03_1
       rect:
         serializedVersion: 2
         x: 10
-        y: 12
+        y: 11
         width: 12
         height: 8
       alignment: 0
@@ -128,8 +156,30 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 3c9e3638d762b77b0800000000000000
-      internalID: -5225540622116197949
+      spriteID: cc33b5f151a5b5550800000000000000
+      internalID: 6150608762871428044
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: splash03_2
+      rect:
+        serializedVersion: 2
+        x: 11
+        y: 7
+        width: 10
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b499f81494dd1abd0800000000000000
+      internalID: -2620570201450636981
       vertices: []
       indices: 
       edges: []
@@ -148,7 +198,9 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      02_0: -5225540622116197949
+      splash03_0: 7335592434182581646
+      splash03_1: 6150608762871428044
+      splash03_2: -2620570201450636981
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
