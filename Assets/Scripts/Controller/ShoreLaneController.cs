@@ -8,7 +8,7 @@ public class ShoreLaneController : MonoBehaviour
     private AttitudeCalibrationService calibrationService;
     [SerializeField] private Transform leftLaneLimit;
     [SerializeField] private Transform rightLaneLimit;
-
+    [SerializeField] private FishingInputSource inputSource;
     [SerializeField] private bool invertLane;
     [FormerlySerializedAs("deadZoneDegress")] [SerializeField, Min(0f)] private float deadZoneDegrees = 3f;
 
@@ -19,14 +19,11 @@ public class ShoreLaneController : MonoBehaviour
     [SerializeField, Range(45f, 89f)] [Tooltip("The maximum tilt angle the object can support, in degrees.")]
     private float maxSupportedTiltDegrees = 75f;
 
-    /// <summary>
-    /// The smoothing rate applied to tilt changes.
-    /// Higher values produce a faster response.
-    /// </summary>
     [SerializeField, Min(0f)]
-    [Tooltip("Controls how quickly tilt changes are smoothed. Higher values produce a faster response.")]
-    private float smoothing = 30f;
-    //[SerializeField, Min(0f)] private float autoCalibrationDelay = 0.5f;
+    [Tooltip("Maximum horizontal movement speed in world units per second.")]
+    private float maxLaneSpeed = 4f;
+    
+
 
     public float CurrentLaneX => transform.position.x;
 
@@ -52,13 +49,27 @@ public class ShoreLaneController : MonoBehaviour
 
     private void Update()
     {
-        if (attitudeReader == null || 
-            !attitudeReader.IsEnabled || 
+        if (leftLaneLimit == null && rightLaneLimit == null)
+        {
+            Debug.unityLogger.Log("Left Lane limit is null or empty");
+            return;
+        }
+        
+        //Editor and desktop builds use the configured non-motion input source.
+
+        if (!Application.isMobilePlatform && inputSource != null)
+        {
+            IsTiltWithinSupportedRange = true;
+            ApplyLaneVelocity(inputSource.MoveInput.x);
+            return;
+        }
+        
+        //Mobile builds continue using calibrated phone attitude.
+        if (attitudeReader == null ||
+            !attitudeReader.IsEnabled ||
             !attitudeReader.HasSample ||
             calibrationService == null ||
-            !calibrationService.IsCalibrated ||
-            leftLaneLimit == null ||
-            rightLaneLimit == null)
+            !calibrationService.IsCalibrated)
         {
             return;
         }
@@ -102,30 +113,26 @@ public class ShoreLaneController : MonoBehaviour
 
         float normalizedTilt = NormalizeTilt(laneTiltDegrees);
 
-        ApplyNormalizedLaneInput(normalizedTilt);
+        ApplyLaneVelocity(normalizedTilt);
     }
-    private void ApplyNormalizedLaneInput(float normalizedInput)
+    private void ApplyLaneVelocity(float normalizedInput)
     {
-        // Convert the normalized input from [-1, 1] into [0, 1].
-        float lanePosition01 =
-            (Mathf.Clamp(normalizedInput, -1f, 1f) + 1f) * 0.5f;
-
-        // Map the normalized position onto the world-space lane limits.
-        float targetX = Mathf.Lerp(
-            leftLaneLimit.position.x,
-            rightLaneLimit.position.x,
-            lanePosition01);
-
-        Vector3 targetPosition = transform.position;
-        targetPosition.x = targetX;
-
-        // Use frame-rate-independent exponential smoothing.
-        float blend = smoothing > 0f
-            ? 1f - Mathf.Exp(-smoothing * Time.deltaTime)
-            : 1f;
-
-        transform.position =
-            Vector3.Lerp(transform.position, targetPosition, blend);
+        //Treat the normalized input as a velocity multiplier.
+        // -1 is full speed left , 0 stops, and 1 is full speed right.
+        
+        float ClampedVelocity = Mathf.Clamp(normalizedInput, -1, 1);
+        
+        Vector3 nextPosition = transform.position;
+        nextPosition.x += ClampedVelocity * maxLaneSpeed * Time.deltaTime;
+        
+        // Keep the player inside the configured lane Limits.
+        float minimumX = Mathf.Min(leftLaneLimit.position.x, rightLaneLimit.position.x);
+        
+        float maximumX = Mathf.Max(leftLaneLimit.position.x, rightLaneLimit.position.x);
+        
+        nextPosition.x = Mathf.Clamp(nextPosition.x, minimumX, maximumX);
+        
+        transform.position = nextPosition;
     }
     private float NormalizeTilt(float degrees)
     {

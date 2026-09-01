@@ -40,9 +40,16 @@ public sealed class FishingLoopController : MonoBehaviour
     }
     private void Start()
     {
-        castGestureDetector.ConfigureReader(
-            AppRoot.Instance.GyroscopeReader);
+        // Mobile entry provides AppRoot and the gyroscope reader.
+        // Direct Editor testing can continue without motion services.
+        if (AppRoot.Instance != null)
+        {
+            castGestureDetector.ConfigureReader(
+                AppRoot.Instance.GyroscopeReader);
+        }
+        
         EnterState(CurrentState);
+      
 
     }
 
@@ -106,6 +113,12 @@ public sealed class FishingLoopController : MonoBehaviour
         
         fishBiteRaceController.FishHooked -= HandleFishHooked;
         fishBiteRaceController.TimedOut -= HandleBaitingTimedOut;
+        
+        if (inputSource != null)
+        {
+            inputSource.CastPerformed -= HandleCastDetected;
+        }
+        
     }
     // Interpret the hook's physical landing event as a gameplay transition.
     // The flight component does not need to know that Baiting exists.
