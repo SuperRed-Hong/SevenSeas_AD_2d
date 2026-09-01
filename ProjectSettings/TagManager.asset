@@ -45,14 +45,17 @@ TagManager:
   - name: Background
     uniqueID: 4210278397
     locked: 0
-  - name: Front
-    uniqueID: 4004067461
-    locked: 0
   - name: Fish
     uniqueID: 1567055959
     locked: 0
+  - name: Front
+    uniqueID: 4004067461
+    locked: 0
   - name: Player
     uniqueID: 3537888399
+    locked: 0
+  - name: UI
+    uniqueID: 807051289
     locked: 0
   m_RenderingLayers:
   - Default

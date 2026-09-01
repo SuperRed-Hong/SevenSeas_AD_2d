@@ -1,6 +1,6 @@
 # Fishing Loop Implementation — Teaching Plan for Codex
 
-Date: 2026-08-29
+Date: 2026-08-29 (M5 and M6 rewritten 2026-09-01 for design revisions 6–8)
 Companion to: [2026-08-29-fishing-loop-design.md](2026-08-29-fishing-loop-design.md) (the approved design — read it first, this plan doesn't repeat its content)
 
 ## Read this before starting, Codex
@@ -243,11 +243,21 @@ production scene instead.
   that reuse explicitly), the 8s timeout timer, transition to `Striking` on a
   win or `Reeling` (empty) on timeout.
 
-### M5 — Striking: the reversed flick + reaction window
+### M5 — Striking: the shrinking-ring timing check
+
+> **The design changed under this milestone — read design doc revision 6
+> (§3/§4/§5) before teaching any of it.** `Striking` is no longer "reverse-flick
+> inside 0.7 s or lose a hook." It is a **shrinking ring / radial timing skill
+> check**: a fixed full-ring target band, a moving ring that shrinks linearly to
+> the centre over `windowDuration`, an attempt (reverse flick *or* keyboard
+> Space) judged against where the ring is at that instant, and an out-of-band
+> attempt that is **rejected with a short input cooldown** rather than fatal.
+> The earlier version of this section described a different mechanic and is
+> superseded.
 
 - **Before anything else — `CastGestureDetector` deep dive (coached, not a
-  reading assignment):** this milestone reuses that detector directly, so
-  understand its state machine for real before touching it. Source:
+  reading assignment):** unchanged from the previous plan, and now load-bearing
+  rather than background. Source:
   [`docs/reference/motion-input-guide.md`](../reference/motion-input-guide.md)
   §5 and §9.2. Ask before explaining: "a naive flick detector would be
   `if (angularVelocity > threshold) Launch();` — what breaks with that, and
@@ -260,56 +270,257 @@ production scene instead.
   having them notice that on their own) before moving on. **Checkpoint before
   the rest of this milestone:** the student should be able to explain,
   unprompted, the trigger/rearm threshold pair and the filtered-vs-raw-peak
-  choice — those are exactly what the "backward flick" detector this milestone
-  builds also depends on.
-- **Thinking prompts:** "`CastGestureDetector` already has an `InvertAxis`
-  option on its tuning profile and reports a signed `DirectedVelocity`. Given
-  that, what's the smallest change that gets you a *second* detector that fires
-  on the opposite wrist-snap direction, instead of writing new gesture-detection
-  code?"
-- **Architecture discussion:** walk through composition here explicitly — a
-  second `CastGestureDetector` instance paired with a second
-  `CastTuningProfile` asset (same axis, `InvertAxis` flipped) versus adding a
-  "which direction" mode flag inside the existing detector. Ask the student
-  which they'd pick and why *before* confirming; the "two instances, no new
-  detection code" route is recommended, but let them reason to it.
-- **Known risk to walk through explicitly (confirmed against the source, not
-  hypothetical):** both detector instances would run their own independent
-  `Ready → Sampling → CastDetected → Cooldown` state machine every frame if
-  left always-enabled, each reading the same `GyroscopeReader` but not sharing
-  state with each other — so cross-instance interference isn't the issue. The
-  real issue: if the "backward" detector sits enabled during `ReadyToCast` or
-  `Baiting`, ordinary hand jitter could trip its own threshold early, drop it
-  into `Cooldown`, and leave it unable to respond right when `Striking` actually
-  needs it — a false negative on a real strike attempt. Fix: don't leave either
-  detector always-on. Toggle each one's `enabled` to match its relevant state
-  (cast detector only during `ReadyToCast`, strike detector only during
-  `Striking`) — `CastGestureDetector.OnEnable()` already calls
-  `ResetDetector()`, so enabling it fresh at the right moment is the reset, no
-  new reset code needed. Have the student verify this reasoning against the
-  actual script before relying on it, the same way you're telling them to
-  verify everything else.
-- **Implementation steps:** create the inverted tuning profile asset, add the
-  second detector instance (disabled by default), start a 0.7s window timer and
-  enable the strike detector on entering `Striking` (disable it again on exit),
-  transition to `Reeling` (with fish) on a successful backward flick within the
-  window, or fail (lose a hook, back to `ReadyToCast`/`GameOver`) on timeout.
+  choice.
+
+- **Thinking prompt 1 — latency. Do this one first; its answer decides the
+  architecture.** "`CastDetected` does not fire when you flick. It fires after
+  `Sampling` has run for `SampleWindow`. Walk me through what that means for a
+  check where the ring is moving every frame — where would the ring actually be
+  by the time that event arrives? Now look at the detector again: is there any
+  point in its state machine that *does* correspond to the moment of the flick?"
+  The student has already added `GestureTriggered` for exactly this purpose, so
+  the goal is not to inform them it exists — it is to have them re-derive *why*
+  it has to exist. Let them find it in their own code; don't hand it over.
+
+- **Thinking prompt 2 — the shape of the check.** "The ring shrinks linearly
+  from 1 to 0 across the window, and the band is a fixed slice of that range. If
+  the band is 0.16 wide and the window is 1.5 s, how long is the player actually
+  inside it? What does that tell you about which numbers belong in the
+  Inspector, and which should be computed from the others?"
+
+- **Thinking prompt 3 — why reject instead of fail.** "The old design failed the
+  whole attempt on a mistimed flick. The new one ignores it and starts a
+  cooldown. What does that change about how a player learns this mechanic? And
+  what stops someone from just mashing Space through the whole window?" (The
+  answer to reach on their own: the cooldown *is* the cost — a badly-timed
+  attempt can swallow the one moment the ring is inside the band.)
+
+- **Thinking prompt 4 — ownership.** "Three things happen when an attempt
+  misses: the rings flash red, the camera shakes, and the state machine does
+  nothing at all. Which component should know about each? And where does the
+  ring's position get computed — who is allowed to compute it?"
+
+- **Architecture discussion:**
+  - **Two events, two consumers.** `CastDetected` (delayed, carries power) stays
+    the cast path's event; `GestureTriggered` (immediate, parameterless) is the
+    strike path's. Point out this is the same decoupling principle already used
+    for `CastBallController.Landed` and the production hook's `Landed(Vector2)`
+    — one producer, several consumers with different needs — and that adding a
+    second event was cheaper and safer than bending one event to serve both.
+  - **Two cooldowns, one authority.** The detector has its own
+    `Sampling → CastDetected → Cooldown` lockout; `StrikeController` has
+    `attemptCooldown`. Have the student add up the detector's lockout from the
+    cast profile's values (`0.35 + 0.2 + 0.75 ≈ 1.3 s`) and compare it against a
+    1.5 s strike window *before* you say anything. Let them discover that a
+    single rejected attempt would otherwise guarantee a timeout. Then decide
+    together: `StrikeGestureProfile` gets a minimal `SampleWindow` and
+    `CooldownDuration`, the strike detector instance gets
+    `castDetectedDisplayDuration = 0`, and `StrikeController.attemptCooldown`
+    becomes the only thing pacing attempts.
+  - **Normalized contract between logic and view.** `StrikeController` publishes
+    a normalized ring radius and normalized band bounds; `StrikeWindowHUD` draws
+    them and computes nothing. Point at the motion-input guide's §0 rule — "the
+    HUD never calculates anything" — as existing project precedent, and at the
+    concrete bug it prevents here: a HUD running its own `elapsed / duration`
+    clock will drift from the one the controller judges against, and the player
+    will lose on an attempt that looked correct on screen. This is the single
+    most likely real bug in this milestone; say so plainly.
+  - **Why a full ring band and not an arc.** The strike input has no direction or
+    aim component, so an arc would promise an aiming task the input cannot
+    express. Worth one beat — a good small example of visual language making a
+    promise the mechanic then has to keep.
+  - **Where the hook loss lives.** `StrikeController` reports "timed out";
+    `FishingLoopController` decides that this means losing a hook. Same split
+    the student already built in M4, where `FishBiteRaceController` picks the
+    winner and the state machine decides what winning means. Ask them to notice
+    the repeat before you name it.
+  - **Where the tuning numbers live — ask this before they write any of them
+    down.** "You are about to add five numbers that the design doc explicitly
+    says can only be settled by playing. Where are you going to put them? Now
+    walk me through what happens to a value you type into the Inspector *during*
+    Play Mode when you press stop." Most students have to be bitten once to
+    believe this, so if they aren't sure, have them try it — type a value on a
+    component in Play Mode, stop, watch it revert. Then ask what is different
+    about `CastTuningProfile`, which they have already been reading all
+    milestone. The project contains both outcomes: `CastTuningProfile` is a
+    `ScriptableObject` and survives; `AttitudeCircleController`'s tuning lives on
+    the scene component and produced M2's "were 10 and 30 test values or real
+    ones?" confusion, still recorded in `findings.md`. Let them reach the rule —
+    feel/balance numbers go in a profile asset, object references and
+    per-instance placement stay on the component — and only then confirm it
+    against design §4's "Tuning data" subsection.
+    Second half of the same discussion: `Striking` needs **two** assets, not
+    one. Ask why the ring parameters can't just be added to `CastTuningProfile`.
+    (Because it is shared with the cast path and the isolated `GyroscopeCastTest`
+    scene, and neither has any idea what a ring is. Bloating a shared asset to
+    serve one new consumer is the same mistake as bending `CastBallController`
+    to serve the vertical cast in M3 — a comparison worth drawing out loud.)
+  - **Profiles that check themselves.** `windowDuration`, the two band radii and
+    `attemptCooldown` have relationships between them, and breaking one produces
+    silent nonsense rather than an error — an inside-out band simply can never be
+    hit, with nothing in the Console to say so. Ask what the profile could do
+    about that before naming `OnValidate`, and point at how
+    `CastTuningProfile.EvaluatePower` already guards its own divide-by-zero as
+    the in-house precedent.
+
+- **Known risk to carry over from the previous plan (still true, still verified
+  against the source):** don't leave either detector always-enabled. Ordinary
+  hand jitter can trip the strike detector's threshold during `ReadyToCast` or
+  `Baiting`, drop it into `Cooldown`, and leave it deaf right when `Striking`
+  needs it — a false negative on a real strike attempt. Toggle each detector's
+  `enabled` to match its relevant state. `CastGestureDetector.OnEnable()`
+  already calls `ResetDetector()`, so enabling it fresh at the right moment *is*
+  the reset; no new reset code is needed. Have the student confirm that in the
+  actual script rather than taking it from this plan.
+
+- **One thing to decide explicitly, not by accident:** the detector runs on
+  `Time.unscaledTime`, while the rest of the fishing loop runs on scaled
+  gameplay time. Ask the student which clock `StrikeController` should use for
+  the window and the cooldown, and make sure the HUD and the judgement end up on
+  the same one either way.
+
+- **Implementation steps** (the student types and clicks every one; check in
+  after each, don't dump the sequence):
+  1. Create the `StrikeGestureProfile` asset — a `CastTuningProfile` instance:
+     same axis as the cast profile, `InvertAxis` set to the opposite of whatever
+     the cast profile currently uses, and the minimal
+     `SampleWindow`/`CooldownDuration` decided above. Say out loud that its
+     `Power` and `Launch` sections are dead weight on this path, and why that's
+     acceptable rather than a smell.
+  2. Add the second `CastGestureDetector` instance, disabled by default, wired
+     to that profile.
+  3. Confirm `GestureTriggered` fires on the frame of the flick — a temporary
+     `Debug.Log` with `Time.unscaledTime` beside one on `CastDetected` makes the
+     `SampleWindow` gap visible. Have them *see* the gap, not just believe it.
+  4. Write the `StrikeWindowProfile` `ScriptableObject` and create its asset:
+     `windowDuration`, both band radii, `attemptCooldown`, shake
+     amplitude/duration, plus the `OnValidate` checks discussed above. Match
+     `CastTuningProfile`'s house style exactly — `[Header]`, a `[Tooltip]` per
+     field, `[Min]`/`[Range]` bounds, private `[SerializeField]` backing fields
+     behind read-only properties, `[CreateAssetMenu]` under `Seven Seas/`.
+     Having them mirror an existing file field-for-field is the point here.
+  5. Write `StrikeController`: window timer, normalized ring radius, band
+     bounds, attempt intake from both input paths, the in-band test, the
+     cooldown, and the three events (succeeded / timed out / attempt rejected).
+     It holds a reference to the profile and reads every tunable from it; the
+     only `[SerializeField]`s on the component itself are references.
+  6. Check the keyboard side against the current source together rather than
+     re-adding it: `FishingInputSource.StrikePerformed` and `SetStrikeEnabled`
+     already exist, and the keyboard implementation already raises Strike on
+     Space. Reading their own earlier code as an API is a skill worth practising
+     here.
+  7. Write `StrikeWindowHUD`: draw the fixed band and the moving ring from the
+     controller's normalized values only, plus the red flash on rejection.
+  8. Add the camera-shake component subscribing to the same rejection event.
+  9. Wire `FishingLoopController`: on entering `Striking`, start the controller
+     and enable the strike detector; on success go to `Reeling` with a fish; on
+     timeout lose a hook and return to `ReadyToCast`/`GameOver`; on exit disable
+     the detector and hide the HUD.
+  10. **Play Mode tuning pass — a required step, not polish.** `windowDuration`,
+     the two band radii, `attemptCooldown` and the shake amplitude are all
+     starting guesses in the design doc, explicitly flagged as such. Sit with
+     the student and tune them by feel, the same way the calibration tolerance
+     and the smoothing values were settled in M2.
 
 ### M6 — Reeling: auto-retrieve + dodge + accelerate/tension
 
-- **Thinking prompts:** "How would you represent 'tension' as a number that
-  rises while a button is held and falls otherwise, updated once per frame?
-  What happens at the two ends of that range?"
-- **Architecture discussion:** a simple clamped accumulator
-  (`tension = Clamp(tension + rate*dt or -decay*dt, 0, max)`) is enough — no
-  need for anything fancier. Also a good moment to discuss sharing a single
-  "attempt failed" path between the rock-collision case and the tension-snap
-  case (§3/§5 of the design already treats them as equivalent consequences) —
-  ask the student to notice the duplication before pointing it out.
-- **Implementation steps:** constant-speed retrieval toward shore, tilt-driven
-  left/right dodge, rock colliders + collision handling, button-held read
-  driving both retrieval-speed boost and the tension accumulator, tension bar
-  UI, snap-at-max event, success-at-shore scoring.
+> **The tension model changed — read design doc revision 7 (§3 `Reeling`, §4,
+> §5.1 and §5.6) before teaching this.** Tension is no longer "rises while a
+> button is held, falls otherwise." It is a **sum of rates**, clamped `0–1`:
+> an always-on passive decay, an accelerate rise rate larger than that decay,
+> and a lateral contribution scaled by the hook's **actual** lateral speed. The
+> last two stack.
+
+- **Thinking prompt 1 — the shape of the update.** "Tension now has three
+  contributions and only one of them is always on. Write me the single line that
+  updates it once per frame. Would you rather write that as an if/else chain or
+  as one sum? What does each version do when two contributions apply at once?"
+  (Where they should land: sum the rates first, apply once, clamp once —
+  stacking then falls out for free instead of needing a branch per combination.)
+
+- **Thinking prompt 2 — measuring the right thing. This is the one that
+  actually bites.** "The dodge control has an input value, and the hook has a
+  position. Which of the two should feed tension? Now imagine the player is
+  holding the dodge control hard against the left lane boundary — what does each
+  choice charge them?" Let them find the answer themselves; it is a good one:
+  full input with zero movement must cost nothing, so tension has to read the
+  hook's real per-frame movement, not the intent behind it. Follow up with "what
+  else does that choice protect you from?" (any smoothing, any clamping, and any
+  future change to how the dodge control works).
+
+- **Thinking prompt 3 — the mapping.** "You have a safe speed, a maximum
+  evaluated speed, and a maximum contribution. What turns a raw speed into a
+  0–1 position between the first two? Have you written this shape before in
+  this project?" They have — **twice**: `CastTuningProfile.EvaluatePower(peak)`
+  (`minimumPeak` → `maximumPeak` via `Mathf.InverseLerp`) and
+  `AttitudeCircleController.NormalizeTilt` (dead zone → max tilt). Getting them
+  to *recognise* the third instance of a shape they already built is worth more
+  here than the code itself. Name it once they see it: dead zone, ramp, clamp.
+
+- **Thinking prompt 4 — the two balance conditions.** "Decay is subtracted every
+  frame no matter what. What has to be true of `accelerateRiseRate` for holding
+  the button to do anything at all? And of `maxLateralTensionRate` for fast
+  dodging to do anything? Is there a speed at which dodging exactly cancels the
+  decay — and would a player be able to feel where it is?"
+
+- **Thinking prompt 5 — firing once.** "The snap fires when tension hits
+  maximum. Tension is clamped, so it *stays* at maximum. What stops the event
+  firing again every frame after that?"
+
+- **Architecture discussion:**
+  - **One accumulator, summed rates, one clamp.** No branchy per-case logic;
+    stacking should be arithmetic, not a special case. Contrast the two versions
+    if it helps — the sum version is also the one that stays correct when a
+    fourth contribution is added later.
+  - **Actual vs. intended, as a general principle.** Tension reads *result* (the
+    hook moved) rather than *intent* (the player pushed). Tie it back to M5's
+    HUD rule: there, the display had to read the controller's value instead of
+    recomputing it; here, tension has to read the hook's movement instead of
+    re-deriving it from input. Same failure mode both times — two places
+    computing what should only be computed once.
+  - **Frame ordering.** Lateral speed must be sampled *after* the dodge has
+    moved the hook this frame, or tension trails the movement by a frame. Worth
+    making them say out loud where in the frame each step happens.
+  - **The `maxEvaluatedLateralSpeed` clamp is also the spike guard.** A single
+    frame hitch can produce an enormous `Δx / deltaTime`; because the mapping
+    clamps, the worst that can do is one frame at maximum contribution. Point
+    out that the clamp is load-bearing for two different reasons, so nobody
+    removes it later thinking it is only about tuning.
+  - **Where tension lives.** Its own component that the reeling controller reads
+    and calls into, versus fields inside the reeling controller. Same question
+    shape as M7's "where should hooks remaining live" — ask it here first, then
+    let M7 be the easy repeat.
+  - **The shared "attempt failed" path** between rock collision and tension snap
+    (§3/§5 of the design already treat them as identical consequences). Ask the
+    student to notice the duplication before you point it out — this beat
+    predates revision 7 and is still worth having.
+
+- **Implementation steps** (the student types and clicks every one):
+  1. Constant-speed retrieval toward the shore.
+  2. Tilt/`MoveInput`-driven left/right dodge, clamped to the lane range.
+  3. Rock colliders and collision handling, routed through a single
+     attempt-failed path.
+  4. Measure the hook's actual lateral speed from its per-frame movement, taking
+     the absolute value. Have them log it and watch it while dodging *before*
+     wiring it to anything — including watching it read zero while shoving
+     against a lane boundary.
+  5. The `ReelTuningProfile` `ScriptableObject` and its asset: retrieval speed,
+     accelerated speed, and all five tension parameters, plus `OnValidate`
+     checks for the two "greater than `decayRate`" invariants and
+     `maxEvaluatedLateralSpeed > safeLateralSpeed`. Same house style as M5's
+     profile — by now this should be a short step, and that is the point.
+  6. The tension accumulator: three rates, summed, clamped `0–1`, all values
+     read from the profile.
+  7. The tension bar UI, reading the `0–1` value and computing nothing.
+  8. The snap-at-max event, fired exactly once.
+  9. Success-at-shore scoring.
+  10. **Play Mode tuning pass — required, and it has a mandatory first step.**
+     `safeLateralSpeed` and `maxEvaluatedLateralSpeed` are in world units per
+     second, so they are meaningless until the hook's real maximum lateral speed
+     is known. Measure that number first (step 4's log already shows it), then
+     set the thresholds from it, then tune the three rates against the table in
+     design §3. Walk design §7 item 6's sub-checks a–f one at a time rather than
+     judging the whole system by feel at once.
 
 ### M7 — Lives, timer, score, GameOver UI
 

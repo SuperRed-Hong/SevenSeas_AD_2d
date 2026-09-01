@@ -18,7 +18,7 @@ public sealed class FishController : MonoBehaviour
     private int scoreValue = 1;
 
     private Transform approachTarget;
-
+    private Transform hookedTarget;
     public FishState State { get; private set; } =
         FishState.Idle;
 
@@ -49,14 +49,36 @@ public sealed class FishController : MonoBehaviour
             approachTarget.position,
             swimSpeed * Time.deltaTime);
     }
-    public void MarkHooked()
+    public void MarkHooked(Transform target)
     {
-        approachTarget = null;
-        State = FishState.Hooked;
-    }
+        if (target == null)
+        {
+            Debug.LogError(
+                $"{name} requires a hook target.");
 
+            return;
+        }
+
+        approachTarget = null;
+        hookedTarget = target;
+        State = FishState.Hooked;
+
+        transform.position = hookedTarget.position;
+    }
+    private void LateUpdate()
+    {
+        if (State != FishState.Hooked ||
+            hookedTarget == null)
+        {
+            return;
+        }
+
+        // Follow after the hook has completed its movement this frame.
+        transform.position = hookedTarget.position;
+    }
     public void ResetToIdle()
     {
+        hookedTarget = null;
         approachTarget = null;
         State = FishState.Idle;
     }
