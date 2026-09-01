@@ -88,3 +88,16 @@
 - Student implemented `FishController`, runtime attraction-range discovery, approach movement, deterministic first-winner resolution, loser reset, and the eight-second timeout infrastructure.
 - Student added `FishSpawner` for a configurable fish count at random non-overlapping positions inside a BoxCollider2D area, plus a `BasicFish` prefab on a dedicated `Fish` physics layer.
 - Added and verified an Editor-only M4 Test Harness path that runs the current scene without AppRoot or phone sensors. The initial stationary-fish failure was diagnosed from serialized data: both `BasicFish` and the race LayerMask excluded the `Fish` layer. After correcting both, range candidates were discovered and fish approached the bait.
+
+## 2026-09-01
+
+- Began a second keyboard/mouse control path using Unity's Input System without duplicating the fishing state machine. `FishingInputSource` carries semantic Move, Cast, Strike, and Accelerate intentions; the keyboard implementation references the `Fishing` action map.
+- Bound A/D through the Move action and Space to state-gated Cast, Strike, and Accelerate actions. Cast uses a one-frame press event, while later acceleration will use held state with a release-before-accelerate guard after Strike.
+- Repurposed the M4-only direct-play Harness into a full-loop Editor entry: it now bypasses only Bootstrap/calibration prerequisites and no longer disables gameplay controllers, repositions the hook, or calls `BeginRace()` directly.
+- Made `FishingLoopController.Start()` tolerate missing `AppRoot` during direct Editor play while preserving gyroscope reader injection when Bootstrap is present.
+- Diagnosed failed Editor A/D movement: `ShoreLaneController.Update()` returned when both lane limits were valid because the null check was inverted; the scene also lacked the saved input-source reference.
+- Rejected the attempted absolute/virtual target keyboard scheme after playtesting showed poor stopping control. The student explicitly chose velocity control for both keyboard and mobile attitude: input magnitude controls speed, neutral input means immediate stop.
+- Replaced the final lane mapping with frame-rate-independent velocity integration plus world-space boundary clamping. Editor A/D verification passed: releasing the key stops accurately at the current position.
+- Moved the non-mobile calibration bypass into `FishingSceneEntryGuard`, where entry prerequisites belong. Editor/desktop now start gameplay without posture calibration; the mobile path still requires the persistent calibration service.
+- The former M4 Harness is no longer required for full-loop Editor testing because the normal scene entry and state machine now support the keyboard path directly.
+- Full Editor integration passed: A/D moved and stopped precisely, Space cast once, the hook landed, nearby fish responded in Baiting, and the bite path advanced to Striking.

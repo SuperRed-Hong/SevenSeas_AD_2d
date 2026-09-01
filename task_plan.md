@@ -71,8 +71,9 @@ Status: **in-progress**
 - [complete] Student implements and wires the position-target lane controller (variant A).
 - [complete] Student designs and implements a shared 3-second motion-calibration service that survives scene changes through `AppRoot`.
 - [in-progress] Student adds explicit calibration entry points in the main menu and pause menu, with hold-still progress and retry feedback. Main-menu entry and mandatory fishing-scene fallback are complete; pause-menu reuse remains pending until pause UI exists.
-- [deferred] Student implements a velocity-controlled lane variant B using the same calibration, dead-zone, and normalization pipeline.
-- [deferred] Student runs an A/B playtest of position-target control versus tilt-as-velocity control and explicitly selects the final lane scheme.
+- [complete] Student replaces position-target lane mapping with one velocity-controlled scheme shared by keyboard direction and normalized phone tilt; neutral input means immediate stop.
+- [complete] Student explicitly selects velocity control after the absolute-target keyboard experiment proved difficult to stop precisely.
+- [in-progress] Verify the selected velocity scheme on Android: greater tilt increases speed, dead-zone/neutral stops immediately, and lane bounds still clamp correctly.
 - [complete] Student subscribes to cast detection and captures lane + power.
 - [complete] Student verifies ordinary lane tilting does not cast accidentally.
 - [complete] Student checks lane-motion input against the cast detector and confirms direction, rather than threshold magnitude, caused the observed backswing false trigger.
@@ -105,9 +106,20 @@ Status: **in-progress — fish race implementation and integration**
 - [complete] Student implements `Fish` state and score data.
 - [complete] Student implements detection range and approach movement.
 - [not-started] Student implements tilt-driven bait wiggle within a small radius.
-- [in-progress] Student implements deterministic winner resolution and loser reset; code exists, formal event-path verification remains.
+- [complete] Student implements and verifies deterministic winner resolution and loser reset through the full Editor loop.
 - [in-progress] Student implements the 8-second timeout; code exists, formal state-transition verification remains.
-- [not-started] Student transitions to `Striking` on a bite or empty `Reeling` on timeout.
+- [in-progress] Student verifies the bite path transitions to `Striking`; the empty `Reeling` timeout path still needs an isolated/full-loop verification.
+
+## Cross-platform input test infrastructure
+
+Status: **in-progress**
+
+- [complete] Student creates a common semantic `FishingInputSource` contract and a keyboard/mouse implementation using Unity's Input System.
+- [complete] `ReadyToCast` gates Move and Cast input; Space emits one Cast event and A/D emits signed velocity input.
+- [complete] `FishingSceneEntryGuard` treats calibration as a mobile-only prerequisite, so Editor/desktop full-loop play starts without a motion-calibration panel.
+- [complete] Editor A/D test verifies release produces zero velocity and stops accurately at the current lane position.
+- [complete] Verify Space drives `ReadyToCast -> Casting`, hook landing, Baiting, fish response, and the bite transition in the full Editor loop.
+- [not-started] Add keyboard Strike and Accelerate behavior when M5/M6 reaches those states.
 
 ## M5 — Striking: reversed flick + reaction window
 
@@ -167,7 +179,7 @@ Status: **not-started**
 
 ## Current next action
 
-Subscribe `FishingLoopController` to `FishBiteRaceController.FishHooked` and `TimedOut`, preserve the winning fish for later score/reeling logic, and verify the transitions to `Striking` or empty `Reeling`. Continue the full M4/M6 scope unless the student later explicitly chooses and documents a simplification. The final 2D-simulated-3D parabola remains a deferred internal M3 trajectory upgrade.
+Implement M4 bait wiggle within its configured radius using the shared `FishingInputSource.MoveInput`, after the required think-first and ownership discussion. Then verify the empty eight-second Baiting timeout path. Continue the full M4/M6 scope unless the student later explicitly chooses and documents a simplification. The final 2D-simulated-3D parabola remains a deferred internal M3 trajectory upgrade.
 
 ## Errors
 

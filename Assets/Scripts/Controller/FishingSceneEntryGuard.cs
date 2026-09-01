@@ -29,6 +29,14 @@ public sealed class FishingSceneEntryGuard : MonoBehaviour
 
     private void Start()
     {
+        // Desktop and Editor use non-motion controls,
+        // so attitude calibration is not required.
+        if (!Application.isMobilePlatform)
+        {
+            BeginGameplay();
+            return;
+        }
+        
         if (AppRoot.Instance == null)
         {
             Debug.LogError(

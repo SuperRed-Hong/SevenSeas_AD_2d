@@ -13,16 +13,19 @@ public sealed class KeyboardMouseFishingInputSource : FishingInputSource
     private float castPower = 1f;
     [SerializeField, Min(0f)]
     [Tooltip("How fast keyboard input moves the virtual position across the normalized range.")]
-    private float moveSpeed = 1f;
-    
-    private Vector2 virtualMoveInput;
+   
+   
     private bool castEnabled;
     private bool strikeEnabled;
     private bool accelerateEnabled;
     private bool accelerateRequiresRelease;
     private bool moveEnabled;
-    
-    public override Vector2 MoveInput => moveAction !=null&& moveAction.action.enabled ? moveAction.action.ReadValue<Vector2>() : Vector2.zero;
+
+    public override Vector2 MoveInput => moveEnabled &&
+                                         moveAction != null &&
+                                         moveAction.action.enabled
+        ? moveAction.action.ReadValue<Vector2>()
+        : Vector2.zero;
     
     public override bool AccelerateHeld => accelerateEnabled && !accelerateRequiresRelease &&
                                            accelerateAction != null&&
@@ -49,22 +52,7 @@ public sealed class KeyboardMouseFishingInputSource : FishingInputSource
     private void Update()
     {
         
-        if (moveEnabled &&
-            moveAction != null &&
-            moveAction.action.enabled)
-        {
-            Vector2 direction =
-                moveAction.action.ReadValue<Vector2>();
-
-            virtualMoveInput +=
-                direction * moveSpeed * Time.deltaTime;
-
-            virtualMoveInput.x =
-                Mathf.Clamp(virtualMoveInput.x, -1f, 1f);
-
-            virtualMoveInput.y =
-                Mathf.Clamp(virtualMoveInput.y, -1f, 1f);
-        }
+       
         
         if (castEnabled &&
             castAction != null &&
