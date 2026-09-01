@@ -200,7 +200,7 @@ MonoBehaviour:
   strikeAction: {fileID: 193975636249741299, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   accelerateAction: {fileID: 7831108344197571277, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   castPower: 1
-  moveSpeed: 1
+  castEnabled: 0
 --- !u!1 &54734068
 GameObject:
   m_ObjectHideFlags: 0
@@ -1967,11 +1967,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShoreLaneController
   leftLaneLimit: {fileID: 343555767}
   rightLaneLimit: {fileID: 588569526}
-  invertLane: 0
+  inputSource: {fileID: 3372223}
+  invertLane: 1
   deadZoneDegrees: 3
   maxTiltDegrees: 25
   maxSupportedTiltDegrees: 75
-  smoothing: 30
+  maxLaneSpeed: 4
 --- !u!212 &1165585710
 SpriteRenderer:
   serializedVersion: 2
@@ -2755,7 +2756,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1636518287}
   - component: {fileID: 1636518286}
-  - component: {fileID: 1636518288}
   m_Layer: 0
   m_Name: FishingSceneEntry
   m_TagString: Untagged
@@ -2792,25 +2792,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1636518288
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1636518285}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6c143815fe003754ba24195e5bffb3ad, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::M4BaitingTestHarness
-  sceneEntryGuard: {fileID: 1636518286}
-  gameplayRoot: {fileID: 1088370656}
-  fishingLoopRoot: {fileID: 3372219}
-  shoreLaneController: {fileID: 1165585709}
-  hookController: {fileID: 1322915245}
-  biteRaceController: {fileID: 1322915247}
-  testHookPosition: {x: 0, y: 1.5}
 --- !u!1 &1758520030
 GameObject:
   m_ObjectHideFlags: 0
