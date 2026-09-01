@@ -66,7 +66,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _caustics_fade:
-        m_Texture: {fileID: 2800000, guid: a9f1be8fd07dbb345912fa871baea302, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _caustics_texture:
@@ -90,14 +90,17 @@ Material:
     - _EnableExternalAlpha: 0
     - _QueueControl: 0
     - _QueueOffset: 0
+    - _XRMotionVectorsPass: 1
     - _ZWrite: 0
     - _caustics_density: 0.5
     - _caustics_speed: 0.1
     - _caustics_texture_mult: 5
     - _caustics_thickness: 0.05
+    - _caustics_tiling: 7
     - _fade_density: 0.55
     - _fade_intensity: 0.5
-    - _pixel_size: 400
+    - _pixel_size: 10
+    - _pixel_size_2: 10
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
