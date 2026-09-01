@@ -53,12 +53,24 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _SampleTexture2D_95bb708954a042848434b19f7e0a164f_Texture_1_Texture2D:
+        m_Texture: {fileID: 2800000, guid: a9f1be8fd07dbb345912fa871baea302, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _UVDistortion_7cc766eaa15248488fe192ee82af640d_NoiseMap_647888222_Texture2D:
+        m_Texture: {fileID: 2800000, guid: a9f1be8fd07dbb345912fa871baea302, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _cauastics_texture:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _caustics_fade:
+        m_Texture: {fileID: 2800000, guid: a9f1be8fd07dbb345912fa871baea302, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _caustics_texture:
-        m_Texture: {fileID: 2800000, guid: 1308f2485fba2c340a814c940716b1d0, type: 3}
+        m_Texture: {fileID: 2800000, guid: ed6e5a20c8c168d4f9257461d30eade1, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - unity_Lightmaps:
@@ -79,13 +91,18 @@ Material:
     - _QueueControl: 0
     - _QueueOffset: 0
     - _ZWrite: 0
-    - _caustics_density: 5
-    - _caustics_speed: 1
-    - _caustics_texture_mult: 10
-    - _caustics_thickness: 0
+    - _caustics_density: 0.5
+    - _caustics_speed: 0.1
+    - _caustics_texture_mult: 5
+    - _caustics_thickness: 0.05
+    - _fade_density: 0.55
+    - _fade_intensity: 0.5
+    - _pixel_size: 400
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
+    - _base_color: {r: 0.19090417, g: 0.4723826, b: 0.62264144, a: 1}
     - _caustics_color: {r: 0.5591154, g: 0.6918238, b: 0.6770613, a: 1}
+    - _caustics_direction: {r: -0.2, g: -1, b: 0, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
