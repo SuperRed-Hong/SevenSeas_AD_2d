@@ -20,7 +20,8 @@ public sealed class CastGestureDetector : MonoBehaviour
     private bool isArmed = true;
 
     public event Action<float> CastDetected;
-
+    public event Action GestureTriggered;
+    
     public CastDetectionState State { get; private set; }
     public float DirectedVelocity { get; private set; }
     public float FilteredVelocity { get; private set; }
@@ -127,6 +128,10 @@ public sealed class CastGestureDetector : MonoBehaviour
         FilteredPeak = Mathf.Max(0f, FilteredVelocity);
         SamplingProgress = 0f;
         isArmed = false;
+        
+        // Notify binary gesture consumers immediately.
+        // Cast power calculation continues through the Sampling state.
+        GestureTriggered?.Invoke();
     }
 
     private void UpdateSamplingState()

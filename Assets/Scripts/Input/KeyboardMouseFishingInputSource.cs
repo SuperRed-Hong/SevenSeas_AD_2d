@@ -53,6 +53,13 @@ public sealed class KeyboardMouseFishingInputSource : FishingInputSource
     {
         
        
+        if (accelerateRequiresRelease &&
+            accelerateAction != null &&
+            !accelerateAction.action.IsPressed())
+        {
+            accelerateRequiresRelease = false;
+        }
+        
         
         if (castEnabled &&
             castAction != null &&
@@ -60,6 +67,16 @@ public sealed class KeyboardMouseFishingInputSource : FishingInputSource
         {
             RaiseCastPerformed(castPower);
         }
+        
+        
+        if (strikeEnabled &&
+            strikeAction != null &&
+            strikeAction.action.WasPressedThisFrame())
+        {
+            RaiseStrikePerformed();
+        }
+        
+        
     }
     public override void SetCastEnabled(bool value)
     {

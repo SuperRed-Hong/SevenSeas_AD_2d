@@ -123,7 +123,7 @@ public sealed class FishBiteRaceController : MonoBehaviour
 
             if (candidate == winner)
             {
-                candidate.MarkHooked();
+                candidate.MarkHooked(transform);
             }
             else
             {

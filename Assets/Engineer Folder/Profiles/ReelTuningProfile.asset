@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2fd4d1f5c9fa4d1ca1e062a34b1562cc, type: 3}
+  m_Name: ReelTuningProfile
+  m_EditorClassIdentifier: Assembly-CSharp::ReelTuningProfile
+  retrievalSpeed: 2
+  acceleratedRetrievalSpeed: 4
+  dodgeSpeed: 4
+  decayRate: 0.8
+  accelerateRiseRate: 1.2
+  safeLateralSpeed: 1.33
+  maxEvaluatedLateralSpeed: 4
+  maxLateralTensionRate: 1.4
