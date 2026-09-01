@@ -139,10 +139,7 @@ public sealed class StrikeController : MonoBehaviour
     
     private void OnEnable()
     {
-        if (gestureDetector != null)
-        {
-            gestureDetector.GestureTriggered += HandleAttempt;
-        }
+   
 
         if (inputSource != null)
         {
@@ -152,10 +149,7 @@ public sealed class StrikeController : MonoBehaviour
 
     private void OnDisable()
     {
-        if (gestureDetector != null)
-        {
-            gestureDetector.GestureTriggered -= HandleAttempt;
-        }
+
 
         if (inputSource != null)
         {
