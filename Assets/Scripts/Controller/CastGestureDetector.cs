@@ -12,7 +12,7 @@ public enum CastDetectionState
 
 public sealed class CastGestureDetector : MonoBehaviour
 {
-    [SerializeField] private GyroscopeReader reader;
+    private GyroscopeReader reader;
     [SerializeField] private CastTuningProfile tuningProfile;
     [SerializeField, Min(0f)] private float castDetectedDisplayDuration = 0.2f;
 
@@ -41,7 +41,11 @@ public sealed class CastGestureDetector : MonoBehaviour
         reader = sensorReader;
         tuningProfile = profile;
     }
-
+    public void ConfigureReader(GyroscopeReader sensorReader)
+    {
+        reader = sensorReader;
+        ResetDetector();
+    }
     private void Update()
     {
         if (reader == null || tuningProfile == null || !reader.IsEnabled)

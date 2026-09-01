@@ -13,14 +13,14 @@ MonoBehaviour:
   m_Name: CastTuningProfile
   m_EditorClassIdentifier: Assembly-CSharp::CastTuningProfile
   castAxis: 0
-  invertAxis: 0
+  invertAxis: 1
   triggerThreshold: 1.25
   rearmThreshold: 0.45
   sampleWindow: 0.35
   cooldownDuration: 0.75
   filterSharpness: 20
-  minimumPeak: 1.5
-  maximumPeak: 7
+  minimumPeak: 2
+  maximumPeak: 20
   powerCurve:
     serializedVersion: 2
     m_Curve:

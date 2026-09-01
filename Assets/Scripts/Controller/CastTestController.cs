@@ -5,11 +5,14 @@ public sealed class CastTestController : MonoBehaviour
     [SerializeField] private CastGestureDetector detector;
     [SerializeField] private CastBallController ball;
     [SerializeField] private CastCameraFollow cameraFollow;
-
+    [SerializeField] private GyroscopeReader reader;
     public bool TrialStarted { get; private set; }
     public bool HasResult { get; private set; }
     public float FinalDistance { get; private set; }
-
+    private void Awake()
+    {
+        detector.ConfigureReader(reader);
+    }
     private void OnEnable()
     {
         if (detector != null)
@@ -47,7 +50,7 @@ public sealed class CastTestController : MonoBehaviour
         HasResult = false;
         FinalDistance = 0f;
         detector?.ResetDetector();
-        ball?.ResetBall();
+        ball?.ResetHook();
         cameraFollow?.ResetCamera();
     }
 

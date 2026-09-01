@@ -130,6 +130,9 @@ GameObject:
   - component: {fileID: 210781005}
   - component: {fileID: 210781006}
   - component: {fileID: 210781007}
+  - component: {fileID: 210781010}
+  - component: {fileID: 210781009}
+  - component: {fileID: 210781011}
   m_Layer: 0
   m_Name: AppRoot
   m_TagString: Untagged
@@ -177,6 +180,47 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SceneLoader
   sceneCatalog: {fileID: 11400000, guid: 4e72b40a294ffef43979a125f86d7d82, type: 2}
+--- !u!114 &210781009
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 210781004}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c596eb49e90cd4d4385932cb09120f0b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AttitudeCalibrationService
+  calibrationDurationSeconds: 3
+  samplingFrequency: 30
+  movementToleranceDegrees: 8
+--- !u!114 &210781010
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 210781004}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a6db92153a14777bc25d5d93566ec12, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AttitudeReader
+  requestedSamplingFrequency: 60
+--- !u!114 &210781011
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 210781004}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5577768109947ab4d9dfceef3c2945c1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GyroscopeReader
+  requestedSamplingFrequency: 60
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
