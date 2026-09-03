@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: cf90337965090354488a6ada0f4fc949
+guid: 3424b109cd0d41b4fa5fe766395c10ea
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -2000726247262814106
-    second: basket_0
+      213: 724784300269526115
+    second: landtile1_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: basket_0
+      name: landtile1_0
       rect:
         serializedVersion: 2
-        x: 7
+        x: 0
         y: 0
-        width: 18
-        height: 18
+        width: 29
+        height: 29
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 6608913141efb34e0800000000000000
-      internalID: -2000726247262814106
+      spriteID: 36c58542b73fe0a00800000000000000
+      internalID: 724784300269526115
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      basket_0: -2000726247262814106
+      landtile1_0: 724784300269526115
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: cf90337965090354488a6ada0f4fc949
+guid: 2aec0dc170683b74eaa93c0bcc084995
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -2000726247262814106
-    second: basket_0
+      213: -3418799620844256622
+    second: Fish-_0000s_0005_Middle-1_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -113,10 +113,10 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: basket_0
+      name: Fish-_0000s_0005_Middle-1_0
       rect:
         serializedVersion: 2
-        x: 7
+        x: 0
         y: 0
         width: 18
         height: 18
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 6608913141efb34e0800000000000000
-      internalID: -2000726247262814106
+      spriteID: 2928651cbdbfd80d0800000000000000
+      internalID: -3418799620844256622
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      basket_0: -2000726247262814106
+      Fish-_0000s_0005_Middle-1_0: -3418799620844256622
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
