@@ -130,7 +130,6 @@ GameObject:
   - component: {fileID: 3372221}
   - component: {fileID: 3372220}
   - component: {fileID: 3372222}
-  - component: {fileID: 3372223}
   - component: {fileID: 3372224}
   - component: {fileID: 3372225}
   - component: {fileID: 3372226}
@@ -158,7 +157,7 @@ MonoBehaviour:
   shoreLaneController: {fileID: 1165585709}
   fishBiteRaceController: {fileID: 1322915247}
   reelingController: {fileID: 1322915249}
-  inputSource: {fileID: 3372223}
+  inputSource: {fileID: 503695418}
   hookController: {fileID: 1322915245}
   strikeController: {fileID: 3372225}
   cameraController: {fileID: 1278519479}
@@ -179,7 +178,8 @@ Transform:
   m_LocalPosition: {x: -1213.9548, y: -1274.9396, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1537418612}
   m_Father: {fileID: 1088370657}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &3372222
@@ -196,24 +196,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CastGestureDetector
   tuningProfile: {fileID: 11400000, guid: 6f584bb866529bc4ab7d26adda28b7f7, type: 2}
   castDetectedDisplayDuration: 0.2
---- !u!114 &3372223
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3372219}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 87f0ab93164626e41978e3b2e61ef357, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::KeyboardMouseFishingInputSource
-  moveAction: {fileID: -5402056319397789927, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
-  castAction: {fileID: 7353514185974222918, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
-  strikeAction: {fileID: 193975636249741299, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
-  accelerateAction: {fileID: 7831108344197571277, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
-  castPower: 1
-  castEnabled: 0
 --- !u!114 &3372224
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -241,7 +223,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StrikeController
   gestureDetector: {fileID: 3372224}
-  inputSource: {fileID: 3372223}
+  inputSource: {fileID: 503695418}
   tuningProfile: {fileID: 11400000, guid: b42bbf48901ce0742a4d76974b1f0d5b, type: 2}
 --- !u!114 &3372226
 MonoBehaviour:
@@ -590,7 +572,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FishSpawner
   fishPrefabs:
   - {fileID: 4580026359424680700, guid: 35e98e66b47adf744aa5ee85691c70d4, type: 3}
-  FishCount: 8
+  FishCount: 22
   minimumSpawnSpacing: 0.75
   maximumPlacementAttempts: 50
 --- !u!61 &297207977
@@ -806,6 +788,54 @@ Transform:
   - {fileID: 726003052}
   - {fileID: 1360780277}
   m_Father: {fileID: 457415847}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &503695417
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 503695419}
+  - component: {fileID: 503695418}
+  m_Layer: 0
+  m_Name: InputRouter
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &503695418
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 503695417}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4651f44fcff00142adc13a88af1ccd5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FishingInputRouter
+  desktopSource: {fileID: 2058960712}
+  mobileSource: {fileID: 1975332611}
+--- !u!4 &503695419
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 503695417}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 2058960711}
+  - {fileID: 1975332612}
+  m_Father: {fileID: 1537418612}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &588569525
 GameObject:
@@ -2254,7 +2284,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShoreLaneController
   leftLaneLimit: {fileID: 343555767}
   rightLaneLimit: {fileID: 588569526}
-  inputSource: {fileID: 3372223}
+  inputSource: {fileID: 503695418}
   invertLane: 0
   deadZoneDegrees: 3
   maxTiltDegrees: 25
@@ -2660,7 +2690,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ReelingController
   shoreTarget: {fileID: 1411359331}
-  inputSource: {fileID: 3372223}
+  inputSource: {fileID: 503695418}
   leftLaneLimit: {fileID: 343555767}
   rightLaneLimit: {fileID: 588569526}
   tuningProfile: {fileID: 11400000, guid: e15c0bd70e6d451d95c5e8fc1589a865, type: 2}
@@ -3355,6 +3385,38 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1278519478}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1537418611
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1537418612}
+  m_Layer: 0
+  m_Name: Input
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1537418612
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1537418611}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 503695419}
+  m_Father: {fileID: 3372221}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1636518285
 GameObject:
@@ -4284,6 +4346,56 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1973554389}
   m_CullTransparentMesh: 1
+--- !u!1 &1975332610
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1975332612}
+  - component: {fileID: 1975332611}
+  m_Layer: 0
+  m_Name: MobileInputSource
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1975332611
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1975332610}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa94e0df985e85d41a38ef6b5df563c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MobileFishingInputSource
+  castGestureDetector: {fileID: 3372222}
+  strikeGestureDetector: {fileID: 3372224}
+  invertMove: 0
+  deadZoneDegrees: 3
+  maxTiltDegrees: 25
+  maxSupportedTiltDegrees: 75
+--- !u!4 &1975332612
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1975332610}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 503695419}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2006360102
 GameObject:
   m_ObjectHideFlags: 0
@@ -4426,6 +4538,56 @@ LineRenderer:
   m_UseWorldSpace: 1
   m_Loop: 0
   m_ApplyActiveColorSpace: 1
+--- !u!1 &2058960710
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2058960711}
+  - component: {fileID: 2058960712}
+  m_Layer: 0
+  m_Name: DesktopInputSource
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2058960711
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2058960710}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 503695419}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2058960712
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2058960710}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87f0ab93164626e41978e3b2e61ef357, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::KeyboardMouseFishingInputSource
+  moveAction: {fileID: -5402056319397789927, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
+  castAction: {fileID: 7353514185974222918, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
+  strikeAction: {fileID: 193975636249741299, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
+  accelerateAction: {fileID: 7831108344197571277, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
+  castPower: 1
+  castEnabled: 0
 --- !u!1 &2109608892
 GameObject:
   m_ObjectHideFlags: 0

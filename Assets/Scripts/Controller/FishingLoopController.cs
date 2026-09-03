@@ -115,7 +115,7 @@ public sealed class FishingLoopController : MonoBehaviour
     private void OnEnable()
     {
 
-        castGestureDetector.CastDetected += HandleCastDetected;
+       
         hookController.Landed += HandleHookLanded;
         
         fishBiteRaceController.FishHooked += HandleFishHooked;
@@ -144,7 +144,7 @@ public sealed class FishingLoopController : MonoBehaviour
 
     private void OnDisable()
     {
-        castGestureDetector.CastDetected -= HandleCastDetected;
+        
         hookController.Landed -= HandleHookLanded;
         
         fishBiteRaceController.FishHooked -= HandleFishHooked;
