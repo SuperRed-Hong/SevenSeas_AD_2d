@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::StrikeWindowProfile
   windowDuration: 1.5
   attemptCooldown: 0.35
-  targetBandInnerRadius: 0.498
-  targetBandOuterRadius: 0.63
+  targetBandInnerRadius: 0.442
+  targetBandOuterRadius: 0.624
   shakeAmplitude: 0.233
   shakeDuration: 0.15

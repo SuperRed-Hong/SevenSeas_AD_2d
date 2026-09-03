@@ -150,7 +150,7 @@ Status: **prototype-complete — revision 8 shake-profile wiring and regression 
 
 ## M6 — Reeling: retrieve + dodge + tension
 
-Status: **in-progress — revision 8 approved and re-read; think-first stage next**
+Status: **in-progress — tension UI teaching resumed; gameplay think-first and architecture checkpoints complete**
 
 - [complete] Revision 8 design update received; movement-driven tension is approved and the former design blocker is cleared.
 
@@ -179,8 +179,8 @@ Status: **in-progress — revision 8 approved and re-read; think-first stage nex
 - [complete] Step 4: student measures and logs actual lateral speed after movement: keyboard maximum is approximately `4 units/s`, and sustained input at a boundary measures `0`.
 - [complete] Step 5: by the student's explicit one-time exception to learner-written mode, Codex created and wired `ReelTuningProfile`, migrated retrieval/dodge speeds, and added tension parameters plus validation; Unity refreshed and `Assembly-CSharp` builds with 0 errors.
 - [in-progress] Step 6: student has implemented the tension accumulator; concise logging/play verification remains.
-- [deferred] Step 7: student adds a display-only live tension bar. Explicitly deferred by the student to prioritize the complete gameplay loop.
-- [deferred] Step 8: student makes maximum tension fire the line-snap outcome exactly once. Explicitly deferred by the student to prioritize the complete gameplay loop.
+- [in-progress] Step 7: student resumed the display-only live tension bar on 2026-09-03. First Slider pass saved with correct direction/range/disabled interaction and Frame ordering. Next: restore the accidentally renamed EventSystem, create a plain `TensionBarHUD` under Canvas, and reparent the Slider; then assign the pointer sprite, bind the display script, add color/visibility behavior, and verify in Play Mode.
+- [in-progress] Step 8: saved code already checks maximum tension and calls the guarded shared attempt-failure path. Runtime verification of one snap/one hook loss remains; the previous deferred status was stale.
 - [in-progress] Step 9: prioritize the shore-arrival event and return-to-`ReadyToCast` loop now; final score accumulation remains owned by M7's `ScoreTracker`.
 - [not-started] Step 10: student measures real maximum lateral speed first, tunes thresholds before rates, and verifies design §7 checklist 6a–f separately.
 
@@ -215,7 +215,7 @@ Status: **not-started**
 
 ## Current next action
 
-Prioritize the rapid-prototype vertical slice by proceeding with M6 while preserving its approved behavior. Complete the concise M6 think-first checkpoint, then implement the ten steps one at a time, focusing first on retrieval, dodge, failure, tension, and shore completion. M5 shake-profile wiring, M4 bait wiggle, and the final 2D-simulated-3D parabola remain explicitly deferred rather than removed.
+Complete M6 Step 7 with learner-written code and learner-operated Unity steps. Await the student's answer to mapping tension 0.25 onto endpoints -100 and 100, then guide UI assembly, data binding, visibility/reset, and Play Mode verification one checked step at a time. Continue maintaining task_plan.md, progress.md, and findings.md as explicitly requested. Saved code has advanced beyond some older checklist entries; distinguish source inspection from runtime verification before marking work complete. M5 shake-profile wiring, M4 bait wiggle, and the final 2D-simulated-3D parabola remain explicitly deferred rather than removed.
 
 ## Errors
 
