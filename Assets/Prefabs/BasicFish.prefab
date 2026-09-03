@@ -81,8 +81,8 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1567055959
-  m_SortingLayer: 3
-  m_SortingOrder: 0
+  m_SortingLayer: 2
+  m_SortingOrder: 1
   m_MaskInteraction: 0
   m_Sprite: {fileID: 7910131988914132003, guid: ac914e5593b24ea4582e10f0033f3ff5, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -157,4 +157,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FishWaterVFX
   waterRipplePrefab: {fileID: 5559508911341606237, guid: 2b9e4eb5591c84245b1494c4eeaeea8b, type: 3}
-  spawnInterval: 0.5
+  waterSplashPrefab: {fileID: 7633407273455485754, guid: c388d6f65e253ec448cb228042d07220, type: 3}
+  rippleSpawnInterval: 0.7
+  splashSpawnInterval: 0.9
