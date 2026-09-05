@@ -1,6 +1,6 @@
 # Fishing Loop Implementation — Teaching Plan for Codex
 
-Date: 2026-08-29 (M5 and M6 rewritten 2026-09-01 for design revisions 6–8)
+Date: 2026-08-29 (M5 and M6 rewritten 2026-09-01 for design revisions 6-8; M5b and M7 notes added 2026-09-04 for revision 9)
 Companion to: [2026-08-29-fishing-loop-design.md](2026-08-29-fishing-loop-design.md) (the approved design — read it first, this plan doesn't repeat its content)
 
 ## Read this before starting, Codex
@@ -422,6 +422,50 @@ production scene instead.
      the student and tune them by feel, the same way the calibration tolerance
      and the smoothing values were settled in M2.
 
+### M5b — Striking follow-ups (design revision 9, deferred)
+
+**Do not start this before M6/M7.** These were specified on 2026-09-04 and
+parked deliberately; the shipped `Striking` implements revision 6. Read design
+revision 9 and §3's `Striking` section before teaching any of it.
+
+The three changes are small in code and large in feel, so the teaching value is
+almost entirely in the *why*. Keep the think-first discipline even though the
+student now knows this system well.
+
+- **Randomized band position.**
+  - *Think first:* "The band is currently fixed. Play ten attempts in a row and
+    tell me what you start doing with your eyes. What does that suggest about
+    what this check is actually measuring after the tenth time?" Then: "If the
+    band's centre is random, what stops it being drawn somewhere that makes the
+    attempt impossible?" Let them find both edge cases — a band clipped by
+    `0`/`1`, and a band so far out the ring is already inside it on frame one.
+  - *Architecture beat:* the clamp is a validation concern on the profile, not a
+    runtime `if` in the controller. Same rule as every other invariant added in
+    revision 8.
+- **Hidden forgiveness margin.**
+  - *Think first:* "Between deciding to flick and `GestureTriggered` firing,
+    name everything that costs time." (Sensor interval, the low-pass filter,
+    the wrist physically reaching `TriggerThreshold`.) "The ring keeps moving
+    through all of it — so what is the mechanic punishing right now?"
+  - *Then the sharp one:* "Why must the forgiveness never be drawn?" The answer
+    is the whole point: a visible margin is just a bigger band, and players
+    re-aim at whatever they can see.
+  - *Architecture beat:* two band values, one published to the HUD, one kept
+    private for judging. Ask where each belongs before saying it. This is the
+    M5 HUD rule again from the other direction — there the HUD must not
+    *recompute* the controller's value; here it must not *receive* one of them.
+- **Two-pass ring.**
+  - *Think first:* "Write the normalized radius as one expression that goes
+    1 → 0 → 1 over the window. No branches." (`Abs(1 - 2p)`.) Then: "What
+    breaks in the rest of the controller once radius is no longer monotonic?"
+  - *Balance beat worth doing on paper before Play Mode:* have them compute
+    total in-band time before and after, including the forgiveness margin, and
+    notice that revision 9 is *more* forgiving overall despite each leg being
+    shorter. Design §3 has the arithmetic; make them redo it rather than read
+    it.
+- **Implementation** is then mostly profile work plus a handful of lines in
+  `StrikeController`, followed by design §7's new checklist items 9–12.
+
 ### M6 — Reeling: auto-retrieve + dodge + accelerate/tension
 
 > **The tension model changed — read design doc revision 7 (§3 `Reeling`, §4,
@@ -535,6 +579,25 @@ production scene instead.
 - **Implementation steps:** build each tracker, wire `GameOver` triggering from
   either hitting 0 hooks or the timer reaching 0, minimal results UI reusing the
   visual patterns already established in `CastDebugHUD.cs`/`GyroscopeDebugHUD.cs`.
+- **Check what already exists before teaching any of this.** `HookTracker.cs`,
+  `ScoreTracker.cs`, `SessionTimer.cs` and `FishingSessionHUD.cs` are already in
+  the project and `FishingLoopController` already holds serialized references to
+  all three trackers, even though the checklist has read "not-started."
+  Re-establish what is actually built and what only compiles, with the student,
+  before deciding which steps remain.
+- **Fold in design revision 9's `FishingLoopProfile` here** (deferred, see
+  revision 9): `postAttemptCooldown` plus M7's own starting-hooks and
+  session-length values belong on one small loop-level profile rather than each
+  finding its own home. Building it during M7 is cheaper than retrofitting it
+  afterwards — which is exactly the retrofit M5 needed after revision 8. Worth
+  naming that parallel out loud; recognising "we have paid this cost before" is
+  the transferable part.
+- **`postAttemptCooldown` teaching beat:** ask where a cooldown that blocks
+  casting should live *before* explaining. The tempting answer is a seventh
+  state; the right one is a temporary input restriction inside `ReadyToCast`.
+  Have them justify it against the six-state design and against
+  `FishingSceneEntryGuard`, which already solved the same shape of problem
+  without adding a state.
 
 ### M8 — End-to-end verification
 
