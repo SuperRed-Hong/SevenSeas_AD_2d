@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 6102094363224459725}
   - component: {fileID: -8155743055767789198}
   m_Layer: 6
-  m_Name: BasicFish
+  m_Name: SmallFish
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -84,7 +84,7 @@ SpriteRenderer:
   m_SortingLayer: 2
   m_SortingOrder: 1
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 1632605622730732877, guid: b4f60169a300a3745af35c7b24e32f54, type: 3}
+  m_Sprite: {fileID: -5064425782845983647, guid: 0e23235ad7ddcfe49b560816636f1533, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
