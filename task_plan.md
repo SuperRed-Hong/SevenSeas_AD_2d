@@ -215,7 +215,7 @@ Status: **not-started**
 
 ## Current next action
 
-Complete M6 Step 7 with learner-written code and learner-operated Unity steps. Await the student's answer to mapping tension 0.25 onto endpoints -100 and 100, then guide UI assembly, data binding, visibility/reset, and Play Mode verification one checked step at a time. Continue maintaining task_plan.md, progress.md, and findings.md as explicitly requested. Saved code has advanced beyond some older checklist entries; distinguish source inspection from runtime verification before marking work complete. M5 shake-profile wiring, M4 bait wiggle, and the final 2D-simulated-3D parabola remain explicitly deferred rather than removed.
+2026-09-06: Collaboration mode now follows AGENTS.md. TensionBarHUD is implemented and scene-wired with the project pointer sprite, retrieval-only visibility, and green/yellow/red feedback. GameOver now cancels flight and bait race. Assembly-CSharp builds with 0 errors; Play Mode verification remains pending. Next: verify HUD visibility/value/reset, one-shot snap and hook loss, and timer expiration during Casting/Baiting, then run the full M7 session checklist. M7 trackers and session HUD already exist and are wired; old not-started entries below/above are historical, not a current implementation verdict. M5 shake-profile wiring, M4 bait wiggle and final parabola remain deferred.
 
 ## Errors
 

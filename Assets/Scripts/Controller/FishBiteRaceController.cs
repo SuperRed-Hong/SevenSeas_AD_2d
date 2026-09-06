@@ -63,6 +63,27 @@ public sealed class FishBiteRaceController : MonoBehaviour
         Debug.Log(
             $"Bite race started with {candidates.Count} candidate fish.");
     }
+    public void CancelRace()
+    {
+        if (!isRaceActive)
+        {
+            return;
+        }
+
+        isRaceActive = false;
+        foreach (FishController candidate in candidates)
+        {
+            if (candidate != null)
+            {
+                candidate.ResetToIdle();
+            }
+        }
+
+        candidates.Clear();
+        hookedFish = null;
+        // Cancellation is not a bite or timeout outcome.
+    }
+
     private void Update()
     {
         if (!isRaceActive)

@@ -467,6 +467,9 @@ public sealed class FishingLoopController : MonoBehaviour
     private void EnterGameOver()
     {
         sessionTimer.StopTimer();
+        hookController.CancelFlight();
+        fishBiteRaceController.CancelRace();
+        strikeController.CancelCheck();
 
         inputSource?.SetMoveEnabled(false);
         inputSource?.SetCastEnabled(false);
