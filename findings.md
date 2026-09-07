@@ -95,3 +95,8 @@
 - Tension UI still needs pointer/endpoints, display-only value mapping, retrieval-state visibility, and layout verification during camera movement. Screen-fixed Canvas versus world-space presentation has not yet been confirmed with the student.
 - Maximum-tension failure is already implemented in saved code despite the old deferred checklist entry. Source inspection establishes implementation presence only; one-shot snap and hook-loss behavior still need runtime verification.
 - The first saved Slider pass has the correct vertical direction, value range, disabled interaction, Fill/Handle assignments, and Frame-last sibling order. Its current `TensionBarHUD` object is actually the former EventSystem (it retains `EventSystem` and `InputSystemUIInputModule`), so it must be renamed back and the Slider moved under a new plain HUD container. The Handle has not yet received the pointer sprite, and `TensionBarHUD.cs` is not yet attached or serialized in the scene.
+
+## 2026-09-06 — HUD and GameOver integration
+
+- The separate TensionBarHUD container had no display component. It now references ReelingController and its child Slider; only the child is hidden so the HUD can reactivate on the next retrieval. Slider notifications are suppressed and disabled-state tinting is removed.
+- GameOver previously left hook flight and an active bite race running. Explicit cancellation now freezes flight without a Landed event and resets approaching candidates without a bite/timeout event. Runtime behavior still requires Play Mode verification.

@@ -144,3 +144,16 @@
 - The student requested complete step-by-step teaching for the tension UI. Resumed M6 Step 7; asked the student to map tension 0.25 onto endpoints -100 and 100. Awaiting their answer before the first Unity setup step.
 - The student explicitly requested continued maintenance of `task_plan.md`; confirmed ongoing synchronization with `progress.md` and `findings.md`. Updated M6's stale heading and snap status without claiming runtime completion.
 - Inspected the student's saved Slider setup. Bottom-to-top direction, `0..1` range, disabled interaction, Fill/Handle Rect assignments, and foreground Frame ordering are present. The frame uses the intended attention-bar sprite. Before binding the HUD script, the renamed EventSystem parent must be separated back into an EventSystem and a plain `TensionBarHUD`; the Handle still uses Unity's default sprite.
+
+## 2026-09-06 — Project collaboration agreement
+
+- Created root AGENTS.md with project roles, design handoff, architecture boundaries, Unity editing discipline, and verification requirements.
+- User explicitly selected collaborative implementation: Codex may directly edit code and scene wiring within requested tasks; important gameplay and design changes are discussed with the user first. Claude remains the primary design-document author and design reviewer.
+- This replaces the historical learner-written-only default; teaching is now available on request. No gameplay code or scenes changed in this task.
+
+## 2026-09-06 — Tension HUD and session cleanup
+
+- Implemented and wired TensionBarHUD, retrieval-only display, continuous green/yellow/red fill, noninteractive value updates, and the existing pointer sprite.
+- Added silent flight/race cancellation at GameOver and explicit Strike cancellation. No gameplay balance parameters changed.
+- Validation: dotnet build Assembly-CSharp.csproj passed with 0 errors and 2 CS0649 warnings in SceneCatalog. Scene file IDs checked for uniqueness and target references; diff reviewed. Unity Play Mode, Android and WebGL were not run.
+- Next: playtest HUD/reset, snap hook loss and timer expiration during flight/baiting, then verify complete M7 outcomes.
