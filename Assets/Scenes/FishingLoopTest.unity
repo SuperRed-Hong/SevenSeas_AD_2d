@@ -164,11 +164,7 @@ MonoBehaviour:
   scoreTracker: {fileID: 3372226}
   hookTracker: {fileID: 3372227}
   sessionTimer: {fileID: 3372228}
-<<<<<<< Updated upstream
-  loopProfile: {fileID: 0}
-=======
   loopProfile: {fileID: 11400000, guid: c24fb50e7f915374ebea7f018072bf2e, type: 2}
->>>>>>> Stashed changes
   castGestureDetector: {fileID: 3372222}
   strikeGestureDetector: {fileID: 3372224}
 --- !u!4 &3372221
