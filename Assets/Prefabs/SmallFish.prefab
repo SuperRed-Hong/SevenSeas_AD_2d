@@ -84,7 +84,7 @@ SpriteRenderer:
   m_SortingLayer: 2
   m_SortingOrder: 1
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -5064425782845983647, guid: 0e23235ad7ddcfe49b560816636f1533, type: 3}
+  m_Sprite: {fileID: -2284313629197055167, guid: 3871a90c9c8f2384bb4c3ff7a595872b, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -107,7 +107,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FishController
   swimSpeed: 2
-  scoreValue: 7
+  scoreValue: 5
 --- !u!58 &6102094363224459725
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -156,7 +156,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a8033f08dbe793f4ba689ed184391b19, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FishWaterVFX
-  waterRipplePrefab: {fileID: 5559508911341606237, guid: 2b9e4eb5591c84245b1494c4eeaeea8b, type: 3}
-  waterSplashPrefab: {fileID: 7633407273455485754, guid: c388d6f65e253ec448cb228042d07220, type: 3}
+  waterRipplePrefab: {fileID: 5559508911341606237, guid: 1b0ba4830b00bd349b380479afed0242, type: 3}
+  waterSplashPrefab: {fileID: 7633407273455485754, guid: 44aefc28bc6135d46964aaca08387add, type: 3}
   rippleSpawnInterval: 0.7
   splashSpawnInterval: 0.9

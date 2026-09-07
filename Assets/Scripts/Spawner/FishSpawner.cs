@@ -3,9 +3,17 @@ using System.Collections.Generic;
 [RequireComponent(typeof(BoxCollider2D))]
 public class FishSpawner : MonoBehaviour
 {
-
-    [SerializeField] [Tooltip("Fish Prefabs that can be Selected for spawning")]
-    private FishController[] fishPrefabs;
+    [System.Serializable]
+    public struct WeightedFish
+    {
+        public FishController prefab;
+        public float weight;
+    }
+    /// <summary>
+    /// Above I added a small data structure so we can emulate rarity when it comes to fish. Instead of it being randomly chosen, we can have a weight assigned. Like a % chance.
+    /// </summary>
+    [SerializeField] [Tooltip("Fish Prefabs with % chance. The higher the number, the more common the chance of the fish spawning is.")]
+    private WeightedFish[] fishPrefabs;
 
     [SerializeField, Range(0, 50)] [Tooltip("Minimum number of fish spawned when the scene starts.")]
     private int FishCount = 20;
@@ -72,8 +80,8 @@ public class FishSpawner : MonoBehaviour
 
                 break;
             }
-            
-            FishController selectedPrefab = fishPrefabs[Random.Range(0, fishPrefabs.Length)];
+
+            FishController selectedPrefab = GetWeightedRandomFish();
             
             Instantiate(
                 selectedPrefab,
@@ -87,6 +95,26 @@ public class FishSpawner : MonoBehaviour
         }
         
     }
+    private FishController GetWeightedRandomFish()
+    {
+        float totalWeight = 0f;
+
+        foreach (var fish in fishPrefabs)
+            totalWeight += fish.weight;
+
+        float randomValue = Random.value * totalWeight;
+
+        foreach (var fish in fishPrefabs)
+        {
+            if (randomValue < fish.weight)
+                return fish.prefab;
+
+            randomValue -= fish.weight;
+        }
+
+        return fishPrefabs[0].prefab; // Just in case.
+    }
+        
     private bool IsPositionAvailable(Vector2 candidatePosition)
     {
         float minimumDistanceSquared =

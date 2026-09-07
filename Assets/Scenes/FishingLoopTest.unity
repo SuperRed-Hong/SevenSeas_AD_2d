@@ -164,6 +164,7 @@ MonoBehaviour:
   scoreTracker: {fileID: 3372226}
   hookTracker: {fileID: 3372227}
   sessionTimer: {fileID: 3372228}
+  loopProfile: {fileID: 0}
   castGestureDetector: {fileID: 3372222}
   strikeGestureDetector: {fileID: 3372224}
 --- !u!4 &3372221
@@ -571,9 +572,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FishSpawner
   fishPrefabs:
-  - {fileID: 4580026359424680700, guid: 3ad49879deaeb4b4c895667170f18d6a, type: 3}
-  - {fileID: 4580026359424680700, guid: f1e632000f82c28419e434f7430c9ed0, type: 3}
-  - {fileID: 4580026359424680700, guid: e43c0fea85d9ac74ba6cad39367c95b6, type: 3}
+  - prefab: {fileID: 4580026359424680700, guid: 3ad49879deaeb4b4c895667170f18d6a, type: 3}
+    weight: 40
+  - prefab: {fileID: 4580026359424680700, guid: f1e632000f82c28419e434f7430c9ed0, type: 3}
+    weight: 25
+  - prefab: {fileID: 4580026359424680700, guid: e43c0fea85d9ac74ba6cad39367c95b6, type: 3}
+    weight: 10
+  - prefab: {fileID: 4580026359424680700, guid: b1a06a358f0053647874fbb21597685b, type: 3}
+    weight: 5
   FishCount: 17
   minimumSpawnSpacing: 0.75
   maximumPlacementAttempts: 50
@@ -3235,9 +3241,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FishSpawner
   fishPrefabs:
-  - {fileID: 4580026359424680700, guid: 35e98e66b47adf744aa5ee85691c70d4, type: 3}
-  - {fileID: 4580026359424680700, guid: 35e98e66b47adf744aa5ee85691c70d4, type: 3}
-  - {fileID: 4580026359424680700, guid: 35e98e66b47adf744aa5ee85691c70d4, type: 3}
+  - prefab: {fileID: 4580026359424680700, guid: 35e98e66b47adf744aa5ee85691c70d4, type: 3}
+    weight: 0
+  - prefab: {fileID: 4580026359424680700, guid: 35e98e66b47adf744aa5ee85691c70d4, type: 3}
+    weight: 0
+  - prefab: {fileID: 4580026359424680700, guid: 35e98e66b47adf744aa5ee85691c70d4, type: 3}
+    weight: 0
+  - prefab: {fileID: 4580026359424680700, guid: 35e98e66b47adf744aa5ee85691c70d4, type: 3}
+    weight: 0
   FishCount: 22
   minimumSpawnSpacing: 0.75
   maximumPlacementAttempts: 50
