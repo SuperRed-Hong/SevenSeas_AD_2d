@@ -157,3 +157,20 @@
 - Added silent flight/race cancellation at GameOver and explicit Strike cancellation. No gameplay balance parameters changed.
 - Validation: dotnet build Assembly-CSharp.csproj passed with 0 errors and 2 CS0649 warnings in SceneCatalog. Scene file IDs checked for uniqueness and target references; diff reviewed. Unity Play Mode, Android and WebGL were not run.
 - Next: playtest HUD/reset, snap hook loss and timer expiration during flight/baiting, then verify complete M7 outcomes.
+
+## 2026-09-06 — Teaching and prototype priorities
+
+- User returned to step-by-step teaching and confirmed tension pointer/fill alignment works in play. User adjusted aspect/scaling/placement; saved lateral tension rate is 0.9.
+- User explicitly deferred the proposed systematic regression pass, preferring current playability and remaining feature development. Tests remain deferred, not passed.
+- Read-only backlog check: mobile accelerate methods lack serialized UI bindings in searched scenes/prefabs; PausePanelButton navigates to MainMenu; gameplay-specific restart flow not found; linear cast and shake-profile integration remain unfinished. FishingLoopTest2 exists but catalog/build still target FishingLoopTest.
+
+
+## 2026-09-06 — Two-day implementation planning
+
+- Created the Android playtest implementation proposal and a separate Claude design-change brief covering all current requests, Profile ownership, cooldown paths, implementation order, deferred scope and open decisions.
+- Kept Claude's canonical revision 9 design and teaching plan unchanged. No gameplay/scene edits or runtime tests in this planning task. Brief prepared for user handoff, not sent to Claude.
+
+## 2026-09-06 — Strike revision 9 user checkpoint
+
+- User explicitly reported the timing-ring migration complete and its functional test passed. This is user-reported verification, not an additional Codex test run.
+- Continue teaching post-attempt cast cooldown next. Add a dedicated FishingLoopProfile for cooldown first; starting-hooks/session-duration migration will be a separate coordinated change to avoid duplicate live configuration sources.

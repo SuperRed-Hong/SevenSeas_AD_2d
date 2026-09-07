@@ -38,6 +38,15 @@ public sealed class FishingLoopController : MonoBehaviour
     private HookTracker hookTracker;
     [SerializeField]
     private SessionTimer sessionTimer;
+
+    [SerializeField]
+    [Tooltip("Shared configuration for the fishing session.")]
+    private FishingLoopProfile loopProfile;
+    
+    //Runtime state belongs to the controller, not the shared profile.
+    private float castCooldownRemaining;
+    
+    public bool IsCastCoolingDown => castCooldownRemaining > 0f;
     
     public Vector2 LandingPosition { get; private set; }
     public float SelectedLaneX { get; private set; }
@@ -54,6 +63,14 @@ public sealed class FishingLoopController : MonoBehaviour
 
     private void Start()
     {
+
+        if (loopProfile == null)
+        {
+            Debug.LogError("FishingLoopController requires a FishingLoopProfile", this);
+            
+            enabled = false;
+            return;
+        }
         // Mobile entry provides AppRoot and the gyroscope reader.
         // Direct Editor testing can continue without motion services.
         if (AppRoot.Instance != null)
@@ -78,7 +95,8 @@ public sealed class FishingLoopController : MonoBehaviour
         {
             return;
         }
-
+        
+        
         ExitState(CurrentState);
         CurrentState = nextState;
         EnterState(CurrentState);

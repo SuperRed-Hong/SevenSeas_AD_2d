@@ -100,3 +100,9 @@
 
 - The separate TensionBarHUD container had no display component. It now references ReelingController and its child Slider; only the child is hidden so the HUD can reactivate on the next retrieval. Slider notifications are suppressed and disabled-state tinting is removed.
 - GameOver previously left hook flight and an active bite race running. Explicit cancellation now freezes flight without a Landed event and resets approaching candidates without a bite/timeout event. Runtime behavior still requires Play Mode verification.
+
+## 2026-09-06 — Android playtest design handoff
+
+- Revision 9 is now synchronized locally but its random target band, hidden forgiveness and two-pass ring remain unimplemented. User requests extending the return-to-ready cooldown to Strike timeout as well; last-message state naming ambiguity is documented explicitly in the handoff.
+- User accepted fish-base-score times longitudinal-distance multiplier, plus near-miss and accelerated-retrieval-distance bonuses. Lateral travel does not count; pending bonuses settle only on successful catch. Numeric curves/rates remain undecided.
+- Fish generation exclusion means visible rock occlusion, not the whole shoreward lane. User also requests a basic behavior tree and Idle/Swim/Hooked animation states.

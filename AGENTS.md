@@ -41,10 +41,11 @@
 1. README.md：作业约束。
 2. docs/design/2026-08-29-fishing-loop-design.md：玩法设计。
 3. docs/design/2026-08-29-fishing-loop-teaching-plan.md：里程碑与教学路线。
-4. task_plan.md、findings.md、progress.md：清单、发现与历史验证。
-5. docs/reference/project-handoff.md：接手地图与一次静态检查快照。
-6. docs/reference/motion-input-guide.md：涉及传感器、滤波或手势时阅读相关章节。
-7. 对应 C#、场景、Prefab、Profile：实际实现和接线。
+4. 
+5. task_plan.md、findings.md、progress.md：清单、发现与历史验证。
+6. docs/reference/project-handoff.md：接手地图与一次静态检查快照。
+7. docs/reference/motion-input-guide.md：涉及传感器、滤波或手势时阅读相关章节。
+8. 对应 C#、场景、Prefab、Profile：实际实现和接线。
 
 文档说明意图，代码与序列化资产说明当前实现，运行检查说明实际行为。出现冲突要明确指出，不能把过时清单当成事实，也不能把未经批准的实现差异自动提升为设计。
 

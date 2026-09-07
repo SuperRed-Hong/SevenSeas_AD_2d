@@ -215,7 +215,7 @@ Status: **not-started**
 
 ## Current next action
 
-2026-09-06: Collaboration mode now follows AGENTS.md. TensionBarHUD is implemented and scene-wired with the project pointer sprite, retrieval-only visibility, and green/yellow/red feedback. GameOver now cancels flight and bait race. Assembly-CSharp builds with 0 errors; Play Mode verification remains pending. Next: verify HUD visibility/value/reset, one-shot snap and hook loss, and timer expiration during Casting/Baiting, then run the full M7 session checklist. M7 trackers and session HUD already exist and are wired; old not-started entries below/above are historical, not a current implementation verdict. M5 shake-profile wiring, M4 bait wiggle and final parabola remain deferred.
+2026-09-06: User approved the two-day implementation plan and requested starting. Continue step-by-step teaching; do not wait for an additional Claude approval as a prerequisite to this explicitly approved work. Current step: create an AccelerateButton under Canvas in FishingLoopTest, then wire press/release to existing MobileFishingInputSource methods. Read-only inspection found no saved accelerate button bindings. Library/LastSceneManagerSetup and build/catalog all identify FishingLoopTest (saved editor-state evidence). No gameplay or scene changes made by Codex in this step. Full plan: docs/design/2026-09-06-android-playtest-implementation-plan.md; Claude handoff remains prepared, not sent.
 
 ## Errors
 
