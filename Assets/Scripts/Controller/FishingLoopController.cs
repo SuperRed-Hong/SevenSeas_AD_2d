@@ -96,13 +96,27 @@ public sealed class FishingLoopController : MonoBehaviour
             return;
         }
         
+        //Capture the source state before CurrentState is overwritten.
+        
+        bool shouldStartCooldown = 
+            nextState ==  FishingLoopState.ReadyToCast &&
+            (CurrentState == FishingLoopState.Striking|| CurrentState == FishingLoopState.Reeling);
+        
+        
         
         ExitState(CurrentState);
+
+        castCooldownRemaining = shouldStartCooldown ? loopProfile.PostAttemptCooldown : 0f;
         CurrentState = nextState;
         EnterState(CurrentState);
     }
 
 
+    private void SetCastingAvailable(bool available)
+    {
+        castGestureDetector.enabled = available;
+        inputSource?.SetCastEnabled(available);
+    }
     private void Update()
     {
         switch (CurrentState)
@@ -210,7 +224,7 @@ public sealed class FishingLoopController : MonoBehaviour
     
     private void HandleCastDetected(float power)
     {
-        if (CurrentState != FishingLoopState.ReadyToCast)
+        if (CurrentState != FishingLoopState.ReadyToCast || IsCastCoolingDown)
         {
             return;
         }
@@ -384,6 +398,18 @@ public sealed class FishingLoopController : MonoBehaviour
 
     private void UpdateReadyToCast()
     {
+        if (!IsCastCoolingDown)
+        {
+            return;
+        }
+        
+        castCooldownRemaining = Mathf.Max(0f, castCooldownRemaining - Time.deltaTime);
+        // Restore casting once when the cooldown ends.
+
+        if (!IsCastCoolingDown)
+        {
+            SetCastingAvailable(true);
+        }
     }
 
     private void EnterState(FishingLoopState state)
@@ -447,9 +473,7 @@ public sealed class FishingLoopController : MonoBehaviour
         inputSource?.SetMoveEnabled(true);
         // Return the hook to the player for the next attempt.
         hookController.Dock();
-        castGestureDetector.enabled = true;
-        
-        inputSource?.SetCastEnabled(true);
+        SetCastingAvailable(!IsCastCoolingDown);
     }
     private void EnterCasting() 
     { 
@@ -507,8 +531,7 @@ public sealed class FishingLoopController : MonoBehaviour
     private void ExitReadyToCast()
     {
         inputSource?.SetMoveEnabled(false);
-        castGestureDetector.enabled = false; 
-        inputSource?.SetCastEnabled(false);
+        SetCastingAvailable(false);
         shoreLaneController.enabled = false;
     }
     private void ExitCasting() { }
