@@ -1,5 +1,13 @@
 # Fishing Loop Findings
 
+## 2026-09-08 — 新 MenuCanvas 与空镜入口
+
+- 用户保存后的正式场景包含 MenuCanvas、StartButton Prefab 实例、SettingButton、ExitButton。Start 原 Prefab 回调会导航 GameScene；Setting/Exit 仍是测试场景路由。已局部覆盖为 FishingSceneEntryGuard.StartGame / OpenSettings / ExitGame，未修改共享 NavigateButton Prefab。
+- GameplayRoot 原包含 MainLanscape；单纯关闭玩法根会同时隐藏场景。已仅把这条静态景物根移到场景根，原父层位姿为单位变换，因此保留世界位置。GameplayRoot 与游戏 Canvas 保存为初始停用，防止 Start 在菜单后面提前计时。
+- 入口守卫负责菜单、必要校准、等待镜头转场和启用玩法；FishingCameraController 负责新空镜选择及等待 CinemachineBrain blend，现有六态玩法流程不增加 Menu 状态。转场独立写在现有 Camera Blends 资产中。
+- MainMenu 和 GameScene 逻辑 ID 共用 FishingLoopTest 资产；SceneLoader 的一次性请求区分显示菜单与直接开局，SubsystemRegistration 重置静态请求以兼容禁用 Domain Reload。排行榜和普通导航的无 AppRoot Editor 路径共用该规则。
+- 本次为用户直接确定的主菜单/镜头流程变更；原设计文档未改写，记录与既有独立 MainMenu 入口的差异，未宣称 Claude 审查。
+
 ## 2026-09-08 — 本地排行榜接入
 
 - 原先只有 GameOver 分数文字，无持久化成绩或榜单。EnterGameOver 是最后一钩和计时结束的共同结束节点，保存从 ScoreTracker 读取最终值；未改变捕鱼计分、状态顺序或结束条件。

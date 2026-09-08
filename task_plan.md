@@ -1,5 +1,14 @@
 # Fishing Loop Teaching Plan
 
+## 当前任务 — 2026-09-08 同场景主菜单与空镜转场
+
+- 用户明确替换旧 MainMenu，使用 FishingLoopTest 中已布置的 MenuCanvas；初始空镜，Start 后转到 Overview。
+- [implemented / compile passed / static wiring checked / Play Mode pending] 启动仍经 BootStrap 初始化服务，MainMenu 逻辑路由已指向 FishingLoopTest；旧 MainMenu 场景取消 Build 勾选但未删除。直接打开 FishingLoopTest 也先显示新菜单。
+- MenuCamera 初值位置 (0, 8, -10)、Orthographic Size 9；MenuCamera → OverviewCamera 单独配置 1 秒 EaseInOut。转场完成才启用 GameplayRoot / GamePlayCanvas，从而开始计时及输入；保留旧相机参数与失败返回修复。
+- 已接 Start / Setting（现有校准面板）/ Exit，并追加排行榜入口。排行榜 Main Menu 返回菜单；Play Again 直接进入开局流程。退出在 Editor 停止 Play、独立包退出，WebGL 禁用退出按钮。
+- MainLanscape 静态景物移出 GameplayRoot，保持世界位置，让菜单有背景且玩法不提前执行。其他鱼、美术、UI 布局与倍率未调整。移动端 Start 先完成校准，再转场；取消校准可重新 Start。
+- 下一步：Unity 刷新后检查空镜构图、Start 单次转场、转场前计时不走、HUD 显隐、排行榜两个返回分支与局内返回菜单；Android 校准以及 WebGL 页面需分开记录。尚未实际 Play Mode 验收。
+
 ## 当前任务 — 2026-09-08 本地分数排行榜
 
 - 用户要求排行榜系统/关卡，先本地保存。已按独立排行榜场景（非新玩法关卡）、分数和日期的默认方案实施；姓名输入与新增玩法关卡不在本版范围。

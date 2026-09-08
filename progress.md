@@ -1,5 +1,13 @@
 # Fishing Loop Progress
 
+## 2026-09-08 — 新主菜单与空镜开局转场已接线
+
+- 用户保存 MenuCanvas 后要求初始场景空镜、Start 后切到 Overview。已复用新 UI，接好 Start / Setting / Exit 和排行榜；旧 MainMenu 从正式路由与 Build 启用列表退出，文件保留。
+- 新建 MenuCamera，位置 (0, 8, -10)、Size 9；配置到 Overview 的 1 秒 EaseInOut。菜单时玩法及游戏 HUD 停用，转场完成再启用；静态 MainLanscape 移至场景根以保持空镜背景。其他布局、鱼配置及原相机跟随行为保留。
+- SceneLoader 区分同场景的 MainMenu / GameScene 进入意图，排行榜返回菜单与再玩一局分别生效；直接 Editor Play 支持菜单入口。移动端保留校准，Setting 暂复用已有校准面板；尚无额外设置系统。
+- 编译 0 errors、3 条已有 MSB3277 warnings。保存场景 fileID 无重复/悬空；初始显隐、静态景物独立、Start Prefab 回调来源与实例覆盖、Setting/Exit 回调通过静态检查。对本轮开始时场景快照的比较确认未删除既有对象，仅局部接线和新增相机/入口。
+- 未运行 Unity Play Mode / Android / WebGL；空镜构图、转场观感、计时延后、HUD、校准和导航回归待用户试玩。未提交、还原或清理已有改动。
+
 ## 2026-09-08 — 本地排行榜首版实现
 
 - 用户要求创建本地排行榜系统/关卡。按独立排行榜页面、分数+日期默认方案实现 Top 10，GameOver 自动记录，主菜单和结束页入口，榜单返回菜单/再玩一局。询问过是否需可玩关卡或姓名，本轮尚未收到回复；本版不包含这两项。
