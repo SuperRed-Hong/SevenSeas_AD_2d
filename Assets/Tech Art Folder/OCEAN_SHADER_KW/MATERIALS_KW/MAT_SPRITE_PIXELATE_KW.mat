@@ -43,6 +43,10 @@ Material:
         m_Texture: {fileID: 2800000, guid: b4ce4a9431be6cf4183fc8663385f3ab, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _asset:
+        m_Texture: {fileID: 2800000, guid: b4ce4a9431be6cf4183fc8663385f3ab, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _main_texture:
         m_Texture: {fileID: 2800000, guid: 7e37d7edb0efe4d4d8917f901c222c8e, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -63,7 +67,7 @@ Material:
     m_Floats:
     - _EnableExternalAlpha: 0
     - _ZWrite: 0
-    - _pixel_size: 100
+    - _pixel_size: 30.2
     m_Colors:
     - White: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}

@@ -100,7 +100,7 @@ Material:
     - _caustics_speed: 0.1
     - _caustics_texture_mult: 5
     - _caustics_thickness: 0.05
-    - _caustics_tiling: 3
+    - _caustics_tiling: 2.5
     - _fade_density: 0.55
     - _fade_intensity: 0.5
     - _pixel_size: 200
