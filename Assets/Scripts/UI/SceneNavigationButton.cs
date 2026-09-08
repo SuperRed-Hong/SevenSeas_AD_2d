@@ -10,8 +10,7 @@ public sealed class SceneNavigationButton : MonoBehaviour
     {
         if (AppRoot.Instance == null)
         {
-            Debug.LogError(
-                "Scene navigation requires the game to start from Bootstrap.");
+            SceneLoader.LoadWithoutAppRoot(targetScene);
             return;
         }
 

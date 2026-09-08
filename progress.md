@@ -1,5 +1,12 @@
 # Fishing Loop Progress
 
+## 2026-09-08 — 本地排行榜首版实现
+
+- 用户要求创建本地排行榜系统/关卡。按独立排行榜页面、分数+日期默认方案实现 Top 10，GameOver 自动记录，主菜单和结束页入口，榜单返回菜单/再玩一局。询问过是否需可玩关卡或姓名，本轮尚未收到回复；本版不包含这两项。
+- 新增 LeaderboardData、LocalLeaderboard、LeaderboardView、LeaderboardNavigationButton、LeaderboardSaveStatus 及 Leaderboard 场景；追加 SceneCatalog/Build Settings 登记。原玩法规则、鱼配置、计分公式及已有 UI 布局未改。
+- 编译使用临时 MSBuild targets 纳入新增脚本，0 errors、3 条已有 MSB3277 warnings。独立 Tests/Leaderboard 检查通过 Top 10、排序、重复局、同分、零负分及异常数据；不读写真实存档。三场景本地 fileID 无悬空/重复，榜单 10 行 TMP 引用核对通过；本次场景与登记文件 diff check 通过。
+- 未运行 Unity Play Mode、存档关闭重启读回、Android 或 WebGL；新场景外观及入口点击仍待运行验收。下一步 Unity 刷新后从主菜单及 GameOver 各进入一次，完成多局并重启确认榜单。没有提交、推送、还原或清理用户改动。
+
 ## 2026-09-08 — 鱼外观分类随机 Profile 已实现
 
 - 用户接受首个固定外观效果并理解实现，要求扩展为四列表 Profile。已创建 FishAppearanceProfile 及资产，填充全部 29 张对应 Sprite，配置四种 Variant 类别。

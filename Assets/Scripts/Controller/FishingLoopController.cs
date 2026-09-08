@@ -52,6 +52,8 @@ public sealed class FishingLoopController : MonoBehaviour
 
     //Runtime state belongs to the controller, not the shared profile.
     private float castCooldownRemaining;
+    private readonly string leaderboardSessionId = System.Guid.NewGuid().ToString("N");
+    public bool FinalScoreSaved { get; private set; }
     public bool IsCastCoolingDown => castCooldownRemaining > 0f;
     public Vector2 LandingPosition { get; private set; }
     public float SelectedLaneX { get; private set; }
@@ -622,6 +624,7 @@ public sealed class FishingLoopController : MonoBehaviour
 
         Debug.Log(
             $"Game Over. Final score: {scoreTracker.Score}");
+        FinalScoreSaved = LocalLeaderboard.TryRecord(leaderboardSessionId, scoreTracker.Score);
     }
 
     #endregion

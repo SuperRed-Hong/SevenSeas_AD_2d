@@ -1,4 +1,5 @@
 using Unity.Cinemachine;
+using System.Collections;
 using UnityEngine;
 
 public sealed class FishingCameraController : MonoBehaviour
@@ -9,6 +10,9 @@ public sealed class FishingCameraController : MonoBehaviour
     [SerializeField]
     private CinemachineCamera hookFollowCamera;
 
+    [SerializeField] private CinemachineCamera menuCamera;
+    [SerializeField] private CinemachineBrain brain;
+
     
     [SerializeField]
     private CinemachineImpulseSource strikeRejectedImpulseSource;
@@ -18,6 +22,7 @@ public sealed class FishingCameraController : MonoBehaviour
     
     public void ShowOverview()
     {
+        if (menuCamera != null) menuCamera.gameObject.SetActive(false);
         if (overviewCamera != null)
         {
             overviewCamera.gameObject.SetActive(true);
@@ -36,6 +41,22 @@ public sealed class FishingCameraController : MonoBehaviour
 
             hookFollowCamera.gameObject.SetActive(false);
         }
+    }
+
+    public void ShowMenu()
+    {
+        if (menuCamera == null) return;
+        ShowOverview();
+        if (overviewCamera != null) overviewCamera.gameObject.SetActive(false);
+        menuCamera.gameObject.SetActive(true);
+    }
+
+    public IEnumerator TransitionToOverview()
+    {
+        ShowOverview();
+        // Let the brain create the blend before deciding whether it has finished.
+        yield return null;
+        while (brain != null && brain.IsBlending) yield return null;
     }
 
     public void FollowHook()

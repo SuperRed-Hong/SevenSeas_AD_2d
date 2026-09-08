@@ -1,5 +1,14 @@
 # Fishing Loop Findings
 
+## 2026-09-08 — 本地排行榜接入
+
+- 原先只有 GameOver 分数文字，无持久化成绩或榜单。EnterGameOver 是最后一钩和计时结束的共同结束节点，保存从 ScoreTracker 读取最终值；未改变捕鱼计分、状态顺序或结束条件。
+- 采用 LeaderboardData（纯数据排序/去重）、LocalLeaderboard（JSON + PlayerPrefs）、LeaderboardView（读取和显示）分工。排行榜不成为第二个局内分数来源，不要求 AppRoot 持有新服务。
+- 独立 Leaderboard 场景使用现有 TMP / uGUI 序列化结构和字体，新布局保留在场景中可编辑。已有 MainMenu / FishingLoopTest 仅追加按钮、保存状态文字及父子引用，原 GameOverText 保持原布局和内容。
+- LeaderboardNavigationButton 支持 AppRoot / SceneLoader 正式入口及直接 Editor Play 的三个固定路由。新增 E_SceneID.Leaderboard 追加在末尾，避免已有枚举序列化引用变化。
+- 本版默认最高 10 条、分数和日期、不输入姓名、不新增可玩地图；这是范围澄清尚未收到回复时采用的实现方案，未声称用户逐条确认或 Claude 审查。仅与用户要求有关的排行榜扩展已实施，原设计文档保持不变。
+- Unity 6.3 PlayerPrefs 文档确认跨局本地持久化；Web 平台使用浏览器存储，设备/浏览器间不共享。实际 PlayerPrefs 重启读回及平台验证尚未进行。
+
 ## 2026-09-08 — 分类外观 Profile 与随机揭示
 
 - 用户要求集中管理 Small / Medium / Large / Special 列表。新增 FishAppearanceProfile，素材按 Small / Middle / Large / EasterEgg 映射填充 9 / 9 / 7 / 4 张。使用原始切片 GUID 与 fileID，不重导入、不复制图片。

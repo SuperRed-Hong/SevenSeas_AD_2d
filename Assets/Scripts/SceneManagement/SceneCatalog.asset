@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SceneCatalog
   sceneEntries:
   - id: 0
-    sceneName: MainMenu
+    sceneName: FishingLoopTest
   - id: 1
     sceneName: FishingLoopTest
   - id: 2
@@ -23,3 +23,5 @@ MonoBehaviour:
     sceneName: AttitudeControlTest
   - id: 4
     sceneName: GyroscopeCastTest
+  - id: 5
+    sceneName: Leaderboard

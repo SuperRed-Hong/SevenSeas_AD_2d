@@ -1,5 +1,13 @@
 # Fishing Loop Teaching Plan
 
+## 当前任务 — 2026-09-08 本地分数排行榜
+
+- 用户要求排行榜系统/关卡，先本地保存。已按独立排行榜场景（非新玩法关卡）、分数和日期的默认方案实施；姓名输入与新增玩法关卡不在本版范围。
+- [implemented / command-line compile passed / static wiring checked / Play Mode pending] 新增 Leaderboard 场景，显示最高 10 条成绩、排名及本地日期；主菜单与 GameOver 提供入口，榜单有 Play Again / Main Menu。SceneCatalog 和 Build Settings 已登记，既有枚举序号未改变。
+- 数据用独立 PlayerPrefs key 保存 JSON。仅 EnterGameOver 记录一次已结算总分（包括 0 分），未完成返回菜单不记录；分数降序、同分较早优先。局 ID 去重，损坏/未知版本存档不覆盖，显示加载/保存失败提示。
+- 数据模型独立检查通过：排序、Top 10、同局去重、同分顺序、0/负分、异常日期、空列表；检查不触碰实际 PlayerPrefs。新增场景及入口引用静态检查通过，当前尚未运行 Unity、Android、WebGL。
+- 下一步：Unity 刷新后检查主菜单入口、GameOver 保存提示与入口、榜单两种返回按钮；完成多局并重启确认保存，再验竖屏布局及 WebGL 本地存储。保留鱼外观逐张视觉适配和之前未执行的回归。
+
 ## 当前阶段 — 2026-09-08 鱼样貌揭示（分类 Profile 随机外观已接入）
 
 - 用户反馈首个固定外观“还可以”，随后要求 Profile 包含 Small / Medium / Large / Special 多个列表并填充各类素材，随机揭示。
