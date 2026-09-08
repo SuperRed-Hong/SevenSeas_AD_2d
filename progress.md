@@ -1,5 +1,10 @@
 # Fishing Loop Progress
 
+## 2026-09-08 — 菜单鼠标点击接线修复
+
+- 用户反馈菜单按钮鼠标点击无反应。定位为上轮关闭 GamePlayCanvas 时同时关闭了其子对象 EventSystem；这是上轮入口显隐调整遗漏的依赖。
+- 将现有 EventSystem 移至场景根，静态核对唯一性、对象及输入模块启用、父子引用和全场景 fileID 完整性通过。本轮未改 C#，未重复编译；未运行 Play Mode，需重新进入 Play 验证菜单点击和 Start 转场。
+
 ## 2026-09-08 — 新主菜单与空镜开局转场已接线
 
 - 用户保存 MenuCanvas 后要求初始场景空镜、Start 后切到 Overview。已复用新 UI，接好 Start / Setting / Exit 和排行榜；旧 MainMenu 从正式路由与 Build 启用列表退出，文件保留。

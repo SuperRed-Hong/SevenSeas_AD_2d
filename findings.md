@@ -1,5 +1,10 @@
 # Fishing Loop Findings
 
+## 2026-09-08 — 菜单点击失效根因
+
+- 上轮将 GamePlayCanvas 设为菜单阶段停用，却遗漏其子对象 EventSystem（1185182857），连带禁用了 InputSystemUIInputModule。按钮回调和 GraphicRaycaster 已接线，但没有活动的 EventSystem 分发点击。
+- 已仅将 EventSystem 的 RectTransform（1185182860）从 GamePlayCanvas 移至场景根，更新原父子列表和 SceneRoots。保留输入 Action 引用、组件启用状态及唯一 EventSystem，不改按钮、布局或玩法。
+
 ## 2026-09-08 — 新 MenuCanvas 与空镜入口
 
 - 用户保存后的正式场景包含 MenuCanvas、StartButton Prefab 实例、SettingButton、ExitButton。Start 原 Prefab 回调会导航 GameScene；Setting/Exit 仍是测试场景路由。已局部覆盖为 FishingSceneEntryGuard.StartGame / OpenSettings / ExitGame，未修改共享 NavigateButton Prefab。

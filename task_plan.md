@@ -1,5 +1,7 @@
 # Fishing Loop Teaching Plan
 
+- 2026-09-08 菜单点击修复：[scene wiring fixed / Play Mode pending] EventSystem 原在被菜单入口停用的 GamePlayCanvas 下，导致所有菜单点击失效；已移至场景根，保持唯一且启用。待用户重新 Play 验证 Start / Setting / Leaderboard。
+
 ## 当前任务 — 2026-09-08 同场景主菜单与空镜转场
 
 - 用户明确替换旧 MainMenu，使用 FishingLoopTest 中已布置的 MenuCanvas；初始空镜，Start 后转到 Overview。
