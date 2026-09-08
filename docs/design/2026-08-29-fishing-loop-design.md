@@ -1,8 +1,8 @@
 # Fishing Loop Design — Cast, Fly, Reel (MVP)
 
-Status: revision 8, pending user re-review
+Status: revision 9, pending user re-review
 Date: 2026-08-29 (revision 5 added 2026-08-30; revisions 6, 7 and 8 added
-2026-09-01)
+2026-09-01; revision 9 added 2026-09-04)
 
 **Revision 2 changes:** added a `Baiting` state between `Casting` and `Reeling`
 (fish actively swim toward the bait, tilt can wiggle the bait, first fish to
@@ -88,6 +88,27 @@ rather than fail silently, and renames the strike detector's asset from revision
 6's "StrikeTuningProfile" to **`StrikeGestureProfile`**, now that a second
 strike-related asset exists and the old name no longer says which is which.
 
+**Revision 9 changes (this pass, requested by the user on 2026-09-04) —
+DEFERRED IMPLEMENTATION, captured now so nothing is lost.** None of this is part
+of the current M6 work; the shipped `Striking` implements revision 6 as written,
+and these four changes are queued behind M6/M7. See the "Implementation status"
+box in §3's `Striking` section.
+
+1. **The target band's position is randomized per attempt.** Its *width* still
+   comes from the profile; the *radius it appears at* is drawn at random within
+   a tunable range each time `Striking` begins. Turns the check from "learn one
+   fixed rhythm" into "read and react."
+2. **A hidden forgiveness margin separates the drawn band from the judged
+   band.** One profile parameter widens the success test by a fixed radius
+   beyond what is drawn, absorbing the sensor's detection latency on the reverse
+   flick. The margin is never drawn.
+3. **The ring makes two passes, not one:** outer → centre, then centre → outer.
+   The band is crossed once per pass, so the player gets **two chances** per
+   `Striking` entry instead of one.
+4. **A cooldown on returning to `ReadyToCast` after a completed attempt.**
+   Tunable; the player stays in `ReadyToCast` and can still move along the
+   shore, but cannot cast until it elapses. See §3's `ReadyToCast` section.
+
 ## Process note (read this first)
 
 **Claude's role on this document is design and later review only.** Claude did not
@@ -170,11 +191,14 @@ Baiting --(wait timeout, no fish arrived)--> Reeling (empty)
 Striking --(attempt while the moving ring is inside the target band)--> Reeling (with fish)
 Striking --(attempt outside the band)--> rejected: ignored + input cooldown, stay in Striking
 Striking --(window elapses with no successful attempt)--> lose one hook --> ReadyToCast (or GameOver)
-Reeling --(reaches shore, has fish)--> catch scored --> ReadyToCast
-Reeling --(reaches shore, no fish)--> empty reel, no score --> ReadyToCast
-Reeling --(hits rock)--> lose one hook --> ReadyToCast (or GameOver if hooks == 0)
-Reeling --(tension maxes out)--> line snaps, lose one hook --> ReadyToCast (or GameOver)
+Reeling --(reaches shore, has fish)--> catch scored --> ReadyToCast*
+Reeling --(reaches shore, no fish)--> empty reel, no score --> ReadyToCast*
+Reeling --(hits rock)--> lose one hook --> ReadyToCast* (or GameOver if hooks == 0)
+Reeling --(tension maxes out)--> line snaps, lose one hook --> ReadyToCast* (or GameOver)
 (any state) --(timer reaches 0)--> GameOver
+
+* every return from Reeling enters ReadyToCast with casting locked out for
+  postAttemptCooldown (revision 9) — lane movement stays available
 ```
 
 ### ReadyToCast
@@ -201,6 +225,45 @@ Reeling --(tension maxes out)--> line snaps, lose one hook --> ReadyToCast (or G
   the existing debug HUD tooling (`GyroscopeDebugHUD.cs`) while performing
   normal lane-selection tilting, not just by picking a number that feels right
   on paper.
+
+#### Post-attempt cooldown (new in revision 9 — not yet implemented)
+
+Every return from `Reeling` — scored catch, empty reel, rock hit or line snap —
+enters `ReadyToCast` with **casting locked out for `postAttemptCooldown`**
+(tunable, starting value **0.8 s**).
+
+- **The player stays in `ReadyToCast`.** Lane movement remains available, so
+  the cooldown is repositioning time rather than dead time. No seventh state is
+  added: this is a temporary input restriction inside an existing state, the
+  same shape `FishingSceneEntryGuard` already uses to hold calibration outside
+  the six-state machine.
+- **The cast detector stays disabled** for the duration, on top of the existing
+  rule that it is only enabled during `ReadyToCast`.
+- **The session timer keeps running.** The cooldown costs real session time,
+  which is what stops it being free.
+
+Three reasons it exists:
+
+1. **The outcome needs a beat to read.** A catch that scores, a snapped line and
+   a rock hit currently all dump the player straight back into a castable state,
+   with no room for the score to land or the hook to visibly return to its dock.
+2. **It stops re-cast spam** on a failed attempt, which otherwise rewards
+   flailing over aiming.
+3. **It absorbs the strike's recovery motion.** The reverse flick that sets the
+   hook ends with the wrist travelling *forward* again — the cast direction. A
+   cooldown covering that recovery removes a whole class of accidental casts.
+
+**Open question, flagged rather than decided:** reason 3 applies just as much to
+the `Striking`-timeout path, which also returns to `ReadyToCast` immediately and
+also follows a reverse flick. This revision applies the cooldown only to the
+four `Reeling` exits, as literally requested. Extending it to the
+`Striking`-timeout return is a one-line change if wanted, but it makes losing a
+hook cost time as well, so it is a balance decision, not a cleanup.
+
+`postAttemptCooldown` is a loop-level feel value, so by §4's tuning rule it
+belongs in a small **`FishingLoopProfile`** rather than on any of the existing
+per-system profiles. M7's "5 hooks" and "90-second timer" are the same kind of
+value and should join it there rather than each acquiring a home of its own.
 
 ### Casting
 
@@ -259,16 +322,57 @@ inside a 0.7-second window, miss and lose a hook — with nothing on screen to
 time against. Revision 6 replaces it with a **shrinking ring / radial timing
 skill check**.
 
+> **Implementation status.** The version shipped in M5 is revision 6's: one
+> fixed band, one inward pass, no forgiveness margin. Revision 9's three changes
+> to this state (randomized band position, hidden forgiveness margin, two-pass
+> ring) are **specified but not implemented** — queued behind M6/M7. The text
+> below describes the intended end state; the paragraphs marked *(revision 9)*
+> are the parts not yet built.
+
 **What the player sees**
 
 - Two concentric rings, centred on the bait/hook.
-- A **target band**: a fixed, complete ring band (an annulus). It is a **full
-  360° band, not a sector and not an arc** — the strike input carries no
-  direction or aim component, so an arc would promise an aiming task the input
-  cannot express. The band is the success region, and it never moves.
-- A **moving ring**: it starts at the outermost radius the moment `Striking`
-  begins and **shrinks linearly to the centre across the whole
-  `windowDuration`**. It passes through the target band exactly once.
+- A **target band**: a complete ring band (an annulus) that holds still for the
+  whole attempt. It is a **full 360° band, not a sector and not an arc** — the
+  strike input carries no direction or aim component, so an arc would promise an
+  aiming task the input cannot express. The band is the success region.
+- **The band's radius is randomized per attempt *(revision 9)*.** Its width is
+  fixed by `targetBandWidth` in the profile, but its centre radius is drawn
+  uniformly at random from
+  `[minBandCenterRadius, maxBandCenterRadius]` each time `Striking` begins.
+  The point is to stop the check being memorized: with a fixed band, a player
+  eventually strikes on a stopwatch and stops looking at the screen. With a
+  random one, they have to actually read the ring every time.
+  Two guards, both required rather than advisory:
+  - The band must fit inside `[0, 1]`, so the drawn centre is clamped to
+    `[targetBandWidth / 2, 1 - targetBandWidth / 2]`.
+  - `maxBandCenterRadius` must stay meaningfully below `1`. A band sitting at
+    the outer edge is entered the instant `Striking` starts, before the player
+    has read anything — that is not a hard attempt, it is an unfair one.
+- A **moving ring**. It starts at the outermost radius the moment `Striking`
+  begins and travels **linearly**, sweeping the whole radius range across
+  `windowDuration`.
+
+**The ring makes two passes *(revision 9)*.** It runs outer → centre, then
+turns around at the centre and runs centre → outer, with `windowDuration`
+covering **both** legs (so each leg takes half of it). Its normalized radius
+over the window is simply:
+
+```
+p          = elapsed / windowDuration        // 0 → 1
+ringRadius = Abs(1 - 2p)                     // 1 → 0 → 1
+```
+
+The band is therefore crossed **twice**, giving the player **two chances per
+`Striking` entry** instead of one. A first mistimed attempt no longer costs the
+whole bite — it costs the first pass. This also takes most of the sting out of
+`attemptCooldown`: a cooldown that swallows the first crossing usually still
+leaves the second, which matters more now that the band's position is random and
+the player can misjudge it honestly.
+
+Note that `ringRadius` is no longer monotonic, so `StrikeController` publishes
+which leg is running (or the direction of travel) alongside the radius — the HUD
+may want to show it, and a debugger definitely does.
 
 **Making an attempt**
 
@@ -280,7 +384,42 @@ skill check**.
 - An attempt is judged at the instant it is made, against the moving ring's
   position at that instant.
 - **Inside the band → success.** The hook is set; enter `Reeling` "with a fish
-  attached."
+  attached." The first success ends `Striking` immediately — there is no second
+  success to collect.
+
+**The judged band is slightly larger than the drawn band *(revision 9)*.** A
+single profile parameter, `hitForgivenessRadius`, widens the success test on
+both sides of what the HUD draws:
+
+```
+effectiveInner = Clamp01(visualInner - hitForgivenessRadius)
+effectiveOuter = Clamp01(visualOuter + hitForgivenessRadius)
+```
+
+**Why it is needed:** the moment the player *intends* the flick and the moment
+the detector *reports* it are not the same. Between them sit the sensor's
+sampling interval (up to ~17 ms at 60 Hz), the low-pass filter's lag, and the
+time it takes a real wrist to cross `TriggerThreshold`. The ring keeps moving
+through all of that, so a perfectly-judged flick registers slightly past where
+the player saw the ring. Without a margin, the mechanic punishes latency rather
+than timing.
+
+**Why a symmetric margin is the right shape here, despite the lag being
+one-directional:** on the inward leg, latency pushes the registered position
+*inward*; on the outward leg it pushes it *outward*. With the two-pass ring
+those two errors point opposite ways, so one symmetric widening covers both. It
+is also simply the cheapest thing that works, which is what this parameter is
+for.
+
+Two rules about it:
+
+- **Never draw the forgiveness margin.** The HUD draws the visual band only. If
+  the real band is visible, players aim at the real band and the forgiveness is
+  spent immediately — the effect only exists while it is invisible.
+- `StrikeController` therefore publishes the **visual** bounds for the HUD and
+  keeps the effective bounds private for judging. Two values that look
+  interchangeable but must not be unified; keeping them apart is the whole
+  mechanism.
 - **Outside the band → rejected, not failed.** The attempt is ignored, costs
   nothing directly, and starts a short, tunable **input cooldown**; no further
   attempt is accepted while it runs. `Striking` continues.
@@ -299,11 +438,11 @@ skill check**.
 
 **Failure**
 
-- The only failure is **the window elapsing with no successful attempt** —
-  including the case where the ring passed the band while the player was locked
-  out by a cooldown. Lose one hook, return to `ReadyToCast` (or `GameOver` if
-  that was the last hook). `Reeling` is never entered; there is nothing to reel
-  back, the fish is simply gone.
+- The only failure is **the window elapsing with no successful attempt** — both
+  passes spent, including any crossing the player was locked out of by a
+  cooldown. Lose one hook, return to `ReadyToCast` (or `GameOver` if that was
+  the last hook). `Reeling` is never entered; there is nothing to reel back, the
+  fish is simply gone.
 - The consequence is unchanged from revision 3. Only the path to it changed.
 
 **No other input applies** during this state — no tilt, no lane movement. It is
@@ -316,27 +455,41 @@ are starting guesses only.
 
 | Parameter | Starting value | Meaning |
 |---|---|---|
-| `windowDuration` | 1.5 s | Time for the ring to shrink from outer edge to centre |
-| `targetBandOuterRadius` | 0.40 | Outer edge of the success band, as a normalized radius |
-| `targetBandInnerRadius` | 0.24 | Inner edge of the success band, as a normalized radius |
+| `windowDuration` | 2.0 s | Total time for **both** ring passes (1.0 s per leg) |
+| `targetBandWidth` *(rev 9)* | 0.16 | Band thickness as a normalized radius; replaces the two fixed radii |
+| `minBandCenterRadius` *(rev 9)* | 0.25 | Lower bound of the random band centre |
+| `maxBandCenterRadius` *(rev 9)* | 0.70 | Upper bound of the random band centre — keep well below 1 |
+| `hitForgivenessRadius` *(rev 9)* | 0.04 | Hidden widening of the judged band on each side |
 | `attemptCooldown` | 0.35 s | Input lockout after a rejected attempt |
 | shake amplitude / duration | ~0.12 units / 0.15 s | Rejected-attempt camera shake |
 
-The moving ring's position is published as a **normalized radius**: `1` at the
-outer edge when `Striking` begins, `0` at the centre when the window ends. The
-band is defined in the same normalized units, so the success test is simply
-`targetBandInnerRadius ≤ ringRadius ≤ targetBandOuterRadius`.
+Revisions 6–8 used fixed `targetBandOuterRadius` / `targetBandInnerRadius`
+(0.40 / 0.24) instead of the three revision 9 band parameters. That is what the
+shipped M5 currently reads.
 
-The property that makes this tunable at all: the ring shrinks **linearly** in
-both radius and time, so the band's width in normalized radius converts directly
-into seconds — `bandWidth × windowDuration`. At the starting values that is
-`0.16 × 1.5 ≈ 0.24 s` of in-band time. Widening the band or lengthening the
-window grows the forgiving window by exactly that product; there is no
-second-order behaviour to reason about.
+The moving ring's position is published as a **normalized radius** — `1` at the
+outer edge, `0` at the centre — so the band, the forgiveness margin and the ring
+are all expressed in the same units and the success test is one range check.
 
-The 1.5 s default is deliberately longer than revision 3's 0.7 s. The player now
-has an approach to watch and time against; 0.7 s was chosen for a pure reflex
-check with no run-up at all.
+The property that makes this tunable at all: the ring travels **linearly** in
+both radius and time, so a width in normalized radius converts directly into
+seconds. With `windowDuration` covering two legs, each leg lasts
+`windowDuration / 2`, and the in-band time per crossing is:
+
+```
+(targetBandWidth + 2 × hitForgivenessRadius) × windowDuration / 2
+```
+
+At the starting values: `(0.16 + 0.08) × 1.0 = 0.24 s` per crossing, **twice** —
+about `0.48 s` of total forgiving time, against revision 6's single `0.24 s`.
+Revision 9 is therefore meaningfully *more* generous overall even though the
+band moved and each individual leg got shorter, which is the intended trade:
+harder to memorize, easier to survive.
+
+`windowDuration` rose from 1.5 s to 2.0 s precisely because it now buys two legs
+instead of one; at 1.5 s each leg would be only 0.75 s and each crossing 0.18 s.
+(Revision 3's original figure was 0.7 s, for a pure reflex check with no run-up
+at all — the number has grown every time the state gained something to read.)
 
 ### Reeling (tension reworked in revision 7)
 
@@ -597,8 +750,9 @@ matter of swapping an asset reference rather than editing code.
 |---|---|
 | `CastTuningProfile` (existing) | Cast gesture detection, power curve, launch velocity |
 | `StrikeGestureProfile` (asset) | A `CastTuningProfile` instance for the reversed detector — `Sensor` section only |
-| `StrikeWindowProfile` (new class) | `windowDuration`, both band radii, `attemptCooldown`, shake amplitude/duration |
+| `StrikeWindowProfile` (new class) | `windowDuration`, the band parameters, `hitForgivenessRadius`, `attemptCooldown`, shake amplitude/duration |
 | `ReelTuningProfile` (new class) | Retrieval speed, accelerated speed, and all five tension parameters from §3 |
+| `FishingLoopProfile` (rev 9, new class) | `postAttemptCooldown`, plus M7's starting hooks and session length |
 
 Note that `Striking` needs **two** assets, not one. The reversed detector is
 configured by a `CastTuningProfile` because that is genuinely what it is; the
@@ -623,9 +777,18 @@ band can never be hit" with no clue why. Each profile enforces its own rules
 - `maxLateralTensionRate > decayRate` — otherwise fast dodging cannot either.
 - `maxEvaluatedLateralSpeed > safeLateralSpeed` — otherwise the mapping divides
   by zero or inverts.
-- `0 ≤ targetBandInnerRadius < targetBandOuterRadius ≤ 1` — otherwise the band
-  is empty or inside-out.
-- `windowDuration > 0`, `attemptCooldown ≥ 0`.
+- `0 < targetBandWidth < 1` — otherwise the band is empty or swallows the whole
+  radius. *(Revisions 6–8 used the pair `0 ≤ targetBandInnerRadius <
+  targetBandOuterRadius ≤ 1` instead, which is what the shipped M5 validates.)*
+- `minBandCenterRadius < maxBandCenterRadius`, and both clamped into
+  `[targetBandWidth / 2, 1 - targetBandWidth / 2]` so a randomly drawn band
+  always fits — a silently out-of-range band is simply unhittable, with nothing
+  in the Console to say why.
+- `hitForgivenessRadius ≥ 0`, and small relative to `targetBandWidth`. If it
+  approaches the band's own width, the drawn band stops meaning anything and the
+  player is being lied to rather than helped — worth an explicit warning bound
+  rather than a silent clamp.
+- `windowDuration > 0`, `attemptCooldown ≥ 0`, `postAttemptCooldown ≥ 0`.
 
 **Follow the existing house style** set by `CastTuningProfile`: `[Header]`
 grouping, a `[Tooltip]` on every field, `[Min]`/`[Range]` where a bound exists,
@@ -752,6 +915,22 @@ it changes today's scope, not just the design's fidelity to the original.
         as a rock hit does — and the snap fires once, not repeatedly.
   7. Reaching shore with a fish attached adds score; without one, no score.
   8. Hooks reaching 0 or the timer reaching 0 ends the game and shows the score.
+
+  *Revision 9 adds these, to be run once its four changes are implemented:*
+
+  9. The target band appears at a **different radius on successive attempts**,
+     and never so far out that it is already entered on the first frame, nor
+     clipped by the outer or inner edge.
+  10. The ring **reverses at the centre** and returns outward, and an attempt
+      timed on the **second** crossing succeeds exactly as one on the first.
+  11. A rejected attempt whose cooldown swallows the first crossing still leaves
+      the second crossing usable.
+  12. A flick timed *slightly* outside the drawn band still succeeds
+      (`hitForgivenessRadius` doing its job), while the drawn band is visibly
+      unchanged — confirm the margin is not rendered.
+  13. After every one of the four `Reeling` exits, casting is refused for
+      `postAttemptCooldown` while lane movement still works, and the session
+      timer keeps counting down throughout.
 
 ## 8. Follow-ups (explicitly not today)
 

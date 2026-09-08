@@ -19,4 +19,4 @@ MonoBehaviour:
   accelerateRiseRate: 1.2
   safeLateralSpeed: 1.33
   maxEvaluatedLateralSpeed: 4
-  maxLateralTensionRate: 1.4
+  maxLateralTensionRate: 0.9

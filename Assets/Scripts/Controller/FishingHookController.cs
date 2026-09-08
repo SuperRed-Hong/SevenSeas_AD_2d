@@ -99,6 +99,15 @@ public sealed class FishingHookController : MonoBehaviour
             launchPoint.rotation);
     }
     
+    public void CancelFlight()
+    {
+        if (State == FishingHookFlightState.Flying)
+        {
+            // Freeze at the current position without publishing a landing event.
+            State = FishingHookFlightState.Landed;
+        }
+    }
+
     private void Update()
     {
         if (State == FishingHookFlightState.Flying)

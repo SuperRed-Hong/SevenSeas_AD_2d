@@ -137,3 +137,50 @@
 - At the student's explicit request, Codex made a one-time implementation exception for the mechanical M6 profile migration: created `ReelTuningProfile` plus its asset, preserved retrieval `2` and dodge `4`, initialized tension thresholds from measured speed, replaced both prototype constants, and serialized the scene reference. The first command-line build could not see the new type because Unity had not yet refreshed its generated `.csproj`; Unity Refresh and a fresh build/Play test remain before Step 5 is complete.
 - After Unity Refresh, the generated project includes `ReelTuningProfile.cs`; a fresh `Assembly-CSharp.csproj` build completed with 0 errors and the same 3 pre-existing assembly-version warnings. Scene GUID verification confirmed `ReelingController` references the new asset, so M6 Step 5 is complete.
 - The student explicitly reprioritized the rapid prototype toward an end-to-end repeatable loop. M6's tension UI, snap outcome, and full tuning verification remain deferred rather than removed; shore arrival and the return to `ReadyToCast` are now the immediate target, with score storage still reserved for M7's `ScoreTracker`.
+
+## 2026-09-03
+
+- Read-only inspected the saved tension implementation and scene. `ReelingController` exposes `Tension01`, resets it at retrieval start/cancel, and already routes maximum tension through guarded `ReportAttemptFailed()`. No runtime verification was performed in this review.
+- The student requested complete step-by-step teaching for the tension UI. Resumed M6 Step 7; asked the student to map tension 0.25 onto endpoints -100 and 100. Awaiting their answer before the first Unity setup step.
+- The student explicitly requested continued maintenance of `task_plan.md`; confirmed ongoing synchronization with `progress.md` and `findings.md`. Updated M6's stale heading and snap status without claiming runtime completion.
+- Inspected the student's saved Slider setup. Bottom-to-top direction, `0..1` range, disabled interaction, Fill/Handle Rect assignments, and foreground Frame ordering are present. The frame uses the intended attention-bar sprite. Before binding the HUD script, the renamed EventSystem parent must be separated back into an EventSystem and a plain `TensionBarHUD`; the Handle still uses Unity's default sprite.
+
+## 2026-09-06 — Project collaboration agreement
+
+- Created root AGENTS.md with project roles, design handoff, architecture boundaries, Unity editing discipline, and verification requirements.
+- User explicitly selected collaborative implementation: Codex may directly edit code and scene wiring within requested tasks; important gameplay and design changes are discussed with the user first. Claude remains the primary design-document author and design reviewer.
+- This replaces the historical learner-written-only default; teaching is now available on request. No gameplay code or scenes changed in this task.
+
+## 2026-09-06 — Tension HUD and session cleanup
+
+- Implemented and wired TensionBarHUD, retrieval-only display, continuous green/yellow/red fill, noninteractive value updates, and the existing pointer sprite.
+- Added silent flight/race cancellation at GameOver and explicit Strike cancellation. No gameplay balance parameters changed.
+- Validation: dotnet build Assembly-CSharp.csproj passed with 0 errors and 2 CS0649 warnings in SceneCatalog. Scene file IDs checked for uniqueness and target references; diff reviewed. Unity Play Mode, Android and WebGL were not run.
+- Next: playtest HUD/reset, snap hook loss and timer expiration during flight/baiting, then verify complete M7 outcomes.
+
+## 2026-09-06 — Teaching and prototype priorities
+
+- User returned to step-by-step teaching and confirmed tension pointer/fill alignment works in play. User adjusted aspect/scaling/placement; saved lateral tension rate is 0.9.
+- User explicitly deferred the proposed systematic regression pass, preferring current playability and remaining feature development. Tests remain deferred, not passed.
+- Read-only backlog check: mobile accelerate methods lack serialized UI bindings in searched scenes/prefabs; PausePanelButton navigates to MainMenu; gameplay-specific restart flow not found; linear cast and shake-profile integration remain unfinished. FishingLoopTest2 exists but catalog/build still target FishingLoopTest.
+
+
+## 2026-09-06 — Two-day implementation planning
+
+- Created the Android playtest implementation proposal and a separate Claude design-change brief covering all current requests, Profile ownership, cooldown paths, implementation order, deferred scope and open decisions.
+- Kept Claude's canonical revision 9 design and teaching plan unchanged. No gameplay/scene edits or runtime tests in this planning task. Brief prepared for user handoff, not sent to Claude.
+
+## 2026-09-06 — Strike revision 9 user checkpoint
+
+- User explicitly reported the timing-ring migration complete and its functional test passed. This is user-reported verification, not an additional Codex test run.
+- Continue teaching post-attempt cast cooldown next. Add a dedicated FishingLoopProfile for cooldown first; starting-hooks/session-duration migration will be a separate coordinated change to avoid duplicate live configuration sources.
+
+## 2026-09-07 — 本轮教学进度与重新规划
+
+- 用户继续亲自编写代码、英文注释、一次一个适量步骤；不反复检查。时机圈按用户报告通过，随后 post-attempt cooldown 完成并获用户试玩确认。
+- 已教学并在保存源码中看到 ScoreTuningProfile、实时距离/倍率、PC 按住空格蓄力和竖条 HUD。显示统一归 FishingSessionHUD；用户确认 Slider 手动及运行时 Value 都会增长。
+- 用户确认倍率在飞行中变化、落水锁定，距离显示在 Reeling 中继续变化。检查发现落水最终倍率重算、上岸倍率结算和 scoreTuningProfile 缺失检查尚未接入；不能标记计分闭环完成。
+- 当前蓄力条显隐仍依赖旧文字对象的显隐条件，记录为下一小步收尾项。PC 蓄力字段仍在输入组件，飞行距离/固定时长仍在 FishingHookController；Profile 迁移尚未执行。
+- 用户希望飞行时间来自模拟；初速度/角度/重力与虚拟高度为讨论建议，尚未确认可见弧线范围，没有实现。
+- 更新 task_plan.md、findings.md、本日志和旧入口提示，新增 docs/reference/2026-09-07-progress-and-plan.md，重新安排收尾、飞行方案、反馈、技巧奖励、鱼行为及设备交付顺序。
+- 本次只更新文档并进行局部源码/保存场景读取，没有修改代码或场景，没有运行编译、Play Mode、Android、WebGL 或完整回归，也未提交/推送。没有改写 Claude 主导设计或发送外部消息。

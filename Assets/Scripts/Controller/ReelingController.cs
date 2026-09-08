@@ -33,7 +33,7 @@ public sealed class ReelingController : MonoBehaviour
     public event Action AttemptFailed;
     public event Action RetrievalCompleted;
     
-    
+    public float DistanceToShore => Mathf.Abs(shoreTarget.position.y - transform.position.y);
     private bool attemptFailureReported;
 
     public void BeginRetrieval()

@@ -1,5 +1,18 @@
 # Fishing Loop Teaching Plan
 
+## 当前入口 — 2026-09-07 更新
+
+当前状态与实施顺序以 [进度与新计划](docs/reference/2026-09-07-progress-and-plan.md) 为准。下方 M0–M8 是历史教学清单；其中 M7 未开始、revision 9/冷却待做等旧描述不再代表当前实现。
+
+- [complete — user reported] 时机圈 revision 9、post-attempt cooldown 试玩通过。
+- [implemented / partial verification] PC 按住空格蓄力、松开抛竿；竖向蓄力条运行时 Value 增长已由用户确认。
+- [in-progress] Session HUD 实时距离与倍率已有；补最终落水倍率锁定、成功上岸倍率结算、Profile 引用检查及竖条独立显隐。
+- [decision pending] 飞行时间改由模拟产生；具体算法、可见弧线范围与 Profile 迁移未定，未实现。
+- [pending] 倍率 VFX、加速/擦边奖励、鱼生成避遮挡、最小鱼行为/动画、试玩说明和重开。
+- [deferred] 系统回归及尚未执行的平台验证；不当成通过。
+
+本轮继续用户亲自编写、一次一个适量步骤、英文注释，不重复考查与反复检查。最新 AGENTS.md 和用户要求优先于下方历史协议。
+
 ## Goal
 
 Coach the project owner through hand-implementing the approved fishing loop:
@@ -150,7 +163,7 @@ Status: **prototype-complete — revision 8 shake-profile wiring and regression 
 
 ## M6 — Reeling: retrieve + dodge + tension
 
-Status: **in-progress — revision 8 approved and re-read; think-first stage next**
+Status: **in-progress — tension UI teaching resumed; gameplay think-first and architecture checkpoints complete**
 
 - [complete] Revision 8 design update received; movement-driven tension is approved and the former design blocker is cleared.
 
@@ -179,8 +192,8 @@ Status: **in-progress — revision 8 approved and re-read; think-first stage nex
 - [complete] Step 4: student measures and logs actual lateral speed after movement: keyboard maximum is approximately `4 units/s`, and sustained input at a boundary measures `0`.
 - [complete] Step 5: by the student's explicit one-time exception to learner-written mode, Codex created and wired `ReelTuningProfile`, migrated retrieval/dodge speeds, and added tension parameters plus validation; Unity refreshed and `Assembly-CSharp` builds with 0 errors.
 - [in-progress] Step 6: student has implemented the tension accumulator; concise logging/play verification remains.
-- [deferred] Step 7: student adds a display-only live tension bar. Explicitly deferred by the student to prioritize the complete gameplay loop.
-- [deferred] Step 8: student makes maximum tension fire the line-snap outcome exactly once. Explicitly deferred by the student to prioritize the complete gameplay loop.
+- [in-progress] Step 7: student resumed the display-only live tension bar on 2026-09-03. First Slider pass saved with correct direction/range/disabled interaction and Frame ordering. Next: restore the accidentally renamed EventSystem, create a plain `TensionBarHUD` under Canvas, and reparent the Slider; then assign the pointer sprite, bind the display script, add color/visibility behavior, and verify in Play Mode.
+- [in-progress] Step 8: saved code already checks maximum tension and calls the guarded shared attempt-failure path. Runtime verification of one snap/one hook loss remains; the previous deferred status was stale.
 - [in-progress] Step 9: prioritize the shore-arrival event and return-to-`ReadyToCast` loop now; final score accumulation remains owned by M7's `ScoreTracker`.
 - [not-started] Step 10: student measures real maximum lateral speed first, tunes thresholds before rates, and verifies design §7 checklist 6a–f separately.
 
@@ -215,7 +228,9 @@ Status: **not-started**
 
 ## Current next action
 
-Prioritize the rapid-prototype vertical slice by proceeding with M6 while preserving its approved behavior. Complete the concise M6 think-first checkpoint, then implement the ten steps one at a time, focusing first on retrieval, dodge, failure, tension, and shore completion. M5 shake-profile wiring, M4 bait wiggle, and the final 2D-simulated-3D parabola remain explicitly deferred rather than removed.
+**2026-09-07 当前动作：** 先按新计划收尾蓄力条显示与倍率结算，再讨论飞行模拟范围；下方 2026-09-06 动作为历史记录，勿重新创建已完成的按钮。详见 `docs/reference/2026-09-07-progress-and-plan.md`。
+
+2026-09-06: User approved the two-day implementation plan and requested starting. Continue step-by-step teaching; do not wait for an additional Claude approval as a prerequisite to this explicitly approved work. Current step: create an AccelerateButton under Canvas in FishingLoopTest, then wire press/release to existing MobileFishingInputSource methods. Read-only inspection found no saved accelerate button bindings. Library/LastSceneManagerSetup and build/catalog all identify FishingLoopTest (saved editor-state evidence). No gameplay or scene changes made by Codex in this step. Full plan: docs/design/2026-09-06-android-playtest-implementation-plan.md; Claude handoff remains prepared, not sent.
 
 ## Errors
 

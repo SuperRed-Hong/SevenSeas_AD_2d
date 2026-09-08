@@ -88,3 +88,32 @@
 - M6 ownership decision: add a focused `ReelingController` for retrieval movement, dodge, measured lateral speed, and tension because their within-frame ordering is tightly coupled. `FishingHookController` remains the Dock/Fly/Land authority, while `FishingLoopController` interprets Reeling success/failure events as global transitions.
 - M6 collision diagnosis: `FishingHook` still had the obsolete `PlayerHazard` component from `OnCollisionEnter2D.cs`, while the entire `Sea` object is tagged `Hazard`. Adding a `Rigidbody2D` for Reeling activated that old trigger path during Casting; it reloads the current scene directly, bypassing `ReelingController.IsActive` and making the loop appear to return to `ReadyToCast`.
 - M6 lateral-speed measurement passed: the current keyboard dodge reaches approximately `4 world units/s`, while holding full input against a clamped lane boundary measures `0`. Initial profile thresholds should therefore use `maxEvaluatedLateralSpeed ≈ 4` and `safeLateralSpeed ≈ 1.33`, then be tuned from Play Mode evidence.
+
+## 2026-09-03 — Tension UI source review
+
+- `FishingLoopTest.unity` contains the attention-bar background as a root-level `SpriteRenderer`, with no display script on that object. The pointer sprite exists as an asset but its GUID is not referenced in saved scenes or prefabs; no script currently consumes `Tension01` for UI.
+- Tension UI still needs pointer/endpoints, display-only value mapping, retrieval-state visibility, and layout verification during camera movement. Screen-fixed Canvas versus world-space presentation has not yet been confirmed with the student.
+- Maximum-tension failure is already implemented in saved code despite the old deferred checklist entry. Source inspection establishes implementation presence only; one-shot snap and hook-loss behavior still need runtime verification.
+- The first saved Slider pass has the correct vertical direction, value range, disabled interaction, Fill/Handle assignments, and Frame-last sibling order. Its current `TensionBarHUD` object is actually the former EventSystem (it retains `EventSystem` and `InputSystemUIInputModule`), so it must be renamed back and the Slider moved under a new plain HUD container. The Handle has not yet received the pointer sprite, and `TensionBarHUD.cs` is not yet attached or serialized in the scene.
+
+## 2026-09-06 — HUD and GameOver integration
+
+- The separate TensionBarHUD container had no display component. It now references ReelingController and its child Slider; only the child is hidden so the HUD can reactivate on the next retrieval. Slider notifications are suppressed and disabled-state tinting is removed.
+- GameOver previously left hook flight and an active bite race running. Explicit cancellation now freezes flight without a Landed event and resets approaching candidates without a bite/timeout event. Runtime behavior still requires Play Mode verification.
+
+## 2026-09-06 — Android playtest design handoff
+
+- Revision 9 is now synchronized locally but its random target band, hidden forgiveness and two-pass ring remain unimplemented. User requests extending the return-to-ready cooldown to Strike timeout as well; last-message state naming ambiguity is documented explicitly in the handoff.
+- User accepted fish-base-score times longitudinal-distance multiplier, plus near-miss and accelerated-retrieval-distance bonuses. Lateral travel does not count; pending bonuses settle only on successful catch. Numeric curves/rates remain undecided.
+- Fish generation exclusion means visible rock occlusion, not the whole shoreward lane. User also requests a basic behavior tree and Idle/Swim/Hooked animation states.
+
+## 2026-09-07 — 计分、蓄力与飞行方案更正
+
+- 距离规则已改变：倍率随 Casting 距离更新、落水锁定；HUD 的当前到岸距离在 Reeling 中减少。旧咬钩时锁定规则仅为历史设计，后续按用户本轮确认实现。
+- FishingLoopController 保存 castDistance；CurrentCastDistance 实际委托 ReelingController.DistanceToShore 计算当前距离，不能误认为它是固定落点距离。CurrentDistanceMultiplier 是运行时倍率；Profile 只存配置。
+- 当前保存代码的 HandleHookLanded 没有最终倍率重算，HandleRetrievalCompleted 仍只结算基础分；Start 没有检查 scoreTuningProfile。教学代码示例已给出不等于用户实际接完。
+- FishingSessionHUD 保留 castChargeText 和 castChargeSlider，Slider 显隐放在文字 activeSelf 变化分支中；去除文字 UI 时必须同步修改消费者和引用，不能只删除文字对象。
+- PC 蓄力以 fullChargeDuration 归一化；旧 castPower 固定值已被替代。用户要竖条，仅键鼠蓄力时显示；运行时 Value 增长由用户确认。
+- 现有正式飞行仍用 minimumCastDistance / maximumCastDistance / flightDuration。用户明确不满意固定飞行时间，但没有确定抛物线方案或可见弧线范围。不要将建议当成获批设计，也不要将独立 CastBallController/GyroscopeCastTest 直接替换正式控制器。
+- 将来虚拟高度仅用于表现时，距离 HUD、倍率和水面逻辑必须读取逻辑坐标，避免把腾空高度算成抛远距离。此项是拟议方案的技术边界，尚未实现。
+- 新计划见 docs/reference/2026-09-07-progress-and-plan.md；旧两日安排不自动延长。技巧奖励数值、时间耗尽的待结算奖励处理和实际截止时间仍有待确定。

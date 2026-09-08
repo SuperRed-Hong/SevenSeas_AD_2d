@@ -12,9 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3d95bafa349616b408906e3e4c9a177d, type: 3}
   m_Name: StrikeWindowProfile
   m_EditorClassIdentifier: Assembly-CSharp::StrikeWindowProfile
-  windowDuration: 1.5
+  windowDuration: 2
   attemptCooldown: 0.35
-  targetBandInnerRadius: 0.498
-  targetBandOuterRadius: 0.63
   shakeAmplitude: 0.233
   shakeDuration: 0.15
+  targetBandWidth: 0.15
+  minBandCenterRadius: 0.187
+  maxBandCenterRadius: 0.852
+  hitForgivenessRadius: 0.04
