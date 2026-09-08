@@ -38,7 +38,10 @@ public sealed class FishingLoopController : MonoBehaviour
     private HookTracker hookTracker;
     [SerializeField]
     private SessionTimer sessionTimer;
-
+    [SerializeField]
+    [Tooltip("Configuration for Score System")]
+    private ScoreTuningProfile scoreTuningProfile;
+    
     [SerializeField]
     [Tooltip("Shared configuration for the fishing session.")]
     private FishingLoopProfile loopProfile;
@@ -52,14 +55,18 @@ public sealed class FishingLoopController : MonoBehaviour
     public float SelectedLaneX { get; private set; }
     public float SelectedCastPower { get; private set; }
     public FishController HookedFish { get; private set; }
+
+    public float CurrentDistanceMultiplier { get; private set; } = 1f;
     
     public FishingLoopState CurrentState { get; private set; } =  FishingLoopState.ReadyToCast;
     [SerializeField]
     private CastGestureDetector castGestureDetector;
     [SerializeField]
     private CastGestureDetector strikeGestureDetector;
-
-
+    
+    private float castDistance;
+    public float CurrentCastDistance => reelingController.DistanceToShore;
+    public float CastDistance => castDistance;
 
     private void Start()
     {
@@ -208,6 +215,7 @@ public sealed class FishingLoopController : MonoBehaviour
             return;
         }
 
+        castDistance = reelingController.DistanceToShore;
         // Preserve the landing point for Baiting and later retrieval logic.
         LandingPosition = landingPosition;
 
@@ -248,7 +256,8 @@ public sealed class FishingLoopController : MonoBehaviour
         }
 
         HookedFish = fish;
-
+        
+ 
         Debug.Log(
             $"Fish hooked: {fish.name}, " +
             $"score value = {fish.ScoreValue}");
@@ -394,6 +403,10 @@ public sealed class FishingLoopController : MonoBehaviour
 
     private void UpdateCasting()
     {
+        castDistance = reelingController.DistanceToShore;
+        CurrentDistanceMultiplier =
+            scoreTuningProfile.GetDistanceMultiplier(
+                reelingController.DistanceToShore);
     }
 
     private void UpdateReadyToCast()
@@ -475,8 +488,11 @@ public sealed class FishingLoopController : MonoBehaviour
         hookController.Dock();
         SetCastingAvailable(!IsCastCoolingDown);
     }
-    private void EnterCasting() 
-    { 
+    private void EnterCasting()
+    {
+        // Reset multiplier
+        castDistance = 0f;
+        CurrentDistanceMultiplier = 1f;
         // Follow the hook from launch through the remaining attempt states.
         cameraController.FollowHook();
         

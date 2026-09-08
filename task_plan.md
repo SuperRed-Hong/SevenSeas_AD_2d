@@ -1,5 +1,18 @@
 # Fishing Loop Teaching Plan
 
+## 当前入口 — 2026-09-07 更新
+
+当前状态与实施顺序以 [进度与新计划](docs/reference/2026-09-07-progress-and-plan.md) 为准。下方 M0–M8 是历史教学清单；其中 M7 未开始、revision 9/冷却待做等旧描述不再代表当前实现。
+
+- [complete — user reported] 时机圈 revision 9、post-attempt cooldown 试玩通过。
+- [implemented / partial verification] PC 按住空格蓄力、松开抛竿；竖向蓄力条运行时 Value 增长已由用户确认。
+- [in-progress] Session HUD 实时距离与倍率已有；补最终落水倍率锁定、成功上岸倍率结算、Profile 引用检查及竖条独立显隐。
+- [decision pending] 飞行时间改由模拟产生；具体算法、可见弧线范围与 Profile 迁移未定，未实现。
+- [pending] 倍率 VFX、加速/擦边奖励、鱼生成避遮挡、最小鱼行为/动画、试玩说明和重开。
+- [deferred] 系统回归及尚未执行的平台验证；不当成通过。
+
+本轮继续用户亲自编写、一次一个适量步骤、英文注释，不重复考查与反复检查。最新 AGENTS.md 和用户要求优先于下方历史协议。
+
 ## Goal
 
 Coach the project owner through hand-implementing the approved fishing loop:
@@ -214,6 +227,8 @@ Status: **not-started**
 - [not-started] Report the implementation outcome to Claude for review.
 
 ## Current next action
+
+**2026-09-07 当前动作：** 先按新计划收尾蓄力条显示与倍率结算，再讨论飞行模拟范围；下方 2026-09-06 动作为历史记录，勿重新创建已完成的按钮。详见 `docs/reference/2026-09-07-progress-and-plan.md`。
 
 2026-09-06: User approved the two-day implementation plan and requested starting. Continue step-by-step teaching; do not wait for an additional Claude approval as a prerequisite to this explicitly approved work. Current step: create an AccelerateButton under Canvas in FishingLoopTest, then wire press/release to existing MobileFishingInputSource methods. Read-only inspection found no saved accelerate button bindings. Library/LastSceneManagerSetup and build/catalog all identify FishingLoopTest (saved editor-state evidence). No gameplay or scene changes made by Codex in this step. Full plan: docs/design/2026-09-06-android-playtest-implementation-plan.md; Claude handoff remains prepared, not sent.
 

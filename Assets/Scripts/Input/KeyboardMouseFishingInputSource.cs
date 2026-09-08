@@ -9,17 +9,23 @@ public sealed class KeyboardMouseFishingInputSource : FishingInputSource
     [SerializeField] private InputActionReference strikeAction;
     [SerializeField] private InputActionReference accelerateAction;
 
-    [SerializeField, Range(0f, 1f)] [Tooltip("Cast power produced by keyboard and mouse input")]
-    private float castPower = 1f;
-    [SerializeField, Min(0f)]
-    [Tooltip("How fast keyboard input moves the virtual position across the normalized range.")]
-   
+    [SerializeField, Min(0.01f)]
+    [Tooltip("Hold duration in seconds required to reach full cast power.")]
+    private float fullChargeDuration = 2f;
+
+    private float castChargeElapsed;
+    private bool isChargingCast;
+    
+    
    
     private bool castEnabled;
     private bool strikeEnabled;
     private bool accelerateEnabled;
     private bool accelerateRequiresRelease;
     private bool moveEnabled;
+    
+    public bool IsChargingCast => isChargingCast;
+    public float CastCharge01 => Mathf.Clamp01(castChargeElapsed / Mathf.Max(0.01f,fullChargeDuration));
 
     public override Vector2 MoveInput => moveEnabled &&
                                          moveAction != null &&
@@ -43,6 +49,9 @@ public sealed class KeyboardMouseFishingInputSource : FishingInputSource
     }
     private void OnDisable()
     {
+        
+        isChargingCast = false;
+        castChargeElapsed = 0f;
         SetActionEnabled(moveAction, false);
         SetActionEnabled(castAction, false);
         SetActionEnabled(strikeAction, false);
@@ -59,13 +68,34 @@ public sealed class KeyboardMouseFishingInputSource : FishingInputSource
         {
             accelerateRequiresRelease = false;
         }
-        
-        
-        if (castEnabled &&
-            castAction != null &&
-            castAction.action.WasPressedThisFrame())
+
+
+        if (castEnabled && castAction != null)
         {
-            RaiseCastPerformed(castPower);
+            if (castAction.action.WasPressedThisFrame())
+            {
+                isChargingCast = true;
+                castChargeElapsed = 0f;
+                
+            }
+
+            if (isChargingCast)
+            {
+                float safeDuration = Mathf.Max(0.01f, fullChargeDuration);
+                
+                castChargeElapsed = Mathf.Min(castChargeElapsed + Time.deltaTime, safeDuration);
+
+                if (castAction.action.WasReleasedThisFrame())
+                {
+                    float power = Mathf.Clamp01(castChargeElapsed / safeDuration);
+                    
+                    // Clear charging before the event changes the game state.
+                    isChargingCast = false;
+                    castChargeElapsed = 0f;
+                    
+                    RaiseCastPerformed(power);
+                }
+            }
         }
         
         
@@ -81,6 +111,12 @@ public sealed class KeyboardMouseFishingInputSource : FishingInputSource
     public override void SetCastEnabled(bool value)
     {
         castEnabled = value;
+
+        if (!value)
+        {
+            isChargingCast = false;
+            castChargeElapsed = 0f;
+        }
     }
 
     public override void SetStrikeEnabled(bool value)

@@ -174,3 +174,13 @@
 
 - User explicitly reported the timing-ring migration complete and its functional test passed. This is user-reported verification, not an additional Codex test run.
 - Continue teaching post-attempt cast cooldown next. Add a dedicated FishingLoopProfile for cooldown first; starting-hooks/session-duration migration will be a separate coordinated change to avoid duplicate live configuration sources.
+
+## 2026-09-07 — 本轮教学进度与重新规划
+
+- 用户继续亲自编写代码、英文注释、一次一个适量步骤；不反复检查。时机圈按用户报告通过，随后 post-attempt cooldown 完成并获用户试玩确认。
+- 已教学并在保存源码中看到 ScoreTuningProfile、实时距离/倍率、PC 按住空格蓄力和竖条 HUD。显示统一归 FishingSessionHUD；用户确认 Slider 手动及运行时 Value 都会增长。
+- 用户确认倍率在飞行中变化、落水锁定，距离显示在 Reeling 中继续变化。检查发现落水最终倍率重算、上岸倍率结算和 scoreTuningProfile 缺失检查尚未接入；不能标记计分闭环完成。
+- 当前蓄力条显隐仍依赖旧文字对象的显隐条件，记录为下一小步收尾项。PC 蓄力字段仍在输入组件，飞行距离/固定时长仍在 FishingHookController；Profile 迁移尚未执行。
+- 用户希望飞行时间来自模拟；初速度/角度/重力与虚拟高度为讨论建议，尚未确认可见弧线范围，没有实现。
+- 更新 task_plan.md、findings.md、本日志和旧入口提示，新增 docs/reference/2026-09-07-progress-and-plan.md，重新安排收尾、飞行方案、反馈、技巧奖励、鱼行为及设备交付顺序。
+- 本次只更新文档并进行局部源码/保存场景读取，没有修改代码或场景，没有运行编译、Play Mode、Android、WebGL 或完整回归，也未提交/推送。没有改写 Claude 主导设计或发送外部消息。

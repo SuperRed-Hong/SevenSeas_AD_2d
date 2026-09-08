@@ -106,3 +106,14 @@
 - Revision 9 is now synchronized locally but its random target band, hidden forgiveness and two-pass ring remain unimplemented. User requests extending the return-to-ready cooldown to Strike timeout as well; last-message state naming ambiguity is documented explicitly in the handoff.
 - User accepted fish-base-score times longitudinal-distance multiplier, plus near-miss and accelerated-retrieval-distance bonuses. Lateral travel does not count; pending bonuses settle only on successful catch. Numeric curves/rates remain undecided.
 - Fish generation exclusion means visible rock occlusion, not the whole shoreward lane. User also requests a basic behavior tree and Idle/Swim/Hooked animation states.
+
+## 2026-09-07 — 计分、蓄力与飞行方案更正
+
+- 距离规则已改变：倍率随 Casting 距离更新、落水锁定；HUD 的当前到岸距离在 Reeling 中减少。旧咬钩时锁定规则仅为历史设计，后续按用户本轮确认实现。
+- FishingLoopController 保存 castDistance；CurrentCastDistance 实际委托 ReelingController.DistanceToShore 计算当前距离，不能误认为它是固定落点距离。CurrentDistanceMultiplier 是运行时倍率；Profile 只存配置。
+- 当前保存代码的 HandleHookLanded 没有最终倍率重算，HandleRetrievalCompleted 仍只结算基础分；Start 没有检查 scoreTuningProfile。教学代码示例已给出不等于用户实际接完。
+- FishingSessionHUD 保留 castChargeText 和 castChargeSlider，Slider 显隐放在文字 activeSelf 变化分支中；去除文字 UI 时必须同步修改消费者和引用，不能只删除文字对象。
+- PC 蓄力以 fullChargeDuration 归一化；旧 castPower 固定值已被替代。用户要竖条，仅键鼠蓄力时显示；运行时 Value 增长由用户确认。
+- 现有正式飞行仍用 minimumCastDistance / maximumCastDistance / flightDuration。用户明确不满意固定飞行时间，但没有确定抛物线方案或可见弧线范围。不要将建议当成获批设计，也不要将独立 CastBallController/GyroscopeCastTest 直接替换正式控制器。
+- 将来虚拟高度仅用于表现时，距离 HUD、倍率和水面逻辑必须读取逻辑坐标，避免把腾空高度算成抛远距离。此项是拟议方案的技术边界，尚未实现。
+- 新计划见 docs/reference/2026-09-07-progress-and-plan.md；旧两日安排不自动延长。技巧奖励数值、时间耗尽的待结算奖励处理和实际截止时间仍有待确定。
