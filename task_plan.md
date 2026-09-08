@@ -1,13 +1,106 @@
 # Fishing Loop Teaching Plan
 
-## 当前入口 — 2026-09-07 更新
+## 当前阶段 — 2026-09-08 鱼样貌揭示（分类 Profile 随机外观已接入）
+
+- 用户反馈首个固定外观“还可以”，随后要求 Profile 包含 Small / Medium / Large / Special 多个列表并填充各类素材，随机揭示。
+- [implemented / command-line compile passed / Play Mode pending] FishAppearanceProfile 已填入 9 / 9 / 7 / 4 张 Sprite；BasicFish 引用共享 Profile，四种 Variant 指定类别。Middle 映射 Medium、EasterEgg 映射 Special。
+- 每条鱼首次 Reveal 在所属列表有效项中等概率抽取并缓存；失败仅恢复隐藏外观，再次揭示保留身份（本步实现选择）。空槽跳过，空列表或缺失 Profile 保留隐藏外观。
+- 当前下一步：试玩四类鱼的随机揭示、失败后再次揭示和素材尺寸；29 张素材引用已配置，逐张视觉适配未完成。根尺寸、碰撞、VFX、计分和生成权重未修改。
+
+以下首个固定外观记录为已完成的前一步，固定 Sprite 配置已被上述 Profile 取代。
+
+用户已在确认三条规则后明确要求开始实施，取代此前仅记录计划的限制。不另建计划文件。
+
+- [implemented / static wiring checked / command-line compile passed / Play Mode pending] FishAppearance 已在 BasicFish 接入，仅 SmallFish_Variant 配置固定 Small-1 素材。提竿成功揭示；ResetToIdle 和停用恢复原 Sprite / tint。其他类别不换图，未增加随机品种。
+- 下一步：Unity 刷新后试玩小鱼，检查 Striking 仍为剪影、成功进入 Reeling 变为真实外观、碰撞/断线/计时结束恢复、上岸仍正常计分且停用。观察新 Sprite 的比例和显示大小，再扩展品种。
+
+当前基线：倍率在飞行中实时变大/变色，落水锁定到本次结束，结束后重置 x1.00；用户表示先保持现状。下方旧的落水才放大及短暂脉冲记录已被此行为取代。
+
+## 用户需求
+
+- 鱼被“吊起来”时揭示真实样貌，使用现有 `Assets/Art Asset Folder/Fish_v2` 素材。
+- 复用现有鱼分类及 BasicFish / Variant 结构，保留已调整的鱼尺寸与涟漪节奏。
+- 当前倍率表现先保持现状，不重新调整；本步仅实现揭示通路及相关 Prefab 接线，保留场景、美术导入和已有尺寸配置。
+
+## 已确认的项目事实
+
+- `Fish_v2/Fishes` 下共有 29 张 PNG，按文件名分类：Small 9、Middle 9、Large 7、EasterEgg 4。这是文件清点，不代表已逐张确认鱼种名称、朝向、透明边距或切片效果。
+- 当前 `FishController` 仅有 Idle / Approaching / Hooked；Hooked 在咬钩胜出时设置，随后进入 Striking，不能直接等同于“提竿成功”或“吊上岸”。
+- `HandleStrikeSucceeded` 进入 Reeling；`HandleRetrievalCompleted` 成功计分后立即停用鱼对象。如果选择上岸展示，需要安排可见的展示时段，不能在同一帧换图后立即停用。
+- `SmallFish_Variant` / `MediumFish_Variant` / `LargeFish_Variant` / `SpecialFish_Variant` 继承 BasicFish。素材 Middle 对应现有 Medium 是建议映射；EasterEgg 是否全部归 Special 仍待确认。
+- 当前已实现首个固定真实 Sprite 与现有隐藏外观的切换，尚无随机鱼种身份系统。素材文件名不能直接作为生物品种名称。
+
+## 已确认的玩法规则 — 2026-09-08
+
+1. 提竿成功、进入 Reeling 时揭示真实样貌；不在咬钩胜出时揭示，也不等待成功上岸。
+2. 揭示前沿用现有水下外观。
+3. 揭示后失败，恢复隐藏外观。
+
+用户随后明确授权开始实施；首步限定为固定素材通路，运行验收后再扩展。
+
+## 后续实施细节
+
+- 身份选择：生成时在所属类别内随机一次，还是每个 Variant 固定一个品种？建议先固定一张做通路，再扩展为生成时选定并保存。同一条鱼失败后保留品种身份仍是建议，本次未单独确认。
+- 不同品种是否影响分数、速度、稀有度？建议首版只改变外观，沿用现有玩法数值；额外规则另行讨论。
+
+## 建议实现边界（尚未批准实施细节）
+
+- 身份与显示分离：鱼保存选定的外观数据，表现组件只负责隐藏/揭示和复位，不决定咬钩胜者、分数或收线结果。
+- 可用小型 ScriptableObject 外观配置记录 ID、真实 Sprite、局部显示尺寸和偏移；需要批量品种时再引入，不建立图鉴、背包或复杂数据库。
+- 不为 29 张素材复制整套鱼逻辑。优先在 BasicFish 共享表现能力，在现有 Variant 配置类别或可选素材。
+- 鱼根对象继续承担行为、Collider 与移动；显示尺寸校正尽量在视觉层完成，避免换图连带改变碰撞尺寸和涟漪缩放。实施前检查根 SpriteRenderer 与 VFX 的实际层级，必要时局部拆出视觉子对象并保留引用。
+- 由 FishingLoopController 在 HandleStrikeSucceeded 的有效成功分支通知目标鱼揭示；只影响这一条鱼。不能在通用 Reeling 入口无条件揭示，因为空钩超时也会进入 Reeling。FishBiteRaceController 仍是唯一咬钩裁决方。
+- 揭示前后检查 SpriteRenderer 的 tint：若隐藏外观靠深色染色，真实素材展示时须恢复正确颜色。检查 PPU、Pivot、Filter Mode、排序和透明边距，不统一覆盖用户已调数值。
+- 当前选择提竿成功时揭示，不增加独立上岸展示时段或延迟下一竿；保留现有上岸结算与停用流程。
+
+## 小步实施顺序
+
+1. [规则已确认] 提竿成功时揭示，之前沿用水下外观，失败恢复隐藏外观。
+2. [首个素材已选 / 视觉试玩待做] 预览 Small-1、Small-2 及现有小鱼剪影；选 Small-1。13×15 与剪影 11×6、均为 PPU 100，中心对齐；未改导入设置或根缩放。其他类别素材尚未逐张核验。
+3. [已实现 / 待 Play Mode] 先在 SmallFish_Variant 打通固定 Small-1 揭示与复位；该 Variant 生成的小鱼均用此测试外观，未增加复杂动画。
+4. 验证后配置 Small / Medium / Large / Special，按需求加入每类随机身份和外观数据。
+5. 最后再讨论揭示过渡、离水动作、音效或名称提示；这不是首版默认范围。
+
+## 验收条件
+
+- 揭示只在提竿成功时发生一次；咬钩、提竿超时和空钩进入 Reeling 均不揭示。只有目标鱼改变外观，其他鱼和 SwimRipple 独立运行。
+- 同一鱼的身份在一次存在期间稳定，重复咬钩不重新抽取（若采纳该建议）。
+- 成功、失败、超时、GameOver 和复用路径按确认规则恢复，不残留外观或触发重复计分。
+- 各类真实素材可辨认且尺寸合理；Collider、泳速、分值与 VFX 尺寸不因换图意外改变。
+- Reeling 期间玩家能看见真实外观；揭示后失败恢复现有水下外观。
+- 源码、接线、编译、Play Mode、设备验证分别记录，不用文档计划代表已完成。
+
+## 与现有计划的关系
+
+下一次先讨论本机制；擦边奖励、鱼生成避遮挡、最小鱼行为/动画、操作说明与交付保留，不删除。透视相机探索继续延期。加速奖励已有源码与编译验证，运行结算尚待确认，不回到未实现阶段重做。
+
+
+## 2026-09-08 — 当前倍率显示验收
+
+- [implemented / compile passed / Play Mode pending] 落水锁定倍率直接驱动文字尺寸，保持至本次尝试结束；验证 2 倍/3 倍大小、收线持续显示及结束恢复。替代此前短暂脉冲。
+
+## 2026-09-08 — 新奖励实现与待验收
+
+- [implemented / compile passed / Play Mode pending] 3 倍上限、落水蓝金红反馈、强化脉冲、向岸加速距离奖励（成功上岸合计取整，失败丢弃）。待测满倍率封顶、末帧位移、空钩无奖及失败后无残留。擦边奖励待下一步规则确认。
+
+## 2026-09-08 — 倍率最小反馈
+
+- [implemented / compile passed / Play Mode pending] 落水锁定倍率后，HUD 倍率文字单次放大回落。默认峰值 1.25、时长 0.4 秒；待观察落水一次、Reeling 不重复。鱼涟漪节奏用户已反馈差不多。
+
+## 2026-09-08 — 当前相机修复
+
+- [implemented / compile passed / Play Mode pending] 返回 Overview 前解除 Follow，下次抛竿恢复；验证失败返回无跳变、下一竿正常跟随、最后一钩和过渡中重抛。
+
+## 当前入口 — 2026-09-08 更新
 
 当前状态与实施顺序以 [进度与新计划](docs/reference/2026-09-07-progress-and-plan.md) 为准。下方 M0–M8 是历史教学清单；其中 M7 未开始、revision 9/冷却待做等旧描述不再代表当前实现。
 
 - [complete — user reported] 时机圈 revision 9、post-attempt cooldown 试玩通过。
-- [implemented / partial verification] PC 按住空格蓄力、松开抛竿；竖向蓄力条运行时 Value 增长已由用户确认。
-- [in-progress] Session HUD 实时距离与倍率已有；补最终落水倍率锁定、成功上岸倍率结算、Profile 引用检查及竖条独立显隐。
-- [decision pending] 飞行时间改由模拟产生；具体算法、可见弧线范围与 Profile 迁移未定，未实现。
+- [implemented / user confirmed display] PC 空格蓄力；POWER 始终显示并保留上次显示值，Slider 独立控制显隐。不要删除 POWER。素材复用完成情况未确认。
+- [implemented / partial verification] 最终落水倍率锁定、成功上岸倍率结算、ScoreTuningProfile 引用检查；移动端输入启用且收线时显示 Accelerate。用户完成步骤，完整运行/设备验证待做。
+- [implemented / partial verification] HookFlightProfile、HookVisual 层级和引用、恒重力解析飞行、Launch 的装备初速度倍率接口。5～25 只是测试地图参考；装备系统尚未实现。
+- [implemented / partial verification] 用户已补 Dock 复位、创建 HookShadow 并反馈腾空感“还可以”；Codex 按本步授权接入仅 Flying 显示及场景引用，显隐运行观察待做。缩放表现尚未实现，不自动扩展；PC 蓄力时长 Profile 迁移待做。
+- [deferred — user decision] 透视相机探索：先在正交场景完成当前功能；用户重新提出且现有素材足够时恢复，不依赖新增美术。
 - [pending] 倍率 VFX、加速/擦边奖励、鱼生成避遮挡、最小鱼行为/动画、试玩说明和重开。
 - [deferred] 系统回归及尚未执行的平台验证；不当成通过。
 
@@ -228,7 +321,7 @@ Status: **not-started**
 
 ## Current next action
 
-**2026-09-07 当前动作：** 先按新计划收尾蓄力条显示与倍率结算，再讨论飞行模拟范围；下方 2026-09-06 动作为历史记录，勿重新创建已完成的按钮。详见 `docs/reference/2026-09-07-progress-and-plan.md`。
+**2026-09-08 当前动作：** 继续正交场景功能开发；先补飞行 Dock 显示复位，并以一个适量步骤确定/实现明显腾空表现，再按最新计划推进反馈、奖励、鱼行为和交付。透视探索延期。下方 2026-09-06 动作为历史记录，勿重新创建已完成的按钮。详见 `docs/reference/2026-09-07-progress-and-plan.md` 顶部更新。
 
 2026-09-06: User approved the two-day implementation plan and requested starting. Continue step-by-step teaching; do not wait for an additional Claude approval as a prerequisite to this explicitly approved work. Current step: create an AccelerateButton under Canvas in FishingLoopTest, then wire press/release to existing MobileFishingInputSource methods. Read-only inspection found no saved accelerate button bindings. Library/LastSceneManagerSetup and build/catalog all identify FishingLoopTest (saved editor-state evidence). No gameplay or scene changes made by Codex in this step. Full plan: docs/design/2026-09-06-android-playtest-implementation-plan.md; Claude handoff remains prepared, not sent.
 

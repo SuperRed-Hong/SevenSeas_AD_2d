@@ -12,6 +12,9 @@ public sealed class FishingCameraController : MonoBehaviour
     
     [SerializeField]
     private CinemachineImpulseSource strikeRejectedImpulseSource;
+
+    private Transform suspendedFollowTarget;
+    private bool isFollowSuspended;
     
     public void ShowOverview()
     {
@@ -22,6 +25,15 @@ public sealed class FishingCameraController : MonoBehaviour
 
         if (hookFollowCamera != null)
         {
+            // The brain can update the outgoing camera before taking its blend snapshot.
+            // Detach before the hook docks so that update keeps the current camera pose.
+            if (!isFollowSuspended)
+            {
+                suspendedFollowTarget = hookFollowCamera.Follow;
+                hookFollowCamera.Follow = null;
+                isFollowSuspended = true;
+            }
+
             hookFollowCamera.gameObject.SetActive(false);
         }
     }
@@ -35,6 +47,13 @@ public sealed class FishingCameraController : MonoBehaviour
 
         if (hookFollowCamera != null)
         {
+            if (isFollowSuspended)
+            {
+                hookFollowCamera.Follow = suspendedFollowTarget;
+                suspendedFollowTarget = null;
+                isFollowSuspended = false;
+            }
+
             hookFollowCamera.gameObject.SetActive(true);
         }
     }

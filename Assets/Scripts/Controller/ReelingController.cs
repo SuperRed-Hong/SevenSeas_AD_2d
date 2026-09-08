@@ -32,6 +32,7 @@ public sealed class ReelingController : MonoBehaviour
     public float Tension01 { get; private set; }
     public event Action AttemptFailed;
     public event Action RetrievalCompleted;
+    public event Action<float> AcceleratedDistanceMoved;
     
     public float DistanceToShore => Mathf.Abs(shoreTarget.position.y - transform.position.y);
     private bool attemptFailureReported;
@@ -104,6 +105,7 @@ public sealed class ReelingController : MonoBehaviour
         
         float previousX = transform.position.x;
         Vector3 position = transform.position;
+        float previousDistanceToShore = DistanceToShore;
         // Convert semantic movement input into lateral hook movement.
         float moveInput =
             Mathf.Clamp(inputSource.MoveInput.x, -1f, 1f);
@@ -172,6 +174,13 @@ public sealed class ReelingController : MonoBehaviour
             return;
         } 
         
+        // Publish actual forward progress after clamping and failure checks.
+        float distanceRetrieved = Mathf.Max(0f, previousDistanceToShore - DistanceToShore);
+        if (accelerateHeld && distanceRetrieved > 0f)
+        {
+            AcceleratedDistanceMoved?.Invoke(distanceRetrieved);
+        }
+
         if (logActualLateralSpeed &&
             Time.unscaledTime >= nextLateralSpeedLogTime)
         {

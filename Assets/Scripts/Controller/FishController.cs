@@ -78,6 +78,11 @@ public sealed class FishController : MonoBehaviour
     }
     public void ResetToIdle()
     {
+        if (TryGetComponent<FishAppearance>(out var appearance))
+        {
+            appearance.RestoreHiddenAppearance();
+        }
+
         hookedTarget = null;
         approachTarget = null;
         State = FishState.Idle;

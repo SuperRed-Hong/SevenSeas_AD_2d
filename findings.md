@@ -1,5 +1,56 @@
 # Fishing Loop Findings
 
+## 2026-09-08 — 分类外观 Profile 与随机揭示
+
+- 用户要求集中管理 Small / Medium / Large / Special 列表。新增 FishAppearanceProfile，素材按 Small / Middle / Large / EasterEgg 映射填充 9 / 9 / 7 / 4 张。使用原始切片 GUID 与 fileID，不重导入、不复制图片。
+- FishAppearance 的序列化 revealedSprite 已迁移为 appearanceProfile 和 category；旧 BasicFish / Small Variant 对应字段已迁移。随机结果留在各鱼实例，不写回共享 Profile；首次有效揭示等概率选择非空项，后续恢复隐藏不会重新抽取。空列表无异常且不换图。
+- 四类 Variant 继承 BasicFish 的共享 Profile，只覆盖类别。现有根缩放、Collider、VFX、分数及生成权重保持原值。已配置全部素材引用，不等于所有 Sprite 视觉尺寸均已验收。
+
+## 2026-09-08 — 首个固定鱼外观实现
+
+- 用户授权开始实施。FishAppearance 单独负责 Sprite / tint 保存、揭示和恢复；BasicFish 共享该组件，未配置 revealedSprite 时保持原样。仅 SmallFish_Variant 指向 Small-1，正式场景现有生成器已引用该 Variant，无需改场景。
+- 揭示位于 HandleStrikeSucceeded 的有效分支；咬钩及空钩路径不会调用。FishController.ResetToIdle 恢复外观，覆盖碰撞、断线及计时结束；FishAppearance.OnDisable 覆盖上岸停用及复用清理。固定 Sprite 不随机改变身份。
+- Small-1 切片为 13×15，现有小鱼剪影为 11×6，PPU 均为 100，中心对齐。直接换图保留根缩放 5.4、Collider 半径 0.06 及 VFX 参数；真实外观比剪影更高，比例和可辨认性待试玩。未修改素材导入设置。
+- 命令行首次构建因生成 csproj 尚未包含新脚本失败；通过 TEMP 下 CustomAfterMicrosoftCommonTargets 临时纳入 FishAppearance 后编译 0 errors、3 个既有 MSB3277 warnings。未手改生成工程，Unity 刷新和 Play Mode 尚待验证。
+
+## 2026-09-08 — 鱼样貌揭示规则确认
+
+- 用户确认：提竿成功时揭示；揭示前沿用现有水下外观；揭示后失败恢复隐藏外观。品种身份保持仍是建议，未随外观复位规则自动视为批准。
+- 对应节点为 HandleStrikeSucceeded 的有效成功分支。Hooked 仍早于该节点；空钩超时也会进入 Reeling，因此不能仅依据进入 Reeling 无条件揭示。当前无需新增上岸展示时段。仅记录计划，未实施。
+
+## 2026-09-08 — 鱼真实样貌揭示前置发现
+
+- Fish_v2/Fishes 含 29 张 PNG（Small 9 / Middle 9 / Large 7 / EasterEgg 4），分类来自文件名。尚未核验视觉适配。
+- Hooked 在提竿前已设置；成功上岸会立即 SetActive(false)。新机制需要先确定触发节点，避免提早揭示或展示同帧消失。详见 [计划](task_plan.md)。
+
+## 2026-09-08 — 倍率反馈修订
+
+- 用户要求几倍倍率就放大几倍，并持续到本次收线结束，取代 1.65 倍/0.65 秒脉冲。缩放基于 Awake 保存的原始值，避免逐帧乘法累积；保持到本次尝试成功、失败或游戏结束。
+
+## 2026-09-08 — 奖励规则与倍率显示
+
+- 用户确认加速奖励单独相加，不乘落水倍率；只计算实际向岸加速距离，横移不计入。采用完整加速期间的向岸位移，不是相对普通收线的额外位移。失败及计时耗尽丢弃未结算奖励，擦边尚未实现。
+- 用户要求倍率上限 3、蓝/金/红落水反馈。分档阈值 1.9 / 2.99 和 1.65 倍放大为本次原型实现选择，色值可在 HUD 手调；未声称 Claude 审查。
+
+## 2026-09-08 — 倍率反馈事件边界
+
+- HUD 监听协调器的 DistanceMultiplierLocked，避免直接监听物理 Landed 时依赖订阅顺序读到旧倍率。事件只在 Casting 落水有效分支发布；HUD 不计算倍率或分数。缩放参数在现有 HUD Inspector 可调，不新增动画资产或场景引用。
+
+## 2026-09-08 — Follow 返回时的目标复位时序
+
+- CinemachineBrain.DoNonFixedUpdate 先 UpdateVirtualCameras（包含已停用但仍 live 的相机），再 UpdateRootFrame；FreezeWhenBlendingOut 在新 blend 建立时才取快照。ShowOverview 后同帧 Dock 会让快照之前的更新读到复位目标。现已在相机控制器解除并恢复 Follow，阻止复位传给退出中的相机。运行效果待用户验证。
+
+## 2026-09-08 — 正交腾空、输入与飞行迁移更正
+
+- 当前决定：透视探索延期，在正交场景内完成功能。现有平面精灵可尝试固定视角轻度透视，但这只是素材可行性判断，未完成 Unity 透视效果验证；大幅转动镜头所需的多视角信息不能由现有单张精灵自动产生。恢复探索前仍须满足用户“不增加美术需求”的前提。
+- 前进方向与虚拟高度都使用世界 +Y，在当前正对 XY 的正交视角下仍是同一条屏幕竖线。Vector3 不会自动带来可见弧线，单纯切换透视也不会解决同平面表现问题。用户明确目标为明显腾空感，后续考虑逻辑位置投影与图像偏移/缩放配合。
+- HookVisual 是根对象的直接子对象；根缩放为 0.2，因此已用世界坐标高度偏移避免局部缩放缩小显示高度。碰撞、距离和倍率继续使用根对象逻辑位置。落水复位已有，Dock 复位尚缺；取消飞行后不得继续发布落水事件，运行分支待验证。
+- HookFlightProfile 是正式飞行基础配置，CastTuningProfile 仍服务手势与旧原型。当前 Launch(power, launchSpeedMultiplier = 1f) 根据初速度分量和重力计算总时长，UpdateFlight 使用解析高度；不是固定时长调参。装备倍率接口已预留，升级系统未实现。
+- PC 蓄力和移动端手势均输出归一化 power；移动端不使用蓄力说法。初速度倍率不等于射程倍率，当前同高起落固定角度/重力模型下射程随速度平方变化。5～25 只来自测试地图，不是最终设计上限。
+- 2026-09-07 的“倍率未结算、无 Profile 缺失检查、删除 POWER、飞行算法未定”等结论已过时：源码已补倍率锁定/结算/引用检查；POWER 常显并保留最后显示值，Slider 独立显隐。POWER 当前保存的是最后一次显示采样值，不应宣称已精确记录松手事件的最终力度。
+- 保存场景已引用新 flightProfile/hookVisual，同时保留旧距离/时长 YAML 键；当前 C# 已不再序列化消费旧键。不为清理残余数据批量改写场景。
+- 本次仅针对性读取源码/场景并更新开发记录，没有运行编译、Play Mode、Android 或 WebGL。
+
 ## Confirmed before implementation
 
 - `CastTuningProfile.TriggerThreshold` is currently 1.25 rad/s, but that value was tuned with flick input in isolation. In M2 it must be re-measured while normal lane-selection tilting is active and raised as needed so ordinary tilt does not trigger a cast.
