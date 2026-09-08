@@ -19,4 +19,4 @@ MonoBehaviour:
   targetBandWidth: 0.15
   minBandCenterRadius: 0.187
   maxBandCenterRadius: 0.852
-  hitForgivenessRadius: 0.04
+  hitForgivenessRadius: 0.15
