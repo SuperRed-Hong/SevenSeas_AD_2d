@@ -365,7 +365,8 @@ public sealed class FishingLoopController : MonoBehaviour
             return;
         }
 
-        cameraController.PlayStrikeRejectedShake();
+        cameraController.PlayStrikeRejectedShake(
+            strikeController.RejectedShakeAmplitude, strikeController.RejectedShakeDuration);
     }
 
     #endregion

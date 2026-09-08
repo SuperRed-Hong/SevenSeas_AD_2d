@@ -87,6 +87,16 @@ public sealed class FishingCameraController : MonoBehaviour
             strikeRejectedImpulseSource.GenerateImpulse();
         }
     }
+
+    public void PlayStrikeRejectedShake(float amplitude, float duration)
+    {
+        if (strikeRejectedImpulseSource == null || amplitude <= 0f || duration <= 0f) return;
+        float previousDuration = strikeRejectedImpulseSource.ImpulseDefinition.ImpulseDuration;
+        Vector3 direction = strikeRejectedImpulseSource.DefaultVelocity.normalized;
+        strikeRejectedImpulseSource.ImpulseDefinition.ImpulseDuration = duration;
+        strikeRejectedImpulseSource.GenerateImpulseWithVelocity(direction * amplitude);
+        strikeRejectedImpulseSource.ImpulseDefinition.ImpulseDuration = previousDuration;
+    }
     
     
 }

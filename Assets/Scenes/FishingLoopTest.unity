@@ -22975,6 +22975,65 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 000c2f0612f7c8f4db8c4c2a6c4812dc, type: 3}
+--- !u!1 &2101000060
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2101000061}
+  - component: {fileID: 2101000062}
+  m_Layer: 0
+  m_Name: StrikeTuning
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2101000061
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2101000060}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2101000062
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2101000060}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce845d4f24cc41b99635656645248023, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::StrikeTuningPanel
+  strikeController: {fileID: 3372225}
+  entryGuard: {fileID: 1636518286}
+  pausedBehaviours:
+  - {fileID: 503695418}
+  - {fileID: 2058960712}
+  - {fileID: 1975332611}
+  - {fileID: 3372222}
+  - {fileID: 3372224}
+  - {fileID: 3372220}
+  - {fileID: 1322915247}
+  - {fileID: 3372225}
+  - {fileID: 1322915249}
+  - {fileID: 3372228}
+  - {fileID: 1165585709}
+  - {fileID: 1322915245}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -22988,3 +23047,4 @@ SceneRoots:
   - {fileID: 1220132656}
   - {fileID: 457415847}
   - {fileID: 1185182860}
+  - {fileID: 2101000061}

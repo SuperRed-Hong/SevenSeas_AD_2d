@@ -1,5 +1,11 @@
 # Fishing Loop Findings
 
+## 2026-09-08 — StrikeWindowProfile 游戏内调参
+
+- 8 项为 windowDuration、attemptCooldown、shakeAmplitude、shakeDuration、targetBandWidth、minBandCenterRadius、maxBandCenterRadius、hitForgivenessRadius。新增运行时应用接口复用合法值约束，拒绝 NaN/Infinity；调整宽度后自动校正随机中心上下限。
+- StrikeController 懒创建运行时副本，BeginCheck 使用独立快照；时间、宽度、容错、冷却及震屏均从同一轮快照读取。Defaults 恢复原资产值，场景退出销毁副本，无磁盘保存。此前震屏 Profile 字段未消费，现通过拒绝事件协调层传给相机，保留原震动方向。
+- StrikeTuningPanel 在独立根节点建立运行时 uGUI，不依赖菜单/游戏 Canvas 的显隐。调参时保存并暂停 12 个玩法/输入组件和 Time.timeScale，关闭恢复，不暂停 EventSystem。开局转场中不允许打开，避免与延迟启用玩法竞争。滑条值 Apply 后回读校正结果，当前正在进行的判定不改变。
+
 ## 2026-09-08 — 场景表现先运行，玩法控制延后
 
 - 用户不希望角色/鱼等场景内容等转场结束才出现。新增 FishingLoopController.PrepareForEntry，在根激活前停用 Loop、ShoreLaneController、Cast/Strike 检测并关闭语义输入。Loop 被停用时 Start 尚未执行，计时器不会开始。
