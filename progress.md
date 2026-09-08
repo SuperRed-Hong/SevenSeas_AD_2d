@@ -1,5 +1,11 @@
 # Fishing Loop Progress
 
+## 2026-09-08 — 暂停按钮改为真正暂停
+
+- 已实现 FishingPauseController / FishingPauseMenu，并改好现有 PausePanelButton 的场景事件；保留原按钮位置、美术与其他菜单配置。暂停面板提供继续和独立返回菜单；调参共用暂停控制，避免相互误恢复。
+- 命令行编译通过：0 errors、3 条已有 MSB3277 warnings。场景所有本地引用及 ID 唯一性检查通过；已核对暂停组件列表和按钮事件，不再直接调用导航。
+- 未执行 Unity Play Mode / Android / WebGL。下一步运行中分别在抛竿、提竿判定、收线暂停，确认计时/移动冻结、继续保留进度、暂停 UI 不触发玩法，最后验证返回菜单及再次 Start。
+
 ## 2026-09-08 — 游戏内提竿参数面板已实现
 
 - 用户要求 StrikeWindowProfile 可在游戏内调整。接入 STRIKE TUNING 入口与 8 个滑条，Apply、Defaults、Close；参数暂存运行时副本，不写回资产，下次提竿判定生效。当前 Profile 保存值保持不变。

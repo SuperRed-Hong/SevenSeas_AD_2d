@@ -5,8 +5,7 @@ using UnityEngine.UI;
 public sealed class StrikeTuningPanel : MonoBehaviour
 {
     [SerializeField] private StrikeController strikeController;
-    [SerializeField] private Behaviour[] pausedBehaviours;
-    [SerializeField] private FishingSceneEntryGuard entryGuard;
+    [SerializeField] private FishingPauseController pauseController;
 
     private readonly string[] labels =
     {
@@ -20,8 +19,6 @@ public sealed class StrikeTuningPanel : MonoBehaviour
     private TMP_Text message;
     private GameObject panel;
     private GameObject canvasObject;
-    private bool[] inputStates;
-    private float previousTimeScale;
     private bool isOpen;
     private Button openButton;
 
@@ -83,17 +80,9 @@ public sealed class StrikeTuningPanel : MonoBehaviour
 
     public void Open()
     {
-        if (isOpen || (entryGuard != null && entryGuard.IsStartingGame) ||
-            strikeController == null || strikeController.RuntimeProfile == null) return;
-        previousTimeScale = Time.timeScale;
-        inputStates = new bool[pausedBehaviours.Length];
-        for (int i = 0; i < pausedBehaviours.Length; i++)
-        {
-            if (pausedBehaviours[i] == null) continue;
-            inputStates[i] = pausedBehaviours[i].enabled;
-            pausedBehaviours[i].enabled = false;
-        }
-        Time.timeScale = 0f;
+        if (isOpen || panel == null || strikeController == null ||
+            strikeController.RuntimeProfile == null || pauseController == null ||
+            !pauseController.TryPause(this)) return;
         isOpen = true;
         RefreshValues();
         message.text = "Runtime only. The project Profile asset stays unchanged.";
@@ -134,15 +123,13 @@ public sealed class StrikeTuningPanel : MonoBehaviour
         if (!isOpen) return;
         isOpen = false;
         panel.SetActive(false);
-        Time.timeScale = previousTimeScale;
-        for (int i = 0; i < pausedBehaviours.Length; i++)
-            if (pausedBehaviours[i] != null) pausedBehaviours[i].enabled = inputStates[i];
+        pauseController.Resume(this);
     }
 
     private void Update()
     {
         if (openButton != null)
-            openButton.interactable = entryGuard == null || !entryGuard.IsStartingGame;
+            openButton.interactable = pauseController != null && pauseController.CanPause;
     }
 
     private void OnDisable()

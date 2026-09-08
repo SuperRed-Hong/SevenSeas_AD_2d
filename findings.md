@@ -1,5 +1,11 @@
 # Fishing Loop Findings
 
+## 2026-09-08 — 暂停按钮接线修正
+
+- 原 PausePanelButton 的 OnClick 实际绑定 SceneNavigationButton.Navigate、targetScene MainMenu，因此点击会重载场景丢失本局。现移除该按钮的旧导航组件，接入 FishingPauseMenu.Open；运行时独立 Canvas 显示 PAUSED、RESUME、MAIN MENU，遮罩阻挡背后操作。
+- 把调参面板已有的 12 个组件暂停快照集中到 FishingPauseController，保留原 enabled 和 Time.timeScale；仅持有暂停的面板可恢复，两个面板互斥，转场期间不接受暂停。EventSystem 与 UI 保持运行。返回菜单仍沿用现有 SceneLoader，不记录未完成局成绩。
+- 按用户明确纠正实施，未改 Claude 设计文档。暂停不重置玩法状态、钩子或分数；既有输入 OnDisable 会取消尚未发出的蓄力，恢复后需重新蓄力。
+
 ## 2026-09-08 — StrikeWindowProfile 游戏内调参
 
 - 8 项为 windowDuration、attemptCooldown、shakeAmplitude、shakeDuration、targetBandWidth、minBandCenterRadius、maxBandCenterRadius、hitForgivenessRadius。新增运行时应用接口复用合法值约束，拒绝 NaN/Infinity；调整宽度后自动校正随机中心上下限。

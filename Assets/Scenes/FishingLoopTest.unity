@@ -18550,7 +18550,6 @@ GameObject:
   - component: {fileID: 1839708404}
   - component: {fileID: 1839708403}
   - component: {fileID: 1839708402}
-  - component: {fileID: 1839708405}
   m_Layer: 5
   m_Name: PausePanelButton
   m_TagString: Untagged
@@ -18621,9 +18620,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1839708405}
-        m_TargetAssemblyTypeName: SceneNavigationButton, Assembly-CSharp
-        m_MethodName: Navigate
+      - m_Target: {fileID: 2101000064}
+        m_TargetAssemblyTypeName: FishingPauseMenu, Assembly-CSharp
+        m_MethodName: Open
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -18671,19 +18670,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1839708400}
   m_CullTransparentMesh: 1
---- !u!114 &1839708405
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1839708400}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fb4a7e6c81fe2c44191696edbd020373, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SceneNavigationButton
-  targetScene: 0
 --- !u!1 &1840160397
 GameObject:
   m_ObjectHideFlags: 0
@@ -22985,6 +22971,8 @@ GameObject:
   m_Component:
   - component: {fileID: 2101000061}
   - component: {fileID: 2101000062}
+  - component: {fileID: 2101000063}
+  - component: {fileID: 2101000064}
   m_Layer: 0
   m_Name: StrikeTuning
   m_TagString: Untagged
@@ -23020,6 +23008,19 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::StrikeTuningPanel
   strikeController: {fileID: 3372225}
+  pauseController: {fileID: 2101000063}
+--- !u!114 &2101000063
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2101000060}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8af79dc2b530467e84976058d3ca6f32, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::FishingPauseController
   entryGuard: {fileID: 1636518286}
   pausedBehaviours:
   - {fileID: 503695418}
@@ -23034,6 +23035,19 @@ MonoBehaviour:
   - {fileID: 3372228}
   - {fileID: 1165585709}
   - {fileID: 1322915245}
+--- !u!114 &2101000064
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2101000060}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e98e29d606e443da2de75f210c82ec4, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::FishingPauseMenu
+  pauseController: {fileID: 2101000063}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
