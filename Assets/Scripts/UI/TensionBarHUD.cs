@@ -47,6 +47,7 @@ public sealed class TensionBarHUD : MonoBehaviour
 
         float tension = reelingController.Tension01;
         tensionSlider.SetValueWithoutNotify(tension);
+        /*
         if (tensionSlider.fillRect != null &&
             tensionSlider.fillRect.TryGetComponent(out Image fill))
         {
@@ -54,5 +55,6 @@ public sealed class TensionBarHUD : MonoBehaviour
                 ? Color.Lerp(Color.green, Color.yellow, tension * 2f)
                 : Color.Lerp(Color.yellow, Color.red, (tension - 0.5f) * 2f);
         }
+        */
     }
 }
