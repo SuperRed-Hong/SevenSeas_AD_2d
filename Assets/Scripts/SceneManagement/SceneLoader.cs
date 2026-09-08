@@ -4,6 +4,17 @@ using UnityEngine.SceneManagement;
 public sealed class SceneLoader : MonoBehaviour
 {
     [SerializeField] private SceneCatalog sceneCatalog;
+    private static bool gameplayRequested;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetEntryRequest() => gameplayRequested = false;
+
+    public static bool ConsumeGameplayRequest()
+    {
+        bool requested = gameplayRequested;
+        gameplayRequested = false;
+        return requested;
+    }
 
     public void LoadScene(E_SceneID sceneId)
     {
@@ -19,6 +30,28 @@ public sealed class SceneLoader : MonoBehaviour
             return;
         }
 
+        LoadResolvedScene(sceneId, sceneName);
+    }
+
+    public static void LoadWithoutAppRoot(E_SceneID sceneId)
+    {
+        string sceneName;
+        switch (sceneId)
+        {
+            case E_SceneID.MainMenu:
+            case E_SceneID.GameScene: sceneName = "FishingLoopTest"; break;
+            case E_SceneID.Leaderboard: sceneName = "Leaderboard"; break;
+            case E_SceneID.AttitudeControlTest: sceneName = "AttitudeControlTest"; break;
+            case E_SceneID.GyroscopeTest: sceneName = "GyroscopeCastTest"; break;
+            default: Debug.LogError($"No direct-play route for {sceneId}."); return;
+        }
+        LoadResolvedScene(sceneId, sceneName);
+    }
+
+    private static void LoadResolvedScene(E_SceneID sceneId, string sceneName)
+    {
+        gameplayRequested = sceneId == E_SceneID.GameScene;
+        Time.timeScale = 1f;
         SceneManager.LoadSceneAsync(sceneName);
     }
 }

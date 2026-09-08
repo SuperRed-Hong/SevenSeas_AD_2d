@@ -19,6 +19,84 @@ public sealed class FishingSessionHUD : MonoBehaviour
     [SerializeField] private GameObject gameOverPanel;
     [SerializeField] private TMP_Text gameOverText;
 
+    [Header("Multiplier Feedback")]
+    [SerializeField] private Color normalMultiplierColor = new Color(0.2f, 0.65f, 1f);
+    [SerializeField] private Color doubleMultiplierColor = new Color(1f, 0.76f, 0.16f);
+    [SerializeField] private Color maximumMultiplierColor = new Color(1f, 0.16f, 0.28f);
+
+    private Vector3 multiplierBaseScale;
+    private Color multiplierBaseColor;
+
+    private void Awake()
+    {
+        if (multiplierText != null)
+        {
+            multiplierBaseScale = multiplierText.transform.localScale;
+            multiplierBaseColor = multiplierText.color;
+        }
+    }
+
+    private void OnEnable()
+    {
+        if (loopController != null)
+        {
+            loopController.DistanceMultiplierLocked += HandleDistanceMultiplierLocked;
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (loopController != null)
+        {
+            loopController.DistanceMultiplierLocked -= HandleDistanceMultiplierLocked;
+        }
+        ResetMultiplierFeedback();
+    }
+
+    private void HandleDistanceMultiplierLocked()
+    {
+        if (multiplierText == null)
+        {
+            return;
+        }
+
+        // Read the same multiplier used by gameplay during flight and after landing.
+        multiplierText.text = $"x{loopController.CurrentDistanceMultiplier:F2}";
+        float multiplier = loopController.CurrentDistanceMultiplier;
+        multiplierText.color = multiplier <= 2f
+            ? Color.Lerp(normalMultiplierColor, doubleMultiplierColor, Mathf.InverseLerp(1.5f, 2f, multiplier))
+            : Color.Lerp(doubleMultiplierColor, maximumMultiplierColor, Mathf.InverseLerp(2.5f, 3f, multiplier));
+        multiplierText.transform.localScale = multiplierBaseScale * multiplier;
+    }
+
+    private void LateUpdate()
+    {
+        // Read after gameplay Update so the value and scale match this frame's flight.
+        FishingLoopState state = loopController.CurrentState;
+        if (state == FishingLoopState.Casting ||
+            state == FishingLoopState.Baiting ||
+            state == FishingLoopState.Striking ||
+            state == FishingLoopState.Reeling)
+        {
+            // Also restore the locked presentation if the HUD is re-enabled mid-attempt.
+            HandleDistanceMultiplierLocked();
+        }
+        else
+        {
+            ResetMultiplierFeedback();
+        }
+    }
+
+    private void ResetMultiplierFeedback()
+    {
+        if (multiplierText != null)
+        {
+            multiplierText.text = $"x{loopController.CurrentDistanceMultiplier:F2}";
+            multiplierText.transform.localScale = multiplierBaseScale;
+            multiplierText.color = multiplierBaseColor;
+        }
+    }
+
     private void Update()
     {
         int secondsRemaining =
@@ -29,8 +107,6 @@ public sealed class FishingSessionHUD : MonoBehaviour
             $"Hooks: {hookTracker.HooksRemaining}\n" +
             $"Time: {secondsRemaining}";
 
-        multiplierText.text =
-            $"x{loopController.CurrentDistanceMultiplier:F2}";
         castDistanceText.text =
             $"DISTANCE {loopController.CurrentCastDistance:F1}";
         

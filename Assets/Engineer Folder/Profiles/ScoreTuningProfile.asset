@@ -13,4 +13,5 @@ MonoBehaviour:
   m_Name: ScoreTuningProfile
   m_EditorClassIdentifier: Assembly-CSharp::ScoreTuningProfile
   distanceForMaxMultiplier: 20
-  maxDistanceMultiplier: 2
+  maxDistanceMultiplier: 3
+  accelerationPointsPerUnit: 1

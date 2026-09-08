@@ -1,5 +1,138 @@
 # Fishing Loop Progress
 
+## 2026-09-08 — 暂停按钮改为真正暂停
+
+- 已实现 FishingPauseController / FishingPauseMenu，并改好现有 PausePanelButton 的场景事件；保留原按钮位置、美术与其他菜单配置。暂停面板提供继续和独立返回菜单；调参共用暂停控制，避免相互误恢复。
+- 命令行编译通过：0 errors、3 条已有 MSB3277 warnings。场景所有本地引用及 ID 唯一性检查通过；已核对暂停组件列表和按钮事件，不再直接调用导航。
+- 未执行 Unity Play Mode / Android / WebGL。下一步运行中分别在抛竿、提竿判定、收线暂停，确认计时/移动冻结、继续保留进度、暂停 UI 不触发玩法，最后验证返回菜单及再次 Start。
+
+## 2026-09-08 — 游戏内提竿参数面板已实现
+
+- 用户要求 StrikeWindowProfile 可在游戏内调整。接入 STRIKE TUNING 入口与 8 个滑条，Apply、Defaults、Close；参数暂存运行时副本，不写回资产，下次提竿判定生效。当前 Profile 保存值保持不变。
+- 调参面板打开时暂停局内时间和玩法/输入，关闭恢复；开局转场期间入口禁用。震屏幅度与时长从本轮判定快照实际传入相机，完成此前未消费字段的接入。
+- 编译 0 errors、3 条已有 MSB3277 warnings；12 个暂停组件、入口守卫与场景本地引用静态核对通过。未运行 Unity Play Mode / Android / WebGL，需验证滑条触控、Apply 后下轮生效、判定中途暂停恢复和震屏变化。运行时生成面板，未改已有菜单或 HUD 布局。
+
+## 2026-09-08 — 修订开局激活时序
+
+- 按用户要求把场景表现和正式玩法分开：进入场景时先禁用玩法协调器、岸边移动和手势/语义输入，再激活 GameplayRoot，鱼/角色/涟漪无需等待转场。渐隐与镜头转场结束后重新启用 Loop，开始计时与输入。
+- 仅新增 Loop.PrepareForEntry、调整入口守卫并序列化已有 Loop 引用；不改计分、鱼逻辑、镜头/渐隐时长和菜单布局。旧“整根延迟激活”已被本记录取代。
+- 编译 0 errors、3 条已有 MSB3277 warnings；源码核对初始语义输入关闭、玩法 Begin 由协调器触发、SessionTimer.Awake 不计时。未运行 Play Mode / Android / WebGL；下一步观察转场前鱼和角色已显示、无法操作且计时未走，转场后正常操作。
+
+## 2026-09-08 — Start 菜单渐隐已接入
+
+- 用户要求 UI 消失改为渐隐。新增 MenuCanvasFader，在现有 MenuCanvas 挂 CanvasGroup 并完成守卫引用；默认 0.35 秒，与既有镜头转场并行，渐隐开始停止菜单点击。
+- 编译 0 errors、3 条已有 MSB3277 warnings；场景组件、引用和 ID 完整性检查通过。未运行 Play Mode 或设备验证，需观察退场观感；可在 MenuCanvas 的 Fade Out Duration 调整时间。未改变菜单布局和游戏 HUD 出现方式。
+
+## 2026-09-08 — 菜单鼠标点击接线修复
+
+- 用户反馈菜单按钮鼠标点击无反应。定位为上轮关闭 GamePlayCanvas 时同时关闭了其子对象 EventSystem；这是上轮入口显隐调整遗漏的依赖。
+- 将现有 EventSystem 移至场景根，静态核对唯一性、对象及输入模块启用、父子引用和全场景 fileID 完整性通过。本轮未改 C#，未重复编译；未运行 Play Mode，需重新进入 Play 验证菜单点击和 Start 转场。
+
+## 2026-09-08 — 新主菜单与空镜开局转场已接线
+
+- 用户保存 MenuCanvas 后要求初始场景空镜、Start 后切到 Overview。已复用新 UI，接好 Start / Setting / Exit 和排行榜；旧 MainMenu 从正式路由与 Build 启用列表退出，文件保留。
+- 新建 MenuCamera，位置 (0, 8, -10)、Size 9；配置到 Overview 的 1 秒 EaseInOut。菜单时玩法及游戏 HUD 停用，转场完成再启用；静态 MainLanscape 移至场景根以保持空镜背景。其他布局、鱼配置及原相机跟随行为保留。
+- SceneLoader 区分同场景的 MainMenu / GameScene 进入意图，排行榜返回菜单与再玩一局分别生效；直接 Editor Play 支持菜单入口。移动端保留校准，Setting 暂复用已有校准面板；尚无额外设置系统。
+- 编译 0 errors、3 条已有 MSB3277 warnings。保存场景 fileID 无重复/悬空；初始显隐、静态景物独立、Start Prefab 回调来源与实例覆盖、Setting/Exit 回调通过静态检查。对本轮开始时场景快照的比较确认未删除既有对象，仅局部接线和新增相机/入口。
+- 未运行 Unity Play Mode / Android / WebGL；空镜构图、转场观感、计时延后、HUD、校准和导航回归待用户试玩。未提交、还原或清理已有改动。
+
+## 2026-09-08 — 本地排行榜首版实现
+
+- 用户要求创建本地排行榜系统/关卡。按独立排行榜页面、分数+日期默认方案实现 Top 10，GameOver 自动记录，主菜单和结束页入口，榜单返回菜单/再玩一局。询问过是否需可玩关卡或姓名，本轮尚未收到回复；本版不包含这两项。
+- 新增 LeaderboardData、LocalLeaderboard、LeaderboardView、LeaderboardNavigationButton、LeaderboardSaveStatus 及 Leaderboard 场景；追加 SceneCatalog/Build Settings 登记。原玩法规则、鱼配置、计分公式及已有 UI 布局未改。
+- 编译使用临时 MSBuild targets 纳入新增脚本，0 errors、3 条已有 MSB3277 warnings。独立 Tests/Leaderboard 检查通过 Top 10、排序、重复局、同分、零负分及异常数据；不读写真实存档。三场景本地 fileID 无悬空/重复，榜单 10 行 TMP 引用核对通过；本次场景与登记文件 diff check 通过。
+- 未运行 Unity Play Mode、存档关闭重启读回、Android 或 WebGL；新场景外观及入口点击仍待运行验收。下一步 Unity 刷新后从主菜单及 GameOver 各进入一次，完成多局并重启确认榜单。没有提交、推送、还原或清理用户改动。
+
+## 2026-09-08 — 鱼外观分类随机 Profile 已实现
+
+- 用户接受首个固定外观效果并理解实现，要求扩展为四列表 Profile。已创建 FishAppearanceProfile 及资产，填充全部 29 张对应 Sprite，配置四种 Variant 类别。
+- 首次成功提竿随机揭示所属类别的一张图，实例缓存结果；失败恢复剪影，再次揭示同图。列表空槽跳过，缺失 Profile / 空列表保留隐藏外观。未修改揭示时机、计分、鱼尺寸或碰撞。
+- 命令行通过临时 MSBuild targets 纳入新增脚本，编译 0 errors、3 条已有 MSB3277 warnings；分类数量与 Sprite 引用、Variant 类别静态核对。随机分类版本尚未运行 Play Mode / Android / WebGL，不能沿用固定外观用户反馈作为新版运行通过。
+- 下一步：Unity 刷新后观察四类随机外观、失败再次揭示及各素材显示比例。原设计文档未修改，未提交或清理已有改动。
+
+## 2026-09-08 — 首个鱼样貌揭示通路已实现
+
+- 用户要求开始实施。新增 FishAppearance，BasicFish 共享组件，SmallFish_Variant 配置固定 Small-1；提竿成功揭示，失败/计时结束通过 ResetToIdle 恢复隐藏外观，上岸停用清理显示。其他鱼类别暂不配置。
+- 保留用户根尺寸、Collider、涟漪间隔、分值与场景/UI/美术配置。没有新增上岸等待、品种随机规则或复杂动画；未改写 Claude 的设计文档，本记录保存用户直接确定的新增规则与实现差异。
+- 编译：使用临时 MSBuild targets 纳入尚未被 Unity 生成 csproj 收录的新脚本，0 errors、3 条已有 MSB3277 warnings。Prefab 组件、Sprite GUID/fileID 及正式场景生成器引用已静态核对；未运行 Unity Play Mode、Android 或 WebGL。
+- 下一步：在正式场景试玩小鱼的提竿前/后外观、失败恢复、再次咬钩、计时结束及上岸结算，确认 Small-1 显示比例后扩展品种。仅预览两张 Small 候选，29 张素材适配未完成。未提交、还原或清理已有修改。
+
+## 2026-09-08 — 鱼样貌揭示三条规则已确认
+
+- 用户确定提竿成功时揭示真实样貌、此前沿用现有水下外观、揭示后失败恢复隐藏外观。已同步 task_plan.md 的规则、建议接入点与验收条件，以及 findings.md 的依据。
+- 下一步在用户要求实施后，选择一条鱼及固定素材做最小验证，再扩展品种；29 张素材视觉适配尚未逐张确认，身份选择与额外品种数值规则仍未确定。
+- 本轮仅修改三份现有记录，未改代码、场景、Prefab、美术或 Claude 主导设计文档；未运行编译、Play Mode 或设备测试，未提交、还原或清理现有修改。
+
+## 2026-09-08 — 鱼真实样貌揭示计划记录
+
+- 用户表示倍率与尺寸先保持现状，提出下一机制“吊起鱼后揭示真实样貌”，明确仅记计划。详细计划已直接合并进 task_plan.md，findings.md 记录调查依据；误建的独立计划文件已删除，交接链接已修正。记录素材清点、触发歧义、组件边界、小步路线和验收条件。
+- 本轮仅更新文档；未修改代码、场景、Prefab 或美术。只读检查文件分类及相关状态节点，未运行编译/Play Mode；未修改 Claude 主导设计文档。
+
+## 2026-09-08 — 飞行实时倍率表现与收线重置
+
+- 按用户最终澄清，HUD 在 LateUpdate 将 Casting / Baiting / Striking / Reeling 的实际倍率直接用于数字与尺寸；飞行中连续增长，落水后锁定。1–1.5 蓝色，1.5–2 渐变金色，2–2.5 金色，2.5–3 渐变红色。
+- ReadyToCast / GameOver 入口将 CurrentDistanceMultiplier 重置为 1，HUD 同时恢复原始尺寸和颜色，数字显示 x1.00。成功得分在状态切换之前完成，避免重置影响本次结算。取代之前只在落地放大的版本。
+- 编译 0 errors、3 个已有 MSB3277 warnings；HUD diff check 通过。未运行 Play Mode，实时增长与结束重置待观察。
+
+## 2026-09-08 — 倍率尺寸持续显示（取代短暂脉冲）
+
+- 按用户修订，落水后文字 localScale = 原始缩放 × 锁定倍率，蓝金红颜色同时保留，在 Baiting / Striking / Reeling 持续显示；ReadyToCast / Casting / GameOver 或 HUD 禁用恢复原始大小和颜色。HUD 中途重新启用也恢复对应显示。移除脉冲倍数/时长字段及正式场景对应键。
+- 编译 0 errors、3 个已有 MSB3277 warnings，HUD diff check 通过；未运行 Play Mode，3 倍尺寸布局及结束恢复待观察。
+
+## 2026-09-08 — 三倍倍率、稀有度颜色与加速奖励
+
+- 用户批准基础分×落水倍率＋实际向岸加速距离×单位奖励、合计后取整。ReelingController 测量移动前后到岸距离差，在断线检查后、完成事件前发布；Loop 仅在 Reeling 且挂鱼时累计，成功结算后退出，其他退出清空。初值 1 分/单位，可在 ScoreTuningProfile 调整，空钩无奖励。
+- 最大倍率设为 3，保留现有满倍率距离 20；HUD 落水脉冲 1.65 倍/0.65 秒，低倍率蓝色、1.9 起金色、2.99 起红色。锁定颜色保留至下一次 Casting 恢复原色。参数已写入正式场景，未修改布局。
+- 编译 0 errors、3 个已有 MSB3277 warnings；针对性检查奖励先累计后结算、退出重置与 Profile/HUD 引用。Play Mode、设备未运行，成功/失败/空钩/计时结束奖励及颜色观感待验证。
+
+## 2026-09-08 — 落水倍率文字反馈
+
+- FishingLoopController 在有效 Casting 落水、最终倍率写入后发布 DistanceMultiplierLocked；FishingSessionHUD 使用现有 loopController / multiplierText 接线，播放一次 0.4 秒、峰值 1.25 倍的缩放。保留原始缩放，结束/禁用/GameOver/新抛竿恢复。使用游戏时间，暂停时不推进。
+- 编译 0 errors、3 个已有 MSB3277 warnings。场景引用已核对，无需新接线；diff check 仅报告 LoopController 原有两处 Header 行尾空白，本次未改这些行。Play Mode 视觉验收待用户观察。
+
+## 2026-09-08 — SwimRipple 随机播放节奏
+
+- 用户确认未上钩鱼已能播放；新要求为错开出现时间、小鱼更频繁、大鱼更稀疏。FishWaterVFX 每条鱼独立随机首播延迟，Animator 播完一轮后隐藏并随机等待；不受其他鱼 Hooked / Reeling 影响。继续复用子对象，无 Instantiate / Destroy。
+- Small / Medium / Large Variant 的 swimRippleInterval 分别为 0.5–1.1 / 1.2–2.2 / 2.3–3.8 秒，表示每轮结束后的等待；Basic 与 Special 默认 1.2–2.2 秒。频率为试玩初值，未修改尺寸或动画速度。
+- 编译 0 errors、3 个已有 MSB3277 warnings；代码 diff check 通过，Variant 字段目标核对通过。Play Mode 中节奏与暂停恢复待验证。
+
+## 2026-09-08 — 未上钩鱼的常驻涟漪
+
+- 用户确认相机返回问题已解决。
+- SwimRipple 移除实际位移门槛，仅依据所属鱼 State != Hooked 显示，因此 Idle / Approaching 均播放，不受其他鱼咬钩后候选者 ResetToIdle 影响。HookedSplash 仍要求自身 Hooked、收线激活及实际位移。未增加鱼的游动行为。
+- 编译 0 errors、3 个已有依赖 warnings；diff check 通过。涟漪显示待 Play Mode 确认。
+
+## 2026-09-08 — 相机返回过渡修复（待运行验证）
+
+- 录屏约 17.8 秒显示先跳到船边再缩放。FishingCameraController.ShowOverview 在 Dock 前暂存并解除 Follow，FollowHook 恢复目标。Cinemachine 会先刷新旧 live 相机，再建立冻结快照，停用对象不足以阻止该次跟随更新。
+- dotnet build 成功：0 errors，3 个已有 MSB3277 warnings；代码 diff check 通过。未运行 Unity Play Mode。待验证失败返回、再次抛竿、最后一钩返回及过渡中再次抛竿。场景和 Blend 参数未修改。
+
+## 2026-09-08 — 鱼身跟随 VFX 职责修正
+
+- 按用户本步直接修改授权，FishWaterVFX 改为未上钩且实际移动时显示 SwimRipple；已上钩、ReelingController.IsActive 且实际移动时显示 HookedSplash。Striking/静止不显示，启用与禁用时清理两种效果显隐。
+- BasicFish 已绑定现有 HookedSplash 嵌套子对象；四种鱼 Variant 均无相关引用/启用覆盖，可继承基础配置。保留用户尺寸、动画、颜色；常驻子对象复用，不恢复定时 Instantiate/Destroy。
+- 检查：嵌套对象引用与 ID 唯一性通过，git diff --check 通过；dotnet build Assembly-CSharp.csproj --no-restore --verbosity quiet 成功，0 错误、3 条程序集版本冲突警告。未执行 Unity Play Mode 或设备验证，需观察游动涟漪、Striking 隐藏和收线水花。
+- 旧场景的鱼 Prefab 引用迁移仍按用户中途取消保留未处理，旧 Prefab 未删除。
+
+## 2026-09-08 — HookShadow 显隐接入
+
+- 用户完成 Dock 图像偏移复位并确认；创建 HookShadow 后反馈腾空感“还可以”。此前“Dock 复位尚缺”的记录已过时。
+- 按用户本步明确授权，Codex 在 FishingHookController 的 LateUpdate 提前返回之前加入投影显隐逻辑，仅 Flying 显示，并在 FishingLoopTest 绑定既有 HookShadow（GameObject fileID 15465561）。保留用户布局、颜色和其他逻辑。
+- 静态确认引用指向正确子对象；未运行 Unity 编译或 Play Mode，待观察待抛隐藏、飞行显示、落水/取消后隐藏。git diff --check 报告该脚本已有的空白行尾空格，未为此改动用户其他内容。
+- 此次直接实施授权限于投影显隐步骤；后续继续按用户指定协作方式推进。
+
+## 2026-09-08 — 教学进度与透视探索延期
+
+- 用户决定先在 Orthographic 正交场景完成各项功能；透视探索保留为延期项，恢复条件为用户重新提出并可复用现有美术，不预设新增素材或模型。
+- 已同步 task_plan.md、findings.md、2026-09-07-progress-and-plan.md、2026-09-07-development-handoff.md 的最新入口，明确旧快照仅为历史。未改写 Claude 主导的设计文档，也未发送跨代理消息。
+- 教学已推进 POWER 常显/保留数值、Slider 独立显隐、Accelerate 移动端输入门控、最终落水倍率锁定、成功上岸倍率结算和 ScoreTuningProfile 缺失检查。用户报告对应步骤完成；POWER 正常由用户明确确认，其他“好了”不扩大为全分支或平台通过。
+- HookFlightProfile 已创建并被正式飞行消费；HookVisual 拆分和场景绑定已静态确认。Launch 已加入默认 1 的装备初速度倍率参数，恒重力解析计算飞行时间/射程和虚拟高度。旧距离范围不再生效，5～25 只是旧测试地图参考；装备系统和 PC 蓄力时长 Profile 迁移未完成。
+- 用户明确反馈当前腾空不明显；已解释同轴投影原因并将“可见弧线完成”的暗示更正。正交内的投影/缩放表现尚待选定实施，不能标为完成。
+- 本次读取发现 Dock() 尚未加入 hookVisual 局部位置复位，作为下一教学收尾项；未代写修复。Launch 的引用错误提示尚未提及 hookVisual，可在该局部收尾时一并校正。
+- 此前按用户明确请求处理过场景冲突（保留双方对象改动，静态检查无悬空引用）及 FishingLoopController Region 分类（不改变逻辑）；不据此扩大为默认代写授权，也不声称已完成用户后续 Git 合并提交。
+- 当前下一步：一个适量步骤补 Dock 显示复位，再继续正交腾空表现、倍率/落水反馈、奖励、鱼生成/行为/动画和交付。已完成的 Profile、UI 和层级不重建。
+- 验证边界：此次文档整理没有修改游戏代码、场景、Prefab 或 Profile，没有运行编译、Play Mode、Android、WebGL 或系统回归，没有提交或推送。
+
 ## 2026-08-29
 
 - Read `docs/design/2026-08-29-fishing-loop-design.md` in full, starting with its Process note.
@@ -184,3 +317,10 @@
 - 用户希望飞行时间来自模拟；初速度/角度/重力与虚拟高度为讨论建议，尚未确认可见弧线范围，没有实现。
 - 更新 task_plan.md、findings.md、本日志和旧入口提示，新增 docs/reference/2026-09-07-progress-and-plan.md，重新安排收尾、飞行方案、反馈、技巧奖励、鱼行为及设备交付顺序。
 - 本次只更新文档并进行局部源码/保存场景读取，没有修改代码或场景，没有运行编译、Play Mode、Android、WebGL 或完整回归，也未提交/推送。没有改写 Claude 主导设计或发送外部消息。
+
+## 2026-09-08 — 编辑器 UI 布局刷新问题已缓解
+
+- 用户报告：修改代码返回 Unity 后 Scene 中 HUD 布局异常，点击 Game 再返回恢复。
+- 局部检查：Unity 6000.3.23f1；Canvas 为 Screen Space - Overlay，Scale With Screen Size，参考分辨率 1440×2304，Match 0.5。未发现项目编辑模式脚本自动重排该 HUD。
+- 用户按建议将 Game 与 Scene 并排保持可见，并固定 Game 为 1440×2304 竖屏预设后，明确反馈问题解决。支持隐藏 Game View 后尺寸/Canvas 刷新不及时的判断；未独立复现，不认定为某个已确认 Unity bug。
+- 不需要重摆 UI、改游戏代码或修改 Canvas 缩放配置。此为用户确认有效的编辑器布局规避方式。

@@ -9,4 +9,5 @@ public enum E_SceneID
     AttitudeControlTest,
 
     GyroscopeTest,
+    Leaderboard,
 }

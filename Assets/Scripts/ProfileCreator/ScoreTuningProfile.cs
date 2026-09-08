@@ -8,13 +8,20 @@ public sealed class ScoreTuningProfile : ScriptableObject
     [SerializeField, Min(0.01f)]
     private float distanceForMaxMultiplier = 10f;
     
-    [SerializeField, Min(1f)]
-    private float maxDistanceMultiplier = 2f;
+    [SerializeField, Range(1f, 3f)]
+    private float maxDistanceMultiplier = 3f;
+
+    [Header("Acceleration Reward")]
+    [SerializeField, Min(0f)]
+    [Tooltip("Bonus points per world unit retrieved toward shore while accelerating with a fish.")]
+    private float accelerationPointsPerUnit = 1f;
+
+    public float AccelerationPointsPerUnit => accelerationPointsPerUnit;
     
     public float GetDistanceMultiplier(float catchDistance)
     {
         float progress = Mathf.Clamp01(catchDistance /  distanceForMaxMultiplier);
-        return Mathf.Lerp(1f, maxDistanceMultiplier, progress);
+        return Mathf.Lerp(1f, Mathf.Clamp(maxDistanceMultiplier, 1f, 3f), progress);
     }
 
 
@@ -24,6 +31,7 @@ public sealed class ScoreTuningProfile : ScriptableObject
             Mathf.Max(0.01f, distanceForMaxMultiplier);
 
         maxDistanceMultiplier =
-            Mathf.Max(1f, maxDistanceMultiplier);
+            Mathf.Clamp(maxDistanceMultiplier, 1f, 3f);
+        accelerationPointsPerUnit = Mathf.Max(0f, accelerationPointsPerUnit);
     }
 }

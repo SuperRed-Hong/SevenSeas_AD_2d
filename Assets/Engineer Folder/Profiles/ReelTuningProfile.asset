@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ReelTuningProfile
   retrievalSpeed: 2
   acceleratedRetrievalSpeed: 4
-  dodgeSpeed: 4
-  decayRate: 0.8
-  accelerateRiseRate: 1.2
-  safeLateralSpeed: 1.33
-  maxEvaluatedLateralSpeed: 4
-  maxLateralTensionRate: 0.9
+  dodgeSpeed: 2
+  decayRate: 0.4
+  accelerateRiseRate: 1
+  safeLateralSpeed: 0.33
+  maxEvaluatedLateralSpeed: 2
+  maxLateralTensionRate: 1

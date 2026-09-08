@@ -1,5 +1,32 @@
 # Seven Seas 新对话开发交接 — 2026-09-07
 
+## 最新交接 — 2026-09-08 鱼样貌揭示仅规划
+
+- 当前用户要求仅更新文档，不开始实现。下一次读 [鱼真实样貌揭示计划](../../task_plan.md)，先确认提竿成功还是吊上岸揭示。Hooked 目前只是咬钩胜出，不能直接作为揭示事件。
+- Fish_v2/Fishes 文件清点：Small 9、Middle 9、Large 7、EasterEgg 4，共 29 张；未逐张视觉确认。保留 BasicFish Variant 的尺寸、涟漪配置。
+- 相机返回用户已确认解决；鱼涟漪节奏用户接受。倍率最高 3 倍，飞行实时放大/变色，落水锁定，收线结束重置 x1.00，用户接受先保持现状。加速距离奖励已实现/编译通过，运行结算未全面验收。下方旧状态不要求重做。
+
+## 最新接手状态 — 2026-09-08（优先于下方历史快照）
+
+本节后续更正：用户已完成 Dock 图像偏移复位并确认，已创建 HookShadow 水面投影并反馈腾空感“还可以”。Codex 按用户明确的“直接帮我实施”授权，加入 LateUpdate 中仅 Flying 显示投影的逻辑，绑定场景既有 HookShadow；静态引用检查完成，编译/运行显隐尚未验证。下方“Dock 尚缺、投影待创建”已过时，勿重做；下一项先观察显隐，再继续既定反馈与功能计划，缩放不自动追加。
+
+- 用户决定延期透视相机探索，当前继续在 Orthographic 正交场景中完成各项功能。不是放弃探索：待当前功能完成、用户重新提出时恢复；必须复用现有美术，若需要补画多视角素材或建模才成立，则不采用。之前只提出另存 FishingPerspectiveTest 的教学步骤，未确认创建或测试完成。
+- 继续中文教学、用户亲自写代码和操作 Unity，一次一个适量步骤；注释、Header、Tooltip、日志和 Region 名称用英文。用户确认“好了”后直接推进，不重复检查；必要时针对性读取依赖。此次仅更新开发文档。
+- POWER 文字最终要求是始终显示、保留最后显示的蓄力数值直到下次蓄力更新；只有 Slider 随键鼠蓄力显隐。用户已确认显示恢复正常，不再删除 castChargeText。Slider 复用张力条素材的步骤已给出，完成情况未明确确认。
+- ReelingButtonHUD 已使用移动端输入组件 isActiveAndEnabled 与 reelingController.IsActive 联合控制按钮显示，用户报告步骤完成；手机实际显示仍待设备验证。
+- FishingLoopController 已实现落水最终倍率计算、成功上岸 Mathf.RoundToInt(基础分 × 锁定倍率)、scoreTuningProfile 缺失检查；源码已确认，用户报告各步骤完成，不等于全流程/全部平台验证通过。
+- 用户允许的一次性维护：Codex 已处理 FishingLoopTest 场景合并冲突并做对象/引用静态检查；另按明确要求给 FishingLoopController 添加英文 Region，未改变逻辑。这些不改变后续默认教学边界。
+- HookFlightProfile 已创建，正式飞行配置与 CastTuningProfile 的移动端手势/旧原型配置分离。PC 用蓄力、移动端用手势，统一输出 power；不能把移动端称作蓄力。
+- FishingHookController 已改为 Launch(float power, float launchSpeedMultiplier = 1f)。固定角度、力度映射基础初速度，装备倍率作用于初速度且不写共享 Profile；装备系统本身尚未实现。使用恒定重力解析计算飞行时间和距离，不再由 Inspector 指定固定时长。
+- 旧 5～25 仅是 Play Test 地图的临时对照，不是正式地图的最终范围或验收标准。当前源码已移除旧距离调参字段；flightDuration 是计算得到的运行字段。保存场景 YAML 尚可见旧 minimumCastDistance / maximumCastDistance / flightDuration 数据，但不再是当前源码的生效调参来源，不应手工批量清理场景。
+- HookVisual 已从根对象分离，局部零位置/旋转、单位缩放，SpriteRenderer 配置保留；根对象保留玩法和物理组件、0.2 缩放。场景已绑定 flightProfile 与 hookVisual，静态接线检查完成。
+- 当前 UpdateFlight 已计算虚拟高度并向世界 +Y 偏移图像，落水复位并先改 State 再发 Landed。前进和高度都投影到屏幕 Y，因此不会形成侧视弯曲轨迹；用户已明确需要的是明显腾空感，当前反馈仍不足。先前将这版称为可见弧线已更正。
+- 下一具体步骤：在正交方案内继续讨论/落实水面投影标记、图像高度偏移和适度缩放的最小腾空表现；具体素材和参数尚待选定。先补 Dock() 对 hookVisual 局部偏移的复位（当前保存源码尚未加入），同时核对中断后再次 Dock 不残留显示状态。不要从 Profile 创建或 HookVisual 拆分重新开始。
+- 后续顺序：正交腾空表现与飞行收尾 → 倍率/落水反馈 → 加速实际向岸距离和擦边奖励 → 鱼生成避遮挡 → 最小行为树/动画 → 成功失败结束反馈、说明、重开、Android 交付。PC Full Charge Duration 的 Profile 迁移仍待做；奖励数值和时间耗尽的待结算处理仍待决定。
+- 验证边界：本次仅源码/场景针对性读取和文档更新，未运行编译、Play Mode、Android、WebGL 或系统回归；落水一次、GameOver 中断、不同力度、装备倍率、腾空复位仍需对应步骤的最小验证。
+
+下方保留 2026-09-07 交接语境，其中旧“下一步”、删除 POWER、倍率待接入、飞行算法未定等描述已由本节取代。
+
 ## 直接从这里接手
 
 先读根 `AGENTS.md` 和本文件；需要完整计划时再读 `docs/reference/2026-09-07-progress-and-plan.md`。旧 `2026-09-07-conversation-handoff.md` 是本轮开始前的快照，里面“从 TransitionTo 开始”已经过时。不要重新创建冷却、ScoreTuningProfile、距离文字或蓄力 Slider。
@@ -108,3 +135,7 @@ Codex 提议：力度决定初速度，固定发射角度与重力产生飞行�
 ## 可直接贴到新对话的启动消息
 
 请读取 AGENTS.md 和 docs/reference/2026-09-07-development-handoff.md，接手 Seven Seas。继续中文教学，我亲自写代码和操作 Unity，代码注释全部英文，一次一个适量步骤，不要每次“好了”都重新检查。时机圈和冷却已通过，PC 空格蓄力与竖向蓄力条已接入，运行时 Value 增长已确认。距离/倍率由 FishingSessionHUD 显示。先接续 HUD 显隐收尾，再补落水最终倍率锁定与上岸结算；不要重建已存在的类、Profile 或 UI。随后讨论模拟飞行时间及 Profile 迁移，可见弧线与具体算法尚未确定。先不要代写游戏代码。
+
+## 2026-09-08 补充：编辑器布局刷新问题
+
+用户已确认：将 Game 与 Scene 并排保持可见，并固定 Game 为 1440×2304 竖屏预设后，解决了“改完代码返回 Unity，Scene 中 HUD 乱掉，切 Game 才恢复”的现象。保留这个编辑器布局即可，不重新摆 UI 或修改游戏布局代码。判断为与隐藏 Game View 后 Canvas/尺寸刷新有关，未锁定具体 Unity bug；没有独立复现或修改代码。

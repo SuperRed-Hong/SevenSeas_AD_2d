@@ -26,7 +26,8 @@ public class ReelingButtonHUD : MonoBehaviour
             return;
         }
 
-        bool shouldShow = reelingController.IsActive;
+        bool shouldShow = fishingInputSource.isActiveAndEnabled &&
+                          reelingController.IsActive;
 
         if (accelerateButton.activeSelf == shouldShow)
         {

@@ -1,4 +1,3 @@
-
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -12,72 +11,103 @@ public enum FishingLoopState
     Reeling,
     GameOver
 }
+
 [RequireComponent(typeof(CastGestureDetector))]
 public sealed class FishingLoopController : MonoBehaviour
 {
-    [SerializeField] private ShoreLaneController shoreLaneController;
-    [SerializeField]
-    private FishBiteRaceController fishBiteRaceController;
-    [SerializeField]
-    private ReelingController reelingController;
-    [SerializeField]
-    private FishingInputSource inputSource;
-    
-    [FormerlySerializedAs("hookFlightController")] [SerializeField]
-    private FishingHookController hookController;
-    [SerializeField]
-    private StrikeController strikeController;
-    
-    [SerializeField]
-    private FishingCameraController cameraController;
+    #region SerializedReferences
+
+    [Header("Gameplay Controllers")] [SerializeField]
+    private ShoreLaneController shoreLaneController;
+
+    [SerializeField] private FishBiteRaceController fishBiteRaceController;
+    [SerializeField] private ReelingController reelingController;
+    [SerializeField] private FishingHookController hookController;
+    [SerializeField] private StrikeController strikeController;
+    [SerializeField] private FishingCameraController cameraController;
+
     
     
-    [SerializeField]
-    private ScoreTracker scoreTracker;
-    [SerializeField]
-    private HookTracker hookTracker;
-    [SerializeField]
-    private SessionTimer sessionTimer;
-    [SerializeField]
-    [Tooltip("Configuration for Score System")]
+    [Header("Input Sources")] 
+    [SerializeField] private FishingInputSource inputSource;
+    [SerializeField] private CastGestureDetector castGestureDetector;
+    [SerializeField] private CastGestureDetector strikeGestureDetector;
+
+    [Header("Session Tracking")] 
+    [SerializeField] private ScoreTracker scoreTracker;
+    [SerializeField] private HookTracker hookTracker;
+    [SerializeField] private SessionTimer sessionTimer;
+
+
+    [Header("Tuning Profiles")] [SerializeField] [Tooltip("Configuration for Score System")]
     private ScoreTuningProfile scoreTuningProfile;
-    
-    [SerializeField]
-    [Tooltip("Shared configuration for the fishing session.")]
+
+    [SerializeField] [Tooltip("Shared configuration for the fishing session.")]
     private FishingLoopProfile loopProfile;
-    
+
+    #endregion
+
+
+    #region Runtime State and Public Properties
+
     //Runtime state belongs to the controller, not the shared profile.
     private float castCooldownRemaining;
-    
+    private readonly string leaderboardSessionId = System.Guid.NewGuid().ToString("N");
+    public bool FinalScoreSaved { get; private set; }
     public bool IsCastCoolingDown => castCooldownRemaining > 0f;
-    
     public Vector2 LandingPosition { get; private set; }
     public float SelectedLaneX { get; private set; }
     public float SelectedCastPower { get; private set; }
     public FishController HookedFish { get; private set; }
 
     public float CurrentDistanceMultiplier { get; private set; } = 1f;
-    
-    public FishingLoopState CurrentState { get; private set; } =  FishingLoopState.ReadyToCast;
-    [SerializeField]
-    private CastGestureDetector castGestureDetector;
-    [SerializeField]
-    private CastGestureDetector strikeGestureDetector;
-    
+
+    public event System.Action DistanceMultiplierLocked;
+    public float AcceleratedCatchDistance { get; private set; }
+
+    public FishingLoopState CurrentState { get; private set; } = FishingLoopState.ReadyToCast;
+
+
     private float castDistance;
     public float CurrentCastDistance => reelingController.DistanceToShore;
     public float CastDistance => castDistance;
 
+    #endregion
+
+    #region Initialization
+
+    public void PrepareForEntry()
+    {
+        // Keep actors and ambient visuals active while entry owns the start gate.
+        // Disabling this component postpones Start(), including the session timer.
+        enabled = false;
+        shoreLaneController.enabled = false;
+        castGestureDetector.enabled = false;
+        strikeGestureDetector.enabled = false;
+        inputSource?.SetMoveEnabled(false);
+        inputSource?.SetCastEnabled(false);
+        inputSource?.SetStrikeEnabled(false);
+        inputSource?.SetAccelerateEnabled(false);
+    }
+
     private void Start()
     {
-
         if (loopProfile == null)
         {
             Debug.LogError("FishingLoopController requires a FishingLoopProfile", this);
-            
+
             enabled = false;
             return;
         }
+
+        if (scoreTuningProfile == null)
+        {
+            Debug.LogError("FishingLoopController requires a ScoreTuningProfile", this);
+
+            enabled = false;
+            return;
+        }
+
         // Mobile entry provides AppRoot and the gyroscope reader.
         // Direct Editor testing can continue without motion services.
         if (AppRoot.Instance != null)
@@ -87,14 +117,15 @@ public sealed class FishingLoopController : MonoBehaviour
 
             castGestureDetector.ConfigureReader(reader);
             strikeGestureDetector.ConfigureReader(reader);
-            
-        
         }
+
         sessionTimer.BeginSession();
         EnterState(CurrentState);
-      
-
     }
+
+    #endregion
+
+    #region State Transitions and Cast Input
 
     private void TransitionTo(FishingLoopState nextState)
     {
@@ -102,15 +133,14 @@ public sealed class FishingLoopController : MonoBehaviour
         {
             return;
         }
-        
+
         //Capture the source state before CurrentState is overwritten.
-        
-        bool shouldStartCooldown = 
-            nextState ==  FishingLoopState.ReadyToCast &&
-            (CurrentState == FishingLoopState.Striking|| CurrentState == FishingLoopState.Reeling);
-        
-        
-        
+
+        bool shouldStartCooldown =
+            nextState == FishingLoopState.ReadyToCast &&
+            (CurrentState == FishingLoopState.Striking || CurrentState == FishingLoopState.Reeling);
+
+
         ExitState(CurrentState);
 
         castCooldownRemaining = shouldStartCooldown ? loopProfile.PostAttemptCooldown : 0f;
@@ -124,6 +154,11 @@ public sealed class FishingLoopController : MonoBehaviour
         castGestureDetector.enabled = available;
         inputSource?.SetCastEnabled(available);
     }
+
+    #endregion
+
+    #region Frame Dispatch
+
     private void Update()
     {
         switch (CurrentState)
@@ -131,11 +166,11 @@ public sealed class FishingLoopController : MonoBehaviour
             case FishingLoopState.ReadyToCast:
                 UpdateReadyToCast();
                 break;
-                
+
             case FishingLoopState.Casting:
                 UpdateCasting();
                 break;
-                
+
             case FishingLoopState.Baiting:
                 UpdateBaiting();
                 break;
@@ -149,19 +184,20 @@ public sealed class FishingLoopController : MonoBehaviour
                 UpdateGameOver();
                 break;
         }
-
     }
+
+    #endregion
+
+    #region Event Subscriptions
+
     private void OnEnable()
     {
-
-       
         hookController.Landed += HandleHookLanded;
-        
+
         fishBiteRaceController.FishHooked += HandleFishHooked;
         fishBiteRaceController.TimedOut += HandleBaitingTimedOut;
-        
-        
-        
+
+
         strikeController.Succeeded += HandleStrikeSucceeded;
         strikeController.TimedOut += HandleStrikeTimedOut;
         strikeController.AttemptRejected += HandleStrikeAttemptRejected;
@@ -169,43 +205,44 @@ public sealed class FishingLoopController : MonoBehaviour
             HandleReelingAttemptFailed;
         reelingController.RetrievalCompleted +=
             HandleRetrievalCompleted;
-        
+        reelingController.AcceleratedDistanceMoved += HandleAcceleratedDistanceMoved;
+
         sessionTimer.Expired += HandleSessionExpired;
-        
+
         if (inputSource != null)
         {
             inputSource.CastPerformed += HandleCastDetected;
-
         }
-        
-
     }
 
     private void OnDisable()
     {
-        
         hookController.Landed -= HandleHookLanded;
-        
+
         fishBiteRaceController.FishHooked -= HandleFishHooked;
         fishBiteRaceController.TimedOut -= HandleBaitingTimedOut;
         strikeController.Succeeded -= HandleStrikeSucceeded;
         strikeController.TimedOut -= HandleStrikeTimedOut;
         strikeController.AttemptRejected -= HandleStrikeAttemptRejected;
-        
+
         reelingController.AttemptFailed -=
             HandleReelingAttemptFailed;
         reelingController.RetrievalCompleted -=
             HandleRetrievalCompleted;
-        
+        reelingController.AcceleratedDistanceMoved -= HandleAcceleratedDistanceMoved;
+
         sessionTimer.Expired -= HandleSessionExpired;
-        
+
         if (inputSource != null)
         {
             inputSource.CastPerformed -= HandleCastDetected;
-
         }
-        
     }
+
+    #endregion
+
+    #region Casting Event Handlers
+
     // Interpret the hook's physical landing event as a gameplay transition.
     // The flight component does not need to know that Baiting exists.
     private void HandleHookLanded(Vector2 landingPosition)
@@ -216,8 +253,15 @@ public sealed class FishingLoopController : MonoBehaviour
         }
 
         castDistance = reelingController.DistanceToShore;
+        // Lock the multiplier using the final landing distance.
+
+        CurrentDistanceMultiplier = scoreTuningProfile.GetDistanceMultiplier(castDistance);
+
         // Preserve the landing point for Baiting and later retrieval logic.
         LandingPosition = landingPosition;
+
+        // Notify presentation only after the final landing multiplier is available.
+        DistanceMultiplierLocked?.Invoke();
 
         Debug.Log(
             $"Hook landed at: {LandingPosition.x:F2}, " +
@@ -225,11 +269,8 @@ public sealed class FishingLoopController : MonoBehaviour
 
         TransitionTo(FishingLoopState.Baiting);
     }
-    
-    
 
-    
-    
+
     private void HandleCastDetected(float power)
     {
         if (CurrentState != FishingLoopState.ReadyToCast || IsCastCoolingDown)
@@ -246,8 +287,11 @@ public sealed class FishingLoopController : MonoBehaviour
 
         TransitionTo(FishingLoopState.Casting);
     }
-   
-    
+
+    #endregion
+
+    #region Baiting Event Handlers
+
     private void HandleFishHooked(FishController fish)
     {
         if (CurrentState != FishingLoopState.Baiting)
@@ -256,14 +300,18 @@ public sealed class FishingLoopController : MonoBehaviour
         }
 
         HookedFish = fish;
-        
- 
+        if (fish.TryGetComponent<FishWaterVFX>(out var waterVFX))
+        {
+            waterVFX.Configure(reelingController);
+        }
+
         Debug.Log(
             $"Fish hooked: {fish.name}, " +
             $"score value = {fish.ScoreValue}");
 
         TransitionTo(FishingLoopState.Striking);
     }
+
     private void HandleBaitingTimedOut()
     {
         if (CurrentState != FishingLoopState.Baiting)
@@ -278,6 +326,11 @@ public sealed class FishingLoopController : MonoBehaviour
         // Continue retrieval with an empty hook.
         TransitionTo(FishingLoopState.Reeling);
     }
+
+    #endregion
+
+    #region Striking Event Handlers
+
     private void HandleStrikeSucceeded()
     {
         if (CurrentState != FishingLoopState.Striking)
@@ -286,6 +339,12 @@ public sealed class FishingLoopController : MonoBehaviour
         }
 
         Debug.Log("Strike succeeded.");
+        if (HookedFish != null &&
+            HookedFish.TryGetComponent<FishAppearance>(out var appearance))
+        {
+            appearance.Reveal();
+        }
+
         TransitionTo(FishingLoopState.Reeling);
     }
 
@@ -298,7 +357,7 @@ public sealed class FishingLoopController : MonoBehaviour
 
         LoseHookAndFinishAttempt("Strike timed out.");
     }
-    
+
     private void HandleStrikeAttemptRejected()
     {
         if (CurrentState != FishingLoopState.Striking)
@@ -306,9 +365,14 @@ public sealed class FishingLoopController : MonoBehaviour
             return;
         }
 
-        cameraController.PlayStrikeRejectedShake();
+        cameraController.PlayStrikeRejectedShake(
+            strikeController.RejectedShakeAmplitude, strikeController.RejectedShakeDuration);
     }
-    
+
+    #endregion
+
+    #region Reeling Events and Score Settlement
+
     private void HandleReelingAttemptFailed()
     {
         if (CurrentState != FishingLoopState.Reeling)
@@ -318,6 +382,15 @@ public sealed class FishingLoopController : MonoBehaviour
 
         LoseHookAndFinishAttempt("Reeling attempt failed.");
     }
+
+    private void HandleAcceleratedDistanceMoved(float distance)
+    {
+        if (CurrentState == FishingLoopState.Reeling && HookedFish != null)
+        {
+            AcceleratedCatchDistance += distance;
+        }
+    }
+
     private void HandleRetrievalCompleted()
     {
         if (CurrentState != FishingLoopState.Reeling)
@@ -327,13 +400,17 @@ public sealed class FishingLoopController : MonoBehaviour
 
         if (HookedFish != null)
         {
-            int caughtScore = HookedFish.ScoreValue;
+            float accelerationBonus = AcceleratedCatchDistance * scoreTuningProfile.AccelerationPointsPerUnit;
+            // Round once after adding the bonus; the distance multiplier applies only to the fish.
+            int caughtScore = Mathf.RoundToInt(
+                HookedFish.ScoreValue * CurrentDistanceMultiplier + accelerationBonus);
 
             scoreTracker.AddScore(caughtScore);
 
             Debug.Log(
                 $"Fish caught: {HookedFish.name}, " +
                 $"score added = {caughtScore}, " +
+                $"acceleration bonus = {accelerationBonus:F2}, " +
                 $"total score = {scoreTracker.Score}");
 
             HookedFish.gameObject.SetActive(false);
@@ -348,7 +425,11 @@ public sealed class FishingLoopController : MonoBehaviour
 
         TransitionTo(FishingLoopState.ReadyToCast);
     }
-    
+
+    #endregion
+
+    #region Session End and Attempt Failure
+
     private void HandleSessionExpired()
     {
         if (CurrentState == FishingLoopState.GameOver)
@@ -363,7 +444,7 @@ public sealed class FishingLoopController : MonoBehaviour
 
         TransitionTo(FishingLoopState.GameOver);
     }
-    
+
     private void LoseHookAndFinishAttempt(string reason)
     {
         HookedFish?.ResetToIdle();
@@ -382,10 +463,13 @@ public sealed class FishingLoopController : MonoBehaviour
 
         TransitionTo(nextState);
     }
-    
+
+    #endregion
+
+    #region State Updates
+
     private void UpdateGameOver()
     {
-
     }
 
     private void UpdateReeling()
@@ -398,7 +482,6 @@ public sealed class FishingLoopController : MonoBehaviour
 
     private void UpdateBaiting()
     {
-            
     }
 
     private void UpdateCasting()
@@ -415,7 +498,7 @@ public sealed class FishingLoopController : MonoBehaviour
         {
             return;
         }
-        
+
         castCooldownRemaining = Mathf.Max(0f, castCooldownRemaining - Time.deltaTime);
         // Restore casting once when the cooldown ends.
 
@@ -424,6 +507,10 @@ public sealed class FishingLoopController : MonoBehaviour
             SetCastingAvailable(true);
         }
     }
+
+    #endregion
+
+    #region State Entry and Exit Dispatch
 
     private void EnterState(FishingLoopState state)
     {
@@ -477,17 +564,23 @@ public sealed class FishingLoopController : MonoBehaviour
         }
     }
 
+    #endregion
+
+    #region State Entry Actions
+
     private void EnterReadyToCast()
     {
-        
+        // Settlement has completed before entering the next attempt.
+        CurrentDistanceMultiplier = 1f;
         shoreLaneController.enabled = true;
         cameraController.ShowOverview();
-        
+
         inputSource?.SetMoveEnabled(true);
         // Return the hook to the player for the next attempt.
         hookController.Dock();
         SetCastingAvailable(!IsCastCoolingDown);
     }
+
     private void EnterCasting()
     {
         // Reset multiplier
@@ -495,7 +588,7 @@ public sealed class FishingLoopController : MonoBehaviour
         CurrentDistanceMultiplier = 1f;
         // Follow the hook from launch through the remaining attempt states.
         cameraController.FollowHook();
-        
+
         // Casting is event-driven. Landed will end this state.
         hookController.Launch(SelectedCastPower);
     }
@@ -505,25 +598,29 @@ public sealed class FishingLoopController : MonoBehaviour
         // Start one bite race when the hook enters the water.
         fishBiteRaceController.BeginRace();
     }
+
     private void EnterStriking()
     {
         // Enabling the detector calls OnEnable(),
         // which resets it for this reaction opportunity.
         strikeGestureDetector.enabled = true;
         inputSource?.SetStrikeEnabled(true);
-        
+
         strikeController.BeginCheck();
     }
 
     private void EnterReeling()
     {
+        AcceleratedCatchDistance = 0f;
         inputSource?.SetMoveEnabled(true);
         inputSource?.SetAccelerateEnabled(true);
 
         reelingController.BeginRetrieval();
     }
+
     private void EnterGameOver()
     {
+        CurrentDistanceMultiplier = 1f;
         sessionTimer.StopTimer();
         hookController.CancelFlight();
         fishBiteRaceController.CancelRace();
@@ -542,7 +639,12 @@ public sealed class FishingLoopController : MonoBehaviour
 
         Debug.Log(
             $"Game Over. Final score: {scoreTracker.Score}");
+        FinalScoreSaved = LocalLeaderboard.TryRecord(leaderboardSessionId, scoreTracker.Score);
     }
+
+    #endregion
+
+    #region State Exit Actions
 
     private void ExitReadyToCast()
     {
@@ -550,8 +652,15 @@ public sealed class FishingLoopController : MonoBehaviour
         SetCastingAvailable(false);
         shoreLaneController.enabled = false;
     }
-    private void ExitCasting() { }
-    private void ExitBaiting() { }
+
+    private void ExitCasting()
+    {
+    }
+
+    private void ExitBaiting()
+    {
+    }
+
     private void ExitStriking()
     {
         strikeController.CancelCheck();
@@ -559,13 +668,20 @@ public sealed class FishingLoopController : MonoBehaviour
         strikeGestureDetector.enabled = false;
         inputSource?.SetStrikeEnabled(false);
     }
+
     private void ExitReeling()
     {
+        // Successful retrieval settles before exit; every other exit discards the bonus.
+        AcceleratedCatchDistance = 0f;
         reelingController.CancelRetrieval();
 
         inputSource?.SetMoveEnabled(false);
         inputSource?.SetAccelerateEnabled(false);
     }
-    private void ExitGameOver() { }
+
+    private void ExitGameOver()
+    {
+    }
+
+    #endregion
 }
-        
