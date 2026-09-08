@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: fcddaddd434f37e47bbb41e17d6ff61f
+guid: 91d8fc511c2549c40ba3a0a3a68c5592
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -7336925150194193057
-    second: Fish_0001s_0003_Middle-4_0
+      213: 4995998409487463783
+    second: FANGDAJING_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -37,7 +37,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 0
+    filterMode: 1
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -72,10 +72,10 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 128
+    maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 0
+    textureCompression: 1
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Fish_0001s_0003_Middle-4_0
+      name: FANGDAJING_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 17
-        height: 14
+        x: 120
+        y: 132
+        width: 25
+        height: 28
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: f5dab07d2710e2a90800000000000000
-      internalID: -7336925150194193057
+      spriteID: 765baef551a555540800000000000000
+      internalID: 4995998409487463783
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Fish_0001s_0003_Middle-4_0: -7336925150194193057
+      FANGDAJING_0: 4995998409487463783
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
