@@ -20,6 +20,7 @@ public sealed class FishingSceneEntryGuard : MonoBehaviour
     private AttitudeCalibrationService calibrationService;
     private bool isWaitingForCalibration;
     private bool isStarting;
+    public bool IsStartingGame => isStarting && enabled;
 
     private void Awake()
     {

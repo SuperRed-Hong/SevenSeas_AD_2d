@@ -56,9 +56,36 @@ public sealed class StrikeWindowProfile : ScriptableObject
     public float MinBandCenterRadius => minBandCenterRadius;
     public float MaxBandCenterRadius => maxBandCenterRadius;
     public float HitForgivenessRadius => hitForgivenessRadius;
+
+    public float[] GetValues() => new[]
+    {
+        windowDuration, attemptCooldown, shakeAmplitude, shakeDuration,
+        targetBandWidth, minBandCenterRadius, maxBandCenterRadius, hitForgivenessRadius
+    };
+
+    public void ApplyRuntimeValues(float[] values)
+    {
+        if (values == null || values.Length != 8) return;
+        foreach (float value in values)
+            if (float.IsNaN(value) || float.IsInfinity(value)) return;
+        windowDuration = values[0];
+        attemptCooldown = values[1];
+        shakeAmplitude = values[2];
+        shakeDuration = values[3];
+        targetBandWidth = values[4];
+        minBandCenterRadius = values[5];
+        maxBandCenterRadius = values[6];
+        hitForgivenessRadius = values[7];
+        ValidateValues(false);
+    }
     
     
     private void OnValidate()
+    {
+        ValidateValues(true);
+    }
+
+    private void ValidateValues(bool showWarning)
     {
         windowDuration = Mathf.Max(0.01f, windowDuration);
         attemptCooldown = Mathf.Max(0f, attemptCooldown);
@@ -91,7 +118,7 @@ public sealed class StrikeWindowProfile : ScriptableObject
 // Forgiveness cannot be negative. Warn when it becomes visually misleading.
         hitForgivenessRadius = Mathf.Max(0f, hitForgivenessRadius);
 
-        if (hitForgivenessRadius >= halfWidth)
+        if (showWarning && hitForgivenessRadius >= halfWidth)
         {
             Debug.LogWarning(
                 "Strike forgiveness is at least half the target band width. " +

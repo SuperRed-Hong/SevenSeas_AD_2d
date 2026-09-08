@@ -7,6 +7,32 @@ public sealed class StrikeController : MonoBehaviour
 
     [SerializeField] private FishingInputSource inputSource;
     [SerializeField] private StrikeWindowProfile tuningProfile;
+    private StrikeWindowProfile runtimeProfile;
+    private StrikeWindowProfile activeProfile;
+
+    public StrikeWindowProfile RuntimeProfile
+    {
+        get
+        {
+            if (runtimeProfile == null && tuningProfile != null)
+                runtimeProfile = Instantiate(tuningProfile);
+            return runtimeProfile;
+        }
+    }
+
+    public void ResetRuntimeTuning()
+    {
+        if (RuntimeProfile != null) runtimeProfile.ApplyRuntimeValues(tuningProfile.GetValues());
+    }
+
+    public float RejectedShakeAmplitude => activeProfile != null ? activeProfile.ShakeAmplitude : 0f;
+    public float RejectedShakeDuration => activeProfile != null ? activeProfile.ShakeDuration : 0f;
+
+    private void OnDestroy()
+    {
+        if (runtimeProfile != null) Destroy(runtimeProfile);
+        if (activeProfile != null) Destroy(activeProfile);
+    }
 
 
     public event Action Succeeded;
@@ -28,11 +54,11 @@ public sealed class StrikeController : MonoBehaviour
     public bool IsCoolingDown => cooldownRemaining > 0f;
 
     public float CooldownRemaining01 =>
-        tuningProfile != null &&
-        tuningProfile.AttemptCooldown > 0f
+        activeProfile != null &&
+        activeProfile.AttemptCooldown > 0f
             ? Mathf.Clamp01(
                 cooldownRemaining /
-                tuningProfile.AttemptCooldown)
+                activeProfile.AttemptCooldown)
             : 0f;
 
     private float elapsedTime;
@@ -52,9 +78,11 @@ public sealed class StrikeController : MonoBehaviour
         }
         
         
-        //Read the configured width and choose one center per attempt.
-        float halfWidth = tuningProfile.TargetBandWidth * 0.5f;
-        float centerRadius = UnityEngine.Random.Range(tuningProfile.MinBandCenterRadius, tuningProfile.MaxBandCenterRadius);
+        // Snapshot tuning so an open check never changes its rules mid-attempt.
+        if (activeProfile == null) activeProfile = Instantiate(RuntimeProfile);
+        else activeProfile.ApplyRuntimeValues(RuntimeProfile.GetValues());
+        float halfWidth = activeProfile.TargetBandWidth * 0.5f;
+        float centerRadius = UnityEngine.Random.Range(activeProfile.MinBandCenterRadius, activeProfile.MaxBandCenterRadius);
         
         // Keep the entire visible band inside the normalized radius range
 
@@ -89,7 +117,7 @@ public sealed class StrikeController : MonoBehaviour
         
 
         // The duration covers both Legs: Inward, the outward.
-        float safeDuration = Mathf.Max(0.01f, tuningProfile.WindowDuration);
+        float safeDuration = Mathf.Max(0.01f, activeProfile.WindowDuration);
         float progress01 = Mathf.Clamp01(elapsedTime / safeDuration);
         
         //p Progress 0 -> 0.5 ->1 produce radius 1-> 0 -> 1
@@ -97,7 +125,7 @@ public sealed class StrikeController : MonoBehaviour
 
         IsExpanding = progress01 >= 0.5;
         
-        if (elapsedTime < tuningProfile.WindowDuration)
+        if (elapsedTime < activeProfile.WindowDuration)
         {
             return;
         }
@@ -129,7 +157,7 @@ public sealed class StrikeController : MonoBehaviour
             return;
         }
 
-        float forgiveness = tuningProfile.HitForgivenessRadius;
+        float forgiveness = activeProfile.HitForgivenessRadius;
         float effectiveInner = Mathf.Clamp01(TargetBandInnerRadius - forgiveness);
         float effectiveOuter = Mathf.Clamp01(TargetBandOuterRadius + forgiveness);
         
@@ -141,7 +169,7 @@ public sealed class StrikeController : MonoBehaviour
             return;
         }
 
-        cooldownRemaining = tuningProfile.AttemptCooldown;
+        cooldownRemaining = activeProfile.AttemptCooldown;
         AttemptRejected?.Invoke();
     }
 
