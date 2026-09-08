@@ -1,5 +1,9 @@
 # Fishing Loop Teaching Plan
 
+- 2026-09-08 开局显示/逻辑分离：[implemented / compile passed / Play Mode pending] 用户要求场景先生效、操作延后。入口 Awake 先调用 Loop.PrepareForEntry 禁用协调器、岸边移动及两种手势，再激活 GameplayRoot；鱼生成、角色显示与涟漪立即运行。菜单渐隐和镜头转场完成后仅启用 Loop，由其 Start 开始计时和 ReadyToCast 输入。取代下方“转场结束才激活整个玩法根”的旧记录；游戏 HUD 仍在开局时显示。
+
+- 2026-09-08 菜单渐隐：[implemented / compile passed / static wiring checked / Play Mode pending] MenuCanvas 新增 CanvasGroup / MenuCanvasFader，Start 后与镜头转场同时执行 0.35 秒平滑渐隐；两者都结束后才启用玩法。Fade Out Duration 可在 MenuCanvas 调整。渐隐开始关闭菜单交互，再显示时恢复透明度和交互。
+
 - 2026-09-08 菜单点击修复：[scene wiring fixed / Play Mode pending] EventSystem 原在被菜单入口停用的 GamePlayCanvas 下，导致所有菜单点击失效；已移至场景根，保持唯一且启用。待用户重新 Play 验证 Start / Setting / Leaderboard。
 
 ## 当前任务 — 2026-09-08 同场景主菜单与空镜转场

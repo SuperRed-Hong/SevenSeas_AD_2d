@@ -10271,6 +10271,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
+  - component: {fileID: 2101000050}
+  - component: {fileID: 2101000051}
   - component: {fileID: 1220132656}
   - component: {fileID: 1220132655}
   - component: {fileID: 1220132654}
@@ -13833,6 +13835,8 @@ MonoBehaviour:
   menuCalibrationPanel: {fileID: 2101000003}
   cameraController: {fileID: 1278519479}
   exitButton: {fileID: 1666176386}
+  menuFader: {fileID: 2101000051}
+  loopController: {fileID: 3372220}
 --- !u!4 &1636518287
 Transform:
   m_ObjectHideFlags: 0
@@ -19776,6 +19780,31 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2101000026}
   m_CullTransparentMesh: 1
+--- !u!225 &2101000050
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1220132652}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
+--- !u!114 &2101000051
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1220132652}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06b7af959ec04dbf95cb8d0d6bc5c5cf, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::MenuCanvasFader
+  fadeOutDuration: 0.35
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

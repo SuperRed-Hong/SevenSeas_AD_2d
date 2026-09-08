@@ -1,5 +1,16 @@
 # Fishing Loop Findings
 
+## 2026-09-08 — 场景表现先运行，玩法控制延后
+
+- 用户不希望角色/鱼等场景内容等转场结束才出现。新增 FishingLoopController.PrepareForEntry，在根激活前停用 Loop、ShoreLaneController、Cast/Strike 检测并关闭语义输入。Loop 被停用时 Start 尚未执行，计时器不会开始。
+- FishingSceneEntryGuard 随后立即激活 GameplayRoot，允许 FishSpawner.Start 和鱼身 VFX 运行；FishBiteRace / Strike / Reeling 原本均需显式 Begin 才推进，因此无需冻结整个场景或 Time.timeScale。转场结束仅重新启用 Loop，沿用原有 Start 初始化与输入门控。
+- 输入组件初始语义门控默认关闭；即使 Router.Awake 晚于 PrepareForEntry、其 activeSource 尚未建立，岸边移动和手势仍停用且底层语义输入默认关闭。独立 EventSystem 继续接收菜单点击。
+
+## 2026-09-08 — 菜单渐隐表现
+
+- MenuCanvasFader 独立控制 CanvasGroup，使用 unscaledDeltaTime 与 SmoothStep 淡出全部菜单子 UI，不修改原图片和文字颜色。默认 0.35 秒，0 秒直接完成。
+- FishingSceneEntryGuard 同时启动镜头转场与菜单渐隐；渐隐完成再停用 MenuCanvas，等待镜头也完成后启用 GameplayRoot / GamePlayCanvas。重新启用菜单恢复 alpha、interactable、blocksRaycasts；EventSystem 继续独立在场景根。
+
 ## 2026-09-08 — 菜单点击失效根因
 
 - 上轮将 GamePlayCanvas 设为菜单阶段停用，却遗漏其子对象 EventSystem（1185182857），连带禁用了 InputSystemUIInputModule。按钮回调和 GraphicRaycaster 已接线，但没有活动的 EventSystem 分发点击。

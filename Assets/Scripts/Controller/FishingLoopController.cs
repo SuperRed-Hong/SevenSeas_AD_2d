@@ -76,6 +76,20 @@ public sealed class FishingLoopController : MonoBehaviour
 
     #region Initialization
 
+    public void PrepareForEntry()
+    {
+        // Keep actors and ambient visuals active while entry owns the start gate.
+        // Disabling this component postpones Start(), including the session timer.
+        enabled = false;
+        shoreLaneController.enabled = false;
+        castGestureDetector.enabled = false;
+        strikeGestureDetector.enabled = false;
+        inputSource?.SetMoveEnabled(false);
+        inputSource?.SetCastEnabled(false);
+        inputSource?.SetStrikeEnabled(false);
+        inputSource?.SetAccelerateEnabled(false);
+    }
+
     private void Start()
     {
         if (loopProfile == null)

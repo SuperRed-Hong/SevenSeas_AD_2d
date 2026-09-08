@@ -5,11 +5,13 @@ using UnityEngine.UI;
 public sealed class FishingSceneEntryGuard : MonoBehaviour
 {
     [SerializeField] private GameObject gameplayRoot;
+    [SerializeField] private FishingLoopController loopController;
 
     [SerializeField]
     private AttitudeCalibrationPanel calibrationPanel;
 
     [SerializeField] private GameObject menuCanvas;
+    [SerializeField] private MenuCanvasFader menuFader;
     [SerializeField] private GameObject gameplayCanvas;
     [SerializeField] private AttitudeCalibrationPanel menuCalibrationPanel;
     [SerializeField] private FishingCameraController cameraController;
@@ -31,9 +33,18 @@ public sealed class FishingSceneEntryGuard : MonoBehaviour
             return;
         }
 
-        // Prevent gameplay Start methods from running
-        // before all entry requirements are satisfied.
-        gameplayRoot.SetActive(false);
+        if (loopController == null)
+            loopController = gameplayRoot.GetComponentInChildren<FishingLoopController>(true);
+        if (loopController == null)
+        {
+            Debug.LogError("Fishing scene entry requires a FishingLoopController.", this);
+            enabled = false;
+            return;
+        }
+
+        // Spawn fish and show actors immediately; only gameplay control waits.
+        loopController.PrepareForEntry();
+        gameplayRoot.SetActive(true);
         if (gameplayCanvas != null) gameplayCanvas.SetActive(false);
     }
 
@@ -160,13 +171,15 @@ public sealed class FishingSceneEntryGuard : MonoBehaviour
             calibrationPanel.ClosePanel();
         }
         menuCalibrationPanel?.ClosePanel();
-        if (menuCanvas != null) menuCanvas.SetActive(false);
         if (gameplayCanvas != null) gameplayCanvas.SetActive(false);
 
-        if (cameraController != null)
-            yield return cameraController.TransitionToOverview();
+        Coroutine cameraTransition = cameraController != null
+            ? StartCoroutine(cameraController.TransitionToOverview()) : null;
+        if (menuFader != null) yield return menuFader.FadeOut();
+        if (menuCanvas != null) menuCanvas.SetActive(false);
+        if (cameraTransition != null) yield return cameraTransition;
 
-        gameplayRoot.SetActive(true);
+        loopController.enabled = true;
         if (gameplayCanvas != null) gameplayCanvas.SetActive(true);
 
         // Entry validation is complete; no further polling is needed.

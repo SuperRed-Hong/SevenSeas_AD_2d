@@ -1,5 +1,16 @@
 # Fishing Loop Progress
 
+## 2026-09-08 — 修订开局激活时序
+
+- 按用户要求把场景表现和正式玩法分开：进入场景时先禁用玩法协调器、岸边移动和手势/语义输入，再激活 GameplayRoot，鱼/角色/涟漪无需等待转场。渐隐与镜头转场结束后重新启用 Loop，开始计时与输入。
+- 仅新增 Loop.PrepareForEntry、调整入口守卫并序列化已有 Loop 引用；不改计分、鱼逻辑、镜头/渐隐时长和菜单布局。旧“整根延迟激活”已被本记录取代。
+- 编译 0 errors、3 条已有 MSB3277 warnings；源码核对初始语义输入关闭、玩法 Begin 由协调器触发、SessionTimer.Awake 不计时。未运行 Play Mode / Android / WebGL；下一步观察转场前鱼和角色已显示、无法操作且计时未走，转场后正常操作。
+
+## 2026-09-08 — Start 菜单渐隐已接入
+
+- 用户要求 UI 消失改为渐隐。新增 MenuCanvasFader，在现有 MenuCanvas 挂 CanvasGroup 并完成守卫引用；默认 0.35 秒，与既有镜头转场并行，渐隐开始停止菜单点击。
+- 编译 0 errors、3 条已有 MSB3277 warnings；场景组件、引用和 ID 完整性检查通过。未运行 Play Mode 或设备验证，需观察退场观感；可在 MenuCanvas 的 Fade Out Duration 调整时间。未改变菜单布局和游戏 HUD 出现方式。
+
 ## 2026-09-08 — 菜单鼠标点击接线修复
 
 - 用户反馈菜单按钮鼠标点击无反应。定位为上轮关闭 GamePlayCanvas 时同时关闭了其子对象 EventSystem；这是上轮入口显隐调整遗漏的依赖。
