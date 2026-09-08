@@ -1,5 +1,9 @@
 # Fishing Loop Teaching Plan
 
+- 2026-09-08 真正暂停：[implemented / compile passed / static wiring checked / Play Mode pending] PausePanelButton 从直接加载 MainMenu 改为打开暂停面板；Resume 保留本局并恢复，Main Menu 独立结束本局返回。FishingPauseController 统一保存/恢复时间和 12 个玩法输入组件，与 StrikeTuningPanel 互斥，避免重复暂停覆盖状态。待试玩各玩法阶段暂停、继续及返回菜单。
+
+- 2026-09-08 游戏内提竿调参：[implemented / compile passed / static wiring checked / Play Mode pending] StrikeTuning 根组件在运行时创建独立 uGUI 面板，左上 STRIKE TUNING 入口，8 个滑条、Apply / Defaults / Close。打开暂停时间和玩法组件，关闭恢复原启用状态；开局转场期间禁止打开。运行时 Profile 副本保留至场景退出，每次 BeginCheck 快照保证本轮判定稳定；下一次判定使用已应用参数。震屏幅度/时长已实际接入拒绝反馈；Profile 资产原值不覆盖。
+
 - 2026-09-08 开局显示/逻辑分离：[implemented / compile passed / Play Mode pending] 用户要求场景先生效、操作延后。入口 Awake 先调用 Loop.PrepareForEntry 禁用协调器、岸边移动及两种手势，再激活 GameplayRoot；鱼生成、角色显示与涟漪立即运行。菜单渐隐和镜头转场完成后仅启用 Loop，由其 Start 开始计时和 ReadyToCast 输入。取代下方“转场结束才激活整个玩法根”的旧记录；游戏 HUD 仍在开局时显示。
 
 - 2026-09-08 菜单渐隐：[implemented / compile passed / static wiring checked / Play Mode pending] MenuCanvas 新增 CanvasGroup / MenuCanvasFader，Start 后与镜头转场同时执行 0.35 秒平滑渐隐；两者都结束后才启用玩法。Fade Out Duration 可在 MenuCanvas 调整。渐隐开始关闭菜单交互，再显示时恢复透明度和交互。
