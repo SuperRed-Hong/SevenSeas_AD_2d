@@ -1,4 +1,79 @@
-## 2026-09-09 — 文档同步与下一阶段交接
+## 2026-09-09 — 暂停美术与全局UI音效
+
+- 用户确认手工按钮音效测试通过，要求全部应用，并指出暂停风格不匹配。FishingPauseMenu复用排行榜羊皮纸Sprite与PressStart2P字体，棕金按钮、居中纵向卡片、安全区布局；保留Resume/Catches/音效/震动/返回菜单。关闭图标扩大透明点击区域，图标单独显示。仅新增三个场景资源引用，未改用户已配置音频素材和音量。
+- 新UiAudioRouter/UiButtonAudioFeedback在场景加载时注册含inactive按钮，悬停/选中Select，点击Confirm，返回/关闭Back；动态暂停/库存/StrikeTuning按钮显式注册。移除暂停旧直接播放，兼容手动持久OnClick音效并去重，同帧点击优先于选择。
+- UI短音源独立DontDestroyOnLoad，保留跨场景尾音与本次应用静音状态；BGM和环境音仍由原场景管理。FishingAudioFeedback公开PlayUi接口保留，配置仍在GameFeedback。直接冷启动无GameFeedback的Leaderboard未取得clip时安全静音，正常从游戏进入已配置。
+- Runtime/Editor工程编译0错误，既有MSB3277警告；实际路由/按钮/FishingAudioFeedback配Unity事件及音源替身32断言通过。主场景local fileID无缺失/重复。
+- 独立Unity6000.3.23f1 + uGUI2.0.0/项目字体素材原生Camera.Render检查480x800、480x960、800x480。关闭点击区调整后10/10检查通过，三尺寸无文字溢出/屏外元素；暂停/库存owner回路由真实Pause源码配明确业务替身检查。截图在系统Temp/SevenSeasNativePauseUI-0b2d8e8d7fdb4b84b27b66d4fc5cb13d-v2，源码hash一致。最小按钮高度竖屏48.74px、横屏33.12px，横屏偏小仍为限制。正式场景EventSystem操作、音频听感及刘海安全区/设备触摸仍待验收，不把原生视觉测试当设备测试。
+
+## 2026-09-09 — Striking进入震动
+
+- 用户要求新增进入Striking时震动；FishingHaptics订阅StateChanged，以CurrentAttemptId单独去重，保留原扣钩失败震动。沿用暂停菜单Vibration开关、暂停/失焦门控；禁用组件取消订阅，恢复不补播。此决定取代此前“首版仅失败震动”的范围。
+- Runtime MSBuild通过，0错误、既有MSB3277警告；实际源码以UNITY_ANDROID编译配Handheld替身12断言通过，覆盖进入/重复/失败独立/开关/暂停/失焦/新竿/订阅生命周期。未改变场景接线；Editor和WebGL不调用设备震动，Android真机听感/震感待测试。
+
+## 2026-09-09 — 胶囊绕行、逃离与捕食集成
+
+- 沿用用户BasicFish/Variant横向胶囊配置。主代理统一共享接口、生成器与场景；fish_behavior实现实际胶囊几何/局部绕行，ambient_fade完成独立生态组件，fish_inventory在系统Temp独立Unity项目做原生验证。没有切分支、覆盖Prefab、提交或推送。
+- FishNavigationGeometry以实际Collider处理生成/移动/旋转，单障碍左右两路点保持，卡转向有限前移退出，原运动边界及Baiting超时保留。FishSpawner改用相同形状检查。旧Sprite矩形不再直接阻挡胶囊鱼。
+- 用户批准Small在Reeling钩3米内逃离，4米外恢复Idle，速度倍率1.5；Large/Special在挂钩Small的5米内每条每竿一次30%判定，转向完成且嘴接触/无遮挡后替换，每竿一次。捕食速度倍率1.5、接触容差0.1作为可调默认。GameOver/暂停/组件禁用、同竿重新启用均有门控。
+- GameplayRoot/FishEcology已接loop与新FishEcologyProfile；loop引用同一Profile。TryReplaceHookedFish统一身份/VFX/张力并停用猎物，保留本竿倍率、张力和加速累计；得分/加时/库存仍只在最终上岸结算。没有中间捕食奖励。
+- Runtime及Editor项目MSBuild通过，0错误，仅既有MSB3277依赖警告。场景local fileID无缺失/重复，新增Profile/脚本引用与GUID核对。修改脚本diff检查通过；未批量清理既有场景空字段尾随空格。
+- Unity6000.3.23f1独立项目真实Physics2D几何9/9、真实PlayMode10/10：胶囊空角不误挡、真实重叠阻挡、长步薄墙/旋转扫掠、区域边界、Trigger开关恢复、直行/绕单岩/不可达停下、暂停/挂钩/禁用、停止范围内转向、目标销毁切换、Sprite嘴直行与绕岩后确实CanReachBait=true。逐帧ColliderDistance无穿障；4份源码SHA256与主仓一致。仅FishAppearance还原方法空替身，数学/物理/Controller Update是真Unity。
+- 原生证据目录：C:/Users/73400/AppData/Local/Temp/SevenSeasNativePhysics-bd7a9e002df64fd4b2bf4389d23c3881，geometry-results.txt与playmode-results.txt。独立生态源码配导航/Physics替身37断言通过；实际协调器/结算源码配Unity与接触替身65断言通过，含身份替换、最终奖励、张力保持、重复/过时/暂停/归零/接触/朝向门控及新一竿重置。
+- FishRuntimeDiagnostics改读实际导航状态，不再反射旧方框算法；Baiting/Reeling保存最近快照及最近60次历史至系统Temp/SevenSeasFishDiagnosticsHistory.txt。正式FishingLoopTest及Android/WebGL完整试玩仍待验收，不能以独立场景结果代替。多障碍组合、BigFishSpawner小活动区仍可能不可达。
+
+## 2026-09-09 — 复现日志与环境音淡入
+
+- 已读取15:16:13现场快照及Editor.log：5条BigFishSpawner鱼处于Approaching，timeScale=1、行为开关正常；4条方框检查被obstacles3_0拦截，另1条圆/区域检查失败，最终Baiting超时。确认此轮受移动/转向检查阻挡，尚不能断言碰撞体过大，也未实现绕行。
+- subagent完成FishingAudioFeedback环境音淡入；主代理审查并将场景ambientFadeInSeconds接为1.5。首次启动、暂停/静音恢复渐入，重复抛竿不重启渐变。BGM及短音效逻辑保留。
+- 当前运行时工程MSBuild通过，仅既有MSB3277警告；subagent实际源码配音源替身28项断言通过。脚本diff检查通过；场景全量diff检查仍报告已有空字段尾随空格，本次新增淡入字段无尾随空格，未批量清理场景。实际听感、Unity Play Mode淡入仍待用户验证；鱼群问题未标记修复。
+
+## 2026-09-09 — 鱼群停摆：切换现场诊断
+
+- 用户再次反馈鱼全停且不咬。最新Editor日志显示新一局先钓到LargeFish（25基础分），后一竿9候选超时；未见鱼脚本异常。不能从截图断言全局暂停或唯一避障原因，不再继续猜测改规则。
+- 新增Editor专用FishRuntimeDiagnostics及meta：Baiting时每秒只读记录鱼状态、启用/配置/生成区域、头距与角差、转向/移动方框和圆检查、方框阻挡对象、鱼头到钩阻挡，写Temp/SevenSeasFishDiagnostics.txt。Tools/Seven Seas/Capture Fish Diagnostics可手动采集。不会修改鱼状态，未进入Player构建。
+- Assembly-CSharp-Editor编译通过；尚无新的运行快照，已请用户重新进入Play并复现保持3秒。此轮只加诊断，不宣称集体停摆已经修好。当前场景已有用户新增BigFishSpawner（单独较小生成区），保留未修改，后续需由现场数据检查区域限制。
+
+## 2026-09-09 — 大鱼转向避障误挡修复
+
+- 用户反馈大鱼靠钩不咬。核对正式LargeFish_Variant（BasicFish派生）scale4.28、CircleCollider2D.radius0.19、33×13/100PPU剪影。此前把圆的世界AABB当作局部方框随鱼转动，额外扩大检查范围，存在大鱼误挡。截图不能确认唯一原因，已询问停住时朝向。
+- FishController将圆形碰撞体独立记录，转向保留圆半径，仅非中心圆补中心弧线余量；移动用ReelingObstacle.BlocksCircleSweep检查圆的端点与完整扫掠。Sprite/其他形状仍按保守包围范围检测，真实障碍与水域边界保持，未改大鱼大小/半径/咬钩规则或场景。
+- Assembly-CSharp编译通过；Temp/SevenSeasMouthBiteChecks原10项加3项回归共13项通过。使用实际大鱼数值构造旧方框误挡与新圆检查通过、真实圆阻挡仍有效；Unity/Physics使用替身，不等于现场Play验证。待原位置复测，保留进一步定位。
+
+## 2026-09-09 — 用户确认鱼头咬钩后实施
+
+- 修改FishController/FishBiteRaceController/ReelingObstable：由鱼头接近钩判定咬钩，追饵按头部位置停靠，保留鱼体避障；新增头到钩的阻挡查询，防隔岩石咬钩。没有改场景、Prefab、美术尺寸、咬钩半径或唯一赢家规则。
+- Assembly-CSharp编译通过（既有MSB3277仍在）；Temp/SevenSeasMouthBiteChecks直接编译当前鱼行为/竞赛/Profile源码，10项针对性检查通过，Physics/数学用替身，不宣称Play/设备通过。真实岩石边缘不同鱼尺寸仍需试玩。未提交推送。
+
+## 2026-09-09 — 岩石边缘追饵调查与鱼线显示修复
+
+- 用户反馈钩落岩石附近鱼不过来、鱼线不显示。静态确认FishingLineView仅处理Casting/Reeling，落水进入Baiting及Striking即隐藏；已补两阶段连接hookRoot，继续保持Ready/GameOver隐藏。场景原引用完整，不改场景；编译通过、3条既有MSB3277，diff检查通过，尚未Play验证。
+- 追饵存在规则矛盾：落点仅检查钩中心，鱼移动检查完整鱼体Bounds避障且竞赛要求鱼中心距钩<=0.25，故近岸落点可能合法但鱼不可达；当前直线受阻停住，无绕行。截图不能区分真实岩石阻挡与保守Bounds误阻，未宣称运行复现。
+- 已询问用户是否采用鱼头接近钩即可咬钩（保留鱼体避障），或要求绕行。此规则尚待确认，未改鱼行为/咬钩范围；保留用户开屏设置、字体及其他未提交改动。
+
+## 2026-09-09 — GUID导入错误修复与音频调整
+
+- 用户截图报FishingLoopTest第3247行无法解析GUID。定位为本次新FishMovementProfile资产及场景引用写入33位GUID；之前只做存在/唯一性检查漏检长度，归因于Codex接线错误。已同步换为合法GUID eaa545d39a1f41d0a6cc7b2f88a2f508；全Assets的meta/unity/prefab/asset共4373项GUID格式检查通过，资源唯一、场景本地引用完整。Unity重新导入结果仍待确认。
+- BGM改为场景界面启用时播放，无需Start/抛竿；海浪保留首次抛竿开始。每个短音效增加独立Level，CatchSuccess默认2倍；循环音量支持运行时Inspector调整。当前四个上传音频保留接线。Assembly-CSharp编译通过，3项既有MSB3277；新增10项真实音频源码/AudioSource替身检查通过，未实际试听/设备验证。
+
+## 2026-09-09 — StrikeTuning / PauseUI / GameFeedback职责整理
+
+- 按用户要求完成FishingLoopTest局部组织调整：原StrikeTuning仅保留调参；暂停控制/菜单、仓库数据/视图迁至PauseUI；音频和震动迁至GameFeedback。两个新根均启用，原组件fileID、音频配置及所有交叉引用保留。
+- 本轮仅场景与开发记录修改，无游戏C#修改。修改前快照逐对象比对通过：六个迁移组件仅宿主改变，其余参数完整；无其他对象意外改动，1032个ID唯一/本地引用无缺失，diff --check通过。未进行本轮编译、Play或设备验证。
+- 保留此前用户上传音频及全部未提交改动；用户希望自己学习配置，下一步在GameFeedback查看FishingAudioFeedback槽位与音量。不提交推送。
+
+## 2026-09-09 — 接手交接分支并完成第一批集成
+
+- 核实当前 `codex/parallel-development-handoff-20260909`、初始工作区干净，阅读AGENTS、三份进度记录及指定交接，未从旧main重建。三子代理并行调查后，用户确定仓库/震动/Idle/奖励规则，主代理统一结果事件与主场景。
+- 实现本局逐条仓库、Android失败震动、局部Idle/转向追饵、上岸2/4/6/6秒无上限及加速张力0.8/1/1.3/1.3；Profile与现成仓库图接到主场景，保留既有美术尺寸、生成与落点规则。鱼逃离/捕食未实施。
+- 音频范围用户要求包含循环音；扫描没有找到BGM/环境素材。已实现播放器/暂停/静音与暂停菜单入口，槽位留空等待素材映射。旧AudioPreview不再自动播放Confirm；没有声称试听或声音交付完成。
+- 当前源码集中编译成功，使用Temp的CustomAfterMicrosoftCommonTargets纳入新脚本，未修改生成csproj。仍有既有MSB3277依赖版本警告。主场景1028个对象ID唯一、本地fileID无缺失，git diff --check通过。
+- 奖励33项隔离检查：Temp/SevenSeasCatchRewardChecks；共享结算31项：Temp/SevenSeasSettlementChecks。实际编译源码配Unity替身，覆盖一次成功/失败、最后钩、空钩、快照/入库、加时归零、实际横移和震动门控。不是Play/Physics/触觉验证。
+- 音频真实源码/AudioSource替身9项检查通过（Temp/SevenSeasAudioChecks-2248877cee1d4669b7a05b58d00a57e2），验证无clip、首次启动、暂停恢复、静音不补播、最后钩反馈与清理；不代表真实DSP/听感。最终主场景引用检查仍为1028个ID、无重复/本地引用缺失，8个新接入脚本/资产GUID唯一。
+- 鱼行为真实源码/Unity数学及Physics替身14项通过（Temp/SevenSeasFishMovementCheck20260909）：10000次Idle目标不出出生圈、圈外渐进返回、转向/抢钩门控、饵移动重检、暂停/结束、挂钩旋转/跟随、取消及单赢家。注入blocked只验证受阻分支，不是真实Physics通过。四组共87项隔离断言通过。
+- 尚未运行Unity Play Mode、Android或WebGL；鱼群运动与仓库实际布局需试玩，音频素材和转向视觉答复待续。未提交推送、未合并远端main、未升级引擎/包。
+
+## 2026-09-09 — 文档同步与下一阶段交接（此前）
 
 用户确认教程看完点击 X 后开始可用（用户试玩反馈，平台范围未说明）。本轮仅更新开发记录与新增并行开发交接，未实施震动、仓库、后续鱼行为、鱼获时间/大小张力、音频功能；未启动子代理。将当前工作区既有源码、场景、用户字体/教程动画/HoldRod/Close 素材一并纳入获授权的 GitHub 进度快照。
 

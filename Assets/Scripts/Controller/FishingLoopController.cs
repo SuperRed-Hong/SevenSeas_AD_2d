@@ -37,6 +37,7 @@ public sealed class FishingLoopController : MonoBehaviour
     [SerializeField] private ScoreTracker scoreTracker;
     [SerializeField] private HookTracker hookTracker;
     [SerializeField] private SessionTimer sessionTimer;
+    [SerializeField] private CatchInventory catchInventory;
 
 
     [Header("Tuning Profiles")] [SerializeField] [Tooltip("Configuration for Score System")]
@@ -45,6 +46,9 @@ public sealed class FishingLoopController : MonoBehaviour
     [SerializeField] [Tooltip("Shared configuration for the fishing session.")]
     private FishingLoopProfile loopProfile;
 
+    [SerializeField] private CatchRewardProfile catchRewardProfile;
+    [SerializeField] private FishEcologyProfile fishEcologyProfile;
+
     #endregion
 
 
@@ -52,6 +56,12 @@ public sealed class FishingLoopController : MonoBehaviour
 
     //Runtime state belongs to the controller, not the shared profile.
     private float castCooldownRemaining;
+    private int attemptId;
+    private bool attemptSettled;
+    private bool fishReplacedThisAttempt;
+    public int CurrentAttemptId => attemptId;
+    public event System.Action<CatchResult> CatchCompleted;
+    public event System.Action<AttemptFailureResult> AttemptFailed;
     private readonly string leaderboardSessionId = System.Guid.NewGuid().ToString("N");
     public bool FinalScoreSaved { get; private set; }
     public bool IsCastCoolingDown => castCooldownRemaining > 0f;
@@ -59,6 +69,11 @@ public sealed class FishingLoopController : MonoBehaviour
     public float SelectedLaneX { get; private set; }
     public float SelectedCastPower { get; private set; }
     public FishController HookedFish { get; private set; }
+    public Vector3 HookPosition => fishBiteRaceController.transform.position;
+    public bool CanProcessFishInteractions => isActiveAndEnabled && Time.timeScale > 0f && Time.deltaTime > 0f &&
+        CurrentState == FishingLoopState.Reeling && !attemptSettled &&
+        sessionTimer != null && sessionTimer.IsRunning && sessionTimer.TimeRemaining > 0f &&
+        reelingController != null && reelingController.isActiveAndEnabled && reelingController.IsActive;
 
     public float CurrentDistanceMultiplier { get; private set; } = 1f;
 
@@ -123,6 +138,7 @@ public sealed class FishingLoopController : MonoBehaviour
         }
 
         sessionTimer.BeginSession();
+        catchInventory?.Clear();
         EnterState(CurrentState);
     }
 
@@ -198,6 +214,7 @@ public sealed class FishingLoopController : MonoBehaviour
 
     private void OnEnable()
     {
+        if (catchInventory != null) CatchCompleted += catchInventory.Record;
         hookController.Landed += HandleHookLanded;
 
         fishBiteRaceController.FishHooked += HandleFishHooked;
@@ -223,6 +240,7 @@ public sealed class FishingLoopController : MonoBehaviour
 
     private void OnDisable()
     {
+        if (catchInventory != null) CatchCompleted -= catchInventory.Record;
         hookController.Landed -= HandleHookLanded;
 
         fishBiteRaceController.FishHooked -= HandleFishHooked;
@@ -262,7 +280,7 @@ public sealed class FishingLoopController : MonoBehaviour
         Physics2D.SyncTransforms();
         if (ReelingObstacle.ContainsPoint(landingPosition))
         {
-            LoseHookAndFinishAttempt("Hook landed on an obstacle.");
+            LoseHookAndFinishAttempt("Hook landed on an obstacle.", AttemptFailureReason.ObstacleLanding);
             return;
         }
 
@@ -369,7 +387,7 @@ public sealed class FishingLoopController : MonoBehaviour
             return;
         }
 
-        LoseHookAndFinishAttempt("Strike timed out.");
+        LoseHookAndFinishAttempt("Strike timed out.", AttemptFailureReason.StrikeTimeout);
     }
 
     private void HandleStrikeAttemptRejected()
@@ -387,6 +405,38 @@ public sealed class FishingLoopController : MonoBehaviour
 
     #region Reeling Events and Score Settlement
 
+    // Only this coordinator can exchange the catch; this is not a second catch settlement.
+    public bool TryReplaceHookedFish(FishController expectedPrey, FishController predator)
+    {
+        if (!CanProcessFishInteractions || fishReplacedThisAttempt ||
+            expectedPrey == null || expectedPrey != HookedFish ||
+            !expectedPrey.isActiveAndEnabled || expectedPrey.State != FishState.Hooked ||
+            predator == null || predator == expectedPrey || !predator.CanNavigate ||
+            !predator.IsFacingNavigationTarget ||
+            !expectedPrey.TryGetComponent<FishAppearance>(out var preyAppearance) ||
+            preyAppearance.Category != FishAppearanceCategory.Small ||
+            !predator.TryGetComponent<FishAppearance>(out var predatorAppearance) ||
+            fishEcologyProfile == null || !fishEcologyProfile.IsPredator(predatorAppearance.Category) ||
+            !FishEcologyController.IsInBiteContact(predator, expectedPrey,
+                fishEcologyProfile.MouthContactTolerance)) return false;
+
+        // Commit identity before callbacks caused by disabling the consumed fish.
+        fishReplacedThisAttempt = true;
+        HookedFish = predator;
+        predator.MarkHooked(fishBiteRaceController.transform);
+        predatorAppearance.Reveal();
+        if (predator.TryGetComponent<FishWaterVFX>(out var waterVFX))
+            waterVFX.Configure(reelingController);
+        reelingController.SetCatchTensionMultiplier(catchRewardProfile != null
+            ? catchRewardProfile.GetAccelerationTensionMultiplier(predatorAppearance.Category) : 1f);
+        expectedPrey.ResetToIdle();
+        expectedPrey.gameObject.SetActive(false);
+
+        // Preserve the cast multiplier, accrued tension and accelerated retrieval distance.
+        Debug.Log($"Predation replaced {expectedPrey.name} with {predator.name}.", this);
+        return true;
+    }
+
     private void HandleReelingAttemptFailed()
     {
         if (CurrentState != FishingLoopState.Reeling)
@@ -394,7 +444,7 @@ public sealed class FishingLoopController : MonoBehaviour
             return;
         }
 
-        LoseHookAndFinishAttempt("Reeling attempt failed.");
+        LoseHookAndFinishAttempt("Reeling attempt failed.", AttemptFailureReason.ReelingFailure);
     }
 
     private void HandleAcceleratedDistanceMoved(float distance)
@@ -407,10 +457,12 @@ public sealed class FishingLoopController : MonoBehaviour
 
     private void HandleRetrievalCompleted()
     {
-        if (CurrentState != FishingLoopState.Reeling)
+        if (CurrentState != FishingLoopState.Reeling || attemptSettled)
         {
             return;
         }
+
+        attemptSettled = true;
 
         if (HookedFish != null)
         {
@@ -421,6 +473,14 @@ public sealed class FishingLoopController : MonoBehaviour
 
             scoreTracker.AddScore(caughtScore);
 
+            HookedFish.TryGetComponent<FishAppearance>(out var appearance);
+            FishAppearanceCategory category = appearance != null ? appearance.Category : FishAppearanceCategory.Small;
+            float addedSeconds = appearance != null && catchRewardProfile != null
+                ? sessionTimer.AddTime(catchRewardProfile.GetTimeReward(category)) : 0f;
+            var result = new CatchResult(attemptId, category,
+                appearance != null ? appearance.RevealedSprite : null,
+                HookedFish.ScoreValue, caughtScore, addedSeconds);
+
             Debug.Log(
                 $"Fish caught: {HookedFish.name}, " +
                 $"score added = {caughtScore}, " +
@@ -429,6 +489,7 @@ public sealed class FishingLoopController : MonoBehaviour
 
             HookedFish.gameObject.SetActive(false);
             HookedFish = null;
+            CatchCompleted?.Invoke(result);
         }
         else
         {
@@ -459,8 +520,10 @@ public sealed class FishingLoopController : MonoBehaviour
         TransitionTo(FishingLoopState.GameOver);
     }
 
-    private void LoseHookAndFinishAttempt(string reason)
+    private void LoseHookAndFinishAttempt(string reason, AttemptFailureReason failureReason)
     {
+        if (attemptSettled || CurrentState == FishingLoopState.GameOver) return;
+        attemptSettled = true;
         HookedFish?.ResetToIdle();
         HookedFish = null;
 
@@ -476,6 +539,7 @@ public sealed class FishingLoopController : MonoBehaviour
                 : FishingLoopState.GameOver;
 
         TransitionTo(nextState);
+        AttemptFailed?.Invoke(new AttemptFailureResult(attemptId, failureReason));
     }
 
     #endregion
@@ -597,6 +661,9 @@ public sealed class FishingLoopController : MonoBehaviour
 
     private void EnterCasting()
     {
+        attemptId++;
+        attemptSettled = false;
+        fishReplacedThisAttempt = false;
         // Reset multiplier
         castDistance = 0f;
         CurrentDistanceMultiplier = 1f;
@@ -629,6 +696,11 @@ public sealed class FishingLoopController : MonoBehaviour
         inputSource?.SetMoveEnabled(true);
         inputSource?.SetAccelerateEnabled(true);
 
+        float tensionMultiplier = 1f;
+        if (catchRewardProfile != null && HookedFish != null &&
+            HookedFish.TryGetComponent<FishAppearance>(out var appearance))
+            tensionMultiplier = catchRewardProfile.GetAccelerationTensionMultiplier(appearance.Category);
+        reelingController.SetCatchTensionMultiplier(tensionMultiplier);
         reelingController.BeginRetrieval();
     }
 

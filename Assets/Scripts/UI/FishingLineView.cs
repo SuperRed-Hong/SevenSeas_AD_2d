@@ -34,6 +34,11 @@ public sealed class FishingLineView : MonoBehaviour
                 case FishingLoopState.Casting:
                     endpoint = hookVisual;
                     break;
+                case FishingLoopState.Baiting:
+                case FishingLoopState.Striking:
+                    // Landing does not detach the line while waiting for a bite or strike.
+                    endpoint = hookRoot;
+                    break;
                 case FishingLoopState.Reeling:
                     FishController fish = loopController.HookedFish;
                     endpoint = fish != null && fish.gameObject.activeInHierarchy

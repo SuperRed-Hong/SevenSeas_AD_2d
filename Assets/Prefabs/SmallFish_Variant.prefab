@@ -8,10 +8,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 8468204536291700123, guid: 35e98e66b47adf744aa5ee85691c70d4, type: 3}
-      propertyPath: category
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: -8155743055767789198, guid: 35e98e66b47adf744aa5ee85691c70d4, type: 3}
       propertyPath: waterRipplePrefab
       value: 
@@ -115,6 +111,18 @@ PrefabInstance:
     - target: {fileID: 6102094363224459725, guid: 35e98e66b47adf744aa5ee85691c70d4, type: 3}
       propertyPath: m_Radius
       value: 0.06
+      objectReference: {fileID: 0}
+    - target: {fileID: 7645829201728323464, guid: 35e98e66b47adf744aa5ee85691c70d4, type: 3}
+      propertyPath: m_Size.x
+      value: 0.11
+      objectReference: {fileID: 0}
+    - target: {fileID: 7645829201728323464, guid: 35e98e66b47adf744aa5ee85691c70d4, type: 3}
+      propertyPath: m_Size.y
+      value: 0.04
+      objectReference: {fileID: 0}
+    - target: {fileID: 8468204536291700123, guid: 35e98e66b47adf744aa5ee85691c70d4, type: 3}
+      propertyPath: category
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8616138916645632358, guid: 35e98e66b47adf744aa5ee85691c70d4, type: 3}
       propertyPath: m_LocalScale.x

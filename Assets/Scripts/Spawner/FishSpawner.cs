@@ -34,6 +34,24 @@ public class FishSpawner : MonoBehaviour
     private readonly List<Vector2> spawnedPositions = new();
     
     private BoxCollider2D spawnArea;
+    [SerializeField] private FishMovementProfile movementProfile;
+    [SerializeField] private FishingLoopController loop;
+
+    private void OnEnable()
+    {
+        if (loop != null) loop.StateChanged += HandleLoopState;
+    }
+
+    private void OnDisable()
+    {
+        if (loop != null) loop.StateChanged -= HandleLoopState;
+    }
+
+    private void HandleLoopState(FishingLoopState state)
+    {
+        foreach (FishController fish in GetComponentsInChildren<FishController>())
+            fish.SetAmbientMovementEnabled(state != FishingLoopState.GameOver);
+    }
 
     private void Awake()
     {
@@ -70,9 +88,7 @@ public class FishSpawner : MonoBehaviour
             FishController fish = Instantiate(selectedPrefab, transform.position,
                 Quaternion.identity, transform);
             Physics2D.SyncTransforms();
-            Bounds footprint = GetSpawnFootprint(fish);
-            footprint.Expand(obstacleSpawnPadding * 2f);
-            Vector3 footprintOffset = footprint.center - fish.transform.position;
+            fish.ConfigureMovement(spawnArea, movementProfile);
             bool positionFound = false;
             Vector2 spawnPosition = default;
 
@@ -87,10 +103,8 @@ public class FishSpawner : MonoBehaviour
                     continue;
                 }
 
-                Bounds candidateBounds = footprint;
-                candidateBounds.center = new Vector3(candidatePosition.x,
-                    candidatePosition.y, transform.position.z) + footprintOffset;
-                if (!FitsSpawnArea(candidateBounds) || ReelingObstacle.OverlapsBounds(candidateBounds))
+                if (!fish.IsNavigationPoseAllowed(new Vector3(candidatePosition.x,
+                    candidatePosition.y, transform.position.z), obstacleSpawnPadding))
                 {
                     continue;
                 }
@@ -108,6 +122,9 @@ public class FishSpawner : MonoBehaviour
             fish.transform.position = new Vector3(spawnPosition.x,
                 spawnPosition.y, transform.position.z);
 
+            fish.ConfigureMovement(spawnArea, movementProfile);
+            fish.SetAmbientMovementEnabled(loop == null || loop.CurrentState != FishingLoopState.GameOver);
+
             spawnedPositions.Add(spawnPosition);
         }
 
@@ -118,44 +135,6 @@ public class FishSpawner : MonoBehaviour
         }
     }
 
-    private static Bounds GetSpawnFootprint(FishController fish)
-    {
-        Bounds footprint = new Bounds(fish.transform.position, Vector3.zero);
-        if (fish.TryGetComponent<SpriteRenderer>(out var renderer) && renderer.sprite != null)
-        {
-            footprint.Encapsulate(renderer.bounds);
-        }
-
-        // Ignore child splash/ripple renderers; only the fish body defines visual clearance.
-        foreach (Collider2D body in fish.GetComponentsInChildren<Collider2D>())
-        {
-            if (body.enabled && body.gameObject.activeInHierarchy)
-            {
-                footprint.Encapsulate(body.bounds);
-            }
-        }
-
-        return footprint;
-    }
-
-    private bool FitsSpawnArea(Bounds footprint)
-    {
-        // All corners must fit, including when the spawn box is rotated.
-        Vector2 halfSize = spawnArea.size * 0.5f;
-        for (int x = 0; x < 2; x++)
-        for (int y = 0; y < 2; y++)
-        {
-            Vector3 corner = new Vector3(x == 0 ? footprint.min.x : footprint.max.x,
-                y == 0 ? footprint.min.y : footprint.max.y, transform.position.z);
-            Vector2 local = (Vector2)spawnArea.transform.InverseTransformPoint(corner) - spawnArea.offset;
-            if (Mathf.Abs(local.x) > halfSize.x || Mathf.Abs(local.y) > halfSize.y)
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
     private FishController GetWeightedRandomFish()
     {
         float totalWeight = 0f;

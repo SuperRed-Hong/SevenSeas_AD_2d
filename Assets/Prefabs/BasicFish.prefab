@@ -11,9 +11,9 @@ GameObject:
   - component: {fileID: 2047887186974144576}
   - component: {fileID: 2734764103662846722}
   - component: {fileID: 4580026359424680700}
-  - component: {fileID: 6102094363224459725}
   - component: {fileID: -8155743055767789198}
   - component: {fileID: 8468204536291700123}
+  - component: {fileID: 7645829201728323464}
   m_Layer: 6
   m_Name: BasicFish
   m_TagString: Untagged
@@ -111,6 +111,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FishController
   swimSpeed: 2
   scoreValue: 7
+--- !u!114 &-8155743055767789198
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1661166179766530865}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8033f08dbe793f4ba689ed184391b19, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FishWaterVFX
+  swimRipple: {fileID: 2396834895034818681}
+  hookedSplash: {fileID: 1255555256454312274}
+  swimRippleInterval: {x: 1.2, y: 2.2}
 --- !u!114 &8468204536291700123
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -121,13 +136,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7bebeb944e0d471882549b1d1d0e385c, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FishAppearance
   fishRenderer: {fileID: 2734764103662846722}
   appearanceProfile: {fileID: 11400000, guid: 5ee676c2dc704d41a865185b37f65388, type: 2}
   category: 0
---- !u!58 &6102094363224459725
-CircleCollider2D:
+--- !u!70 &7645829201728323464
+CapsuleCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -156,27 +171,13 @@ CircleCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_Radius: 0.195
---- !u!114 &-8155743055767789198
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1661166179766530865}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a8033f08dbe793f4ba689ed184391b19, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FishWaterVFX
-  swimRipple: {fileID: 2396834895034818681}
-  hookedSplash: {fileID: 1255555256454312274}
-  swimRippleInterval: {x: 1.2, y: 2.2}
+  m_Size: {x: 0.41, y: 0.1}
+  m_Direction: 1
 --- !u!1001 &7810388842685216036
 PrefabInstance:
   m_ObjectHideFlags: 0

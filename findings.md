@@ -1,4 +1,67 @@
-## 2026-09-09 — 五线并行接入调查
+## 2026-09-09 — UI音效完整接入与暂停视觉
+
+- 用户填好的UI clip确实有效，缺失是普通按钮未触发播放。现在UI音源和绑定单独负责：场景加载扫描按钮，懒创建按钮显式RegisterButton；原PlayUi公开方法转发路由。手工持久音效监听存在时跳过自动点击，避免双播；同帧点击/选择排队合并。
+- UI源持久是为了按钮触发换场景后尾音不被OnDisable切断；不把BGM/环境也改成持久。音源ignoreListenerPause，SoundEnabled仍统一静音，主场景每帧同步Inspector音量。冷启动无音效配置的独立Leaderboard仍静音，正常启动流从GameFeedback继承。
+- 暂停之前完全由脚本生成默认蓝底按钮且未指定项目字体。改复用现有排行榜纸张GUID99c7c95e5fd647942a31e8dd2904364e、PressStart2P GUIDdd8d574598480c14eb2d72e7b14b3d9f、关闭Sprite；生成式布局保持，未重建主场景或增加新美术。
+- 可复用候选：语义UI音效绑定、同帧优先级、跨场景短音尾巴及动态控件注册。项目耦合为FishingAudioFeedback配置和按钮返回命名约定；真实听感/输入设备与第二用例待验证。手动运行时AddListener音效无法由Unity持久监听API识别，因此项目内显式旧调用已移除，未来新增按钮应统一注册。
+
+## 2026-09-09 — 震动触发范围变更
+
+- 用户明确新增Striking进入反馈，取代原“仅失败”约束。状态进入与失败各自按attempt去重，互不吞掉同竿的另一个提示；关闭震动/暂停/失焦时也记录已处理，避免恢复补震。复用Android原生Handheld.Vibrate，不新增第三方包或WebGL桥接，时长/强度仍由现有设备API决定。
+
+## 2026-09-09 — 胶囊导航与生态规则接入
+
+- 用户已将正式BasicFish及其Variants改为横向CapsuleCollider2D；保留其尺寸和资产。旧独立SmallFish/MediumFish/LargeFish/SpecialFish仍有圆，但正式生成器引用Variants。原生成和移动取Sprite/Collider世界AABB会消除胶囊优势，现在统一FishNavigationGeometry；Sprite仅用于嘴部位置，旧非胶囊/圆Collider仍保守Bounds回退。
+- 局部绕行使用阻挡体Bounds产生左右候选路点，再以实际鱼体验证每段转动和扫掠；最多两个路点，卡转向尝试最多两段当前朝向退出。路线保持、失败重试0.5秒，不每帧左右切换。不是全局寻路，不保证复杂多障碍/原活动区域外目标可达。
+- 逃离/捕食规则由用户本轮直接批准，不宣称Claude已审查。行为控制器只申请外部导航与替换，FishingLoopController独占HookedFish写入口，验证当前猎物、类别、朝向、真实嘴接触、阻挡、计时/暂停/收线/每竿一次门控；不重启收线、不发中间CatchCompleted。最终鱼自动决定原结算快照、张力倍率、鱼线和表现。
+- 生态按CurrentAttemptId保留每条捕食者一次概率，暂停或组件禁用后重启不重掷。Small逃离3/4米滞回；捕食概率0.3、检测5米、追赶倍率1.5和接触容差0.1放独立Profile。Special参与是用户明确决定，非随机Sprite推断品种。
+- 原生Unity测试发现6000.3的OverlapCapsule在全局queriesHitTriggers=false时可忽略filter.useTriggers=true。几何与ReelingObstacle入口均在同步查询内暂开并finally/Dispose恢复全局值，不永久修改项目设置。当前项目该开关本来为true，不能把此发现称为之前卡鱼的原因。
+- 资产候选：形状一致的生成/移动查询与只读路线诊断，可迁移胶囊扫掠、旋转保守包络和路径保持；项目耦合为ReelingObstacle标记、每鱼spawnArea活动边界和嘴部规则。仅本项目/独立原生fixture验证，尚非通用导航系统；后续练习在第二个胶囊角色用例验证复杂障碍与非等比缩放边界。
+
+## 2026-09-09 — 运行时证据缺口
+
+- 静态发现圆/方框几何问题不代表所有不咬钩反馈由它导致。最新运行仍出现9候选无赢家；需要实际鱼状态、角差、头距及哪个检查阻挡。新增只读Editor快照工具而非进一步放宽规则。
+- 当前用户场景含BigFishSpawner，生成区高6.37、横向偏移-4.35，与原生成器30.1高区域不同。现代码将每个生成区域同时用作运动边界，可能限制来自小区的鱼，但未有现场证据将其定为本次全停原因；不擅自扩大用户区域。
+
+## 2026-09-09 — 圆形碰撞体不应随鱼旋转成方框
+
+- 旧CaptureFootprint把CircleCollider2D.bounds四角并入局部方框，45度旋转后的半宽从r增至sqrt(2)*r，再加转向余量；LargeFish_Variant世界圆半径0.8132，旧45度方框半宽约1.15，可能使圆外的岩石卡住转向。前一批只检查去重/咬钩距离的替身测试没覆盖真实尺寸的这种几何失真。
+- 现Circle独立圆查询/圆扫掠，保留非中心圆旋转位移与边界检查；其他形状/剪影仍有保守误差。不宣称用户截图已唯一定位；若复测仍停住，须区分转向受阻、移动受阻、头距、竞赛成员与超时，不能继续仅凭截图扩大咬钩范围。
+
+## 2026-09-09 — 已批准鱼头咬钩实现依据
+
+- 用户接受推荐方案后，将竞赛中心距离改为BitePosition到钩的距离；头部取初始剪影Sprite边界中心沿SpriteForwardAngle方向与边界交点，随Transform缩放/旋转到世界空间。不新增Prefab锚点或猜测品种尺寸；无配置旧原型保留中心回退。
+- 追饵目标反推鱼中心，使鱼头停在hookRadius的90%处，留数值余量且不越过钩后掉头；仍使用完整鱼体运动段避障。原hookRadius=0.25与唯一赢家排序不变。ReelingObstacle.BlocksSegment检查两端与Linecast，明确包含Trigger，只拦启用的ReelingObstacle，不让判定容差穿越薄岩石。
+- 源码/Unity数学与Physics替身10项验证近岸头到钩、中心仍在旧半径外、长帧不越过目标、旋转/缩放、受阻/薄岩石分支、未转完不抢、两鱼只一赢家、结束门控。真实碰撞轮廓/保守Bounds误挡仍待Play验证。挂钩后的跟随和揭示保持既有实现，未新增寻路或改写Claude设计文档。
+
+## 2026-09-09 — 靠岸追饵可达性与鱼线门控
+
+- 钩落点ContainsPoint与鱼体Bounds运动检测采用不同足迹，不能从钩落点合法推断鱼中心能到达。竞赛当前中心半径0.25，贴岩石时鱼体可能在进入咬钩范围前被挡；旋转/移动的保守包围盒也可能误挡，需要真实Physics观察，不能直接扩大半径或取消避障作为已批准规则。
+- 用户期望落水等待时仍有鱼线；FishingLineView新增Baiting/Striking到hookRoot的端点，Casting仍到hookVisual、Reeling到挂鱼或空钩。旧“仅Casting/Reeling显示”记录被本次显示修正取代，不改变玩法结果。
+
+## 2026-09-09 — GUID格式漏检更正
+
+- 新FishMovementProfile曾被写成33位GUID，尽管资源与场景字符串相同且唯一，Unity仍不能导入。已修正为生成的32位十六进制GUID并同步引用。旧“静态接线检查通过”仅覆盖当时ID/字符串对应，不证明资源可导入；以后资源引用检查必须包含GUID格式、唯一性与目标引用，而非只搜字符串。
+- BGM现在在GameFeedback启用时开始，独立于玩法runStarted；每个音效Level传给PlayOneShot，不修改共享源来调单个声音，避免影响同时播放的其他音效。真实听感与浏览器自动播放仍需设备验证。
+
+## 2026-09-09 — 场景对象职责纠正
+
+- 此前为复用常驻对象，将暂停/仓库/反馈追加到StrikeTuning，使对象名与职责不符。用户要求先整理组织：现拆为三个独立启用的场景根StrikeTuning、PauseUI、GameFeedback。
+- 保留六个迁移组件的原fileID，仅调整m_GameObject及宿主组件列表。既有按钮事件、调参共享暂停owner、仓库结算订阅和音频素材/音量引用无需重建；源码未依赖旧父对象或名称查找，运行时Canvas/AudioSource将创建到对应的新宿主下。
+- 静态比较确认除宿主外六个组件序列化字段完全一致，其他既有对象块没有变化；1032个ID唯一、本地引用完整。实际Unity重新载入与Play尚待验证。
+
+## 2026-09-09 — 当前分支并行实施依据
+
+- 主代理在当前交接分支完成共享 CatchResult/AttemptFailureResult 契约：每次 EnterCasting 分配 AttemptId，attemptSettled 防重复结算；统一计算实际分、加时并在停用前保存最终 Category/揭示 Sprite。库存通过事件只存结果，不重算分数。收线失败原因目前统一 ReelingFailure，未进一步区分碰撞/断线设备反馈。
+- FishAppearance 的现有四类 Variant 是唯一逻辑大小来源，新增只读 Category/RevealedSprite，不从 scale 或随机 Sprite 推测品种。仅本局逐条库存无需跨局 speciesId。
+- 实际仓库素材为 `Assets/Art Asset Folder/Storage/Fishing-UI-_0001_inventory.png`，73×102、3×4格；独立View使用原比例面板/分页。暂停菜单保持单owner，隐藏面板而不禁用组件，关闭仓库只返回暂停。
+- SessionTimer 以 DefaultExecutionOrder(-100) 先扣时；AddTime 拒绝停止/归零及非正有限输入，无上限但拒绝溢出。HUD在LateUpdate读取结算后时间。仅放大加速增长，边界后的实际横移与衰减不变。
+- Idle 每条鱼保存出生中心、半径2内短程游动；追饵/失败出圈后逐步返回，受阻停住无寻路。移动段与转动范围以保守鱼体Bounds检测；这比生成终点避障覆盖更多，但狭窄处可能停住，需Physics2D试玩。四种剪影原图实际头朝左，Profile spriteForwardAngle=180。Z轴转向当前作为初版，视觉选择仍待用户答复。
+- Android 首版使用 Handheld.Vibrate，时长由系统决定，无第三方依赖；暂停菜单提供本局震动开关，去重且暂停/失焦无新反馈。最后一钩失败允许一次反馈。WebGL无震动实现。
+- 音频目录全量扫描仅24 WAV+1 MP3，WAV为0.08–2.98秒；未试听，不能认定BGM。新3源播放器分离UI/玩法/循环；当前音频槽位空，先完成接入，等待素材。官方参考：https://docs.unity3d.com/6000.3/Documentation/ScriptReference/Handheld.Vibrate.html 、https://docs.unity3d.com/6000.3/Documentation/Manual/webgl-audio.html 、https://developer.mozilla.org/en-US/docs/Web/API/Navigator/vibrate 。
+- 新资产候选（尚非独立验证通用资产）：一次结果快照/去重、本局分页集合、局部转向运动、受状态门控的加时、分平台反馈与音频生命周期。依据为本次脚本/隔离检查；耦合为FishingLoopState/Category/UGUI；适用于本局单玩家，欠真实设备及第二项目接入验证。后续练习：用户重建一次结算消费者并在另一种收集对象用例验证取消/重复/重开，不在当前Prototype扩展框架。
+
+## 2026-09-09 — 五线并行接入调查（交接时）
 
 本轮只读核实：HandleRetrievalCompleted 在 AddScore 后立即停用鱼并清空 HookedFish，仓库/奖励/反馈需要同一成功结果快照；SessionTimer 尚无增加时间接口；FishingPauseController 用单一 owner 管理暂停，仓库关闭不能擅自恢复游戏；FishAppearanceProfile 是四个 Sprite 列表，没有据此确认稳定品种存档方案。Audio 目录已有素材但未试听，仓库素材确切路径待下轮定位。上述是设计接入依据，尚未实施五项新功能。
 
@@ -342,3 +405,8 @@
 - 用户修正规则：首次教程已翻到最后一页后，点击现有 X 保存 TutorialCompleted 并直接继续校准/开场流程；移除独立 Start Fishing 按钮及其场景组件/引用。已看完后返回前页回看，再点击 X 也算完成。
 - 未看完时 X 仍取消本次开始且不标完成；Settings 手动回看 X 只关闭。回调先清空再执行，重复点击不重复启动。
 - 编译 0 errors、3 条既有警告；6 项隔离检查通过（提前关闭、重开第一页、到末页等待 X、X 完成一次、手动回看只关闭、看完返回前页后完成）。场景 fileID 完整无重复。未运行 Unity Play Mode/设备验证，未提交。
+## 2026-09-09 — 现场确认追饵受阻
+
+- Temp/SevenSeasFishDiagnostics.txt在15:16:13记录5条追饵鱼：3条Special及1条Large的转向或移动方框被obstacles3_0拦截；另1条Large的moveCircle=false，该项同时包含圆碰撞和生成区域限制，不能凭现有输出指定具体原因。鱼头距钩1.7774–2.9370，尚未达到咬钩距离。
+- Editor日志对应同一落钩点(-1.03,12.93)、5候选、等待超时，随后收线触发障碍失败。当前Approaching受阻后反复尝试原直线路径，没有绕行；保守Sprite世界AABB仍可能误挡，需将实际形状与包围框区分验证。未更改追饵设计。
+- Ambient Loop新增ambientFadeInSeconds默认1.5秒，以非缩放时间推进音量包络；暂停/静音清零，恢复重新渐入。实际听感待验收。

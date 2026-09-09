@@ -16,6 +16,9 @@ public sealed class FishAppearance : MonoBehaviour
     private Color hiddenColor;
     private bool isRevealed;
 
+    public FishAppearanceCategory Category => category;
+    public Sprite RevealedSprite => revealedSprite;
+
     private void Awake()
     {
         if (fishRenderer == null)

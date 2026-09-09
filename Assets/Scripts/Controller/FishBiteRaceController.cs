@@ -14,7 +14,7 @@ public sealed class FishBiteRaceController : MonoBehaviour
     private readonly List<FishController> candidates = new();
 
     [SerializeField, Min(0f)]
-    [Tooltip("The distance at which a fish can claim the bait.")]
+    [Tooltip("The maximum distance from the fish's mouth to the bait for a bite.")]
     private float hookRadius = 0.25f;
 
     [SerializeField, Min(0.1f)]
@@ -57,7 +57,7 @@ public sealed class FishBiteRaceController : MonoBehaviour
 
         foreach (FishController candidate in candidates)
         {
-            candidate.BeginApproach(transform);
+            candidate.BeginApproach(transform, hookRadius);
         }
         
         Debug.Log(
@@ -86,28 +86,24 @@ public sealed class FishBiteRaceController : MonoBehaviour
 
     private void Update()
     {
-        if (!isRaceActive)
+        if (!isRaceActive || Time.deltaTime <= 0f)
         {
             return;
         }
 
         elapsedTime += Time.deltaTime;
 
-        // Check candidates in Inspector array order.
+        // Check candidates in the stable order chosen when the race began.
         // The first fish within range becomes the only winner.
         foreach (FishController candidate in candidates)
         {
             if (candidate == null ||
-                candidate.State != FishState.Approaching)
+                !candidate.CanClaimBait)
             {
                 continue;
             }
 
-            float distanceToBait = Vector2.Distance(
-                candidate.transform.position,
-                transform.position);
-
-            if (distanceToBait <= hookRadius)
+            if (candidate.CanReachBait(transform.position, hookRadius))
             {
                 CompleteWithWinner(candidate);
                 return;
