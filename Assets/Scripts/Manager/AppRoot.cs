@@ -35,7 +35,7 @@ public sealed class AppRoot : MonoBehaviour
     }
     private void Start()
     {
-        SceneLoader.LoadScene(E_SceneID.MainMenu);
+        SceneLoader.LoadScene(global::SceneLoader.ConsumeBootstrapDestination());
     }
 
     private void OnDestroy()

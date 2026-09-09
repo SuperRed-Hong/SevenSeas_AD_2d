@@ -162,6 +162,7 @@ public sealed class StrikeTuningPanel : MonoBehaviour
         Button button = rect.gameObject.AddComponent<Button>();
         button.targetGraphic = background;
         button.onClick.AddListener(action);
+        UiAudioRouter.RegisterButton(button);
         TMP_Text label = MakeText(text, rect, Vector2.zero, Vector2.one, 30f);
         label.alignment = TextAlignmentOptions.Center;
         return button;

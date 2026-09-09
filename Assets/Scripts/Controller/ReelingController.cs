@@ -26,6 +26,7 @@ public sealed class ReelingController : MonoBehaviour
     private const float LateralSpeedLogInterval = 0.25f;
 
     private float nextLateralSpeedLogTime;
+    private float catchTensionMultiplier = 1f;
 
     public float ActualLateralSpeed { get; private set; }
     public bool IsActive { get; private set; }
@@ -64,6 +65,16 @@ public sealed class ReelingController : MonoBehaviour
         Tension01 = 0f;
         ActualLateralSpeed = 0f;
         IsActive = false;
+        catchTensionMultiplier = 1f;
+    }
+
+    public void SetCatchTensionMultiplier(float multiplier)
+    {
+        // Changing the hooked fish must not clear accumulated tension.
+        catchTensionMultiplier =
+            multiplier >= 0f && !float.IsNaN(multiplier) && !float.IsInfinity(multiplier)
+                ? multiplier
+                : 1f;
     }
     private void OnTriggerEnter2D(Collider2D other)
     {
@@ -158,7 +169,7 @@ public sealed class ReelingController : MonoBehaviour
         float netRate =
             -tuningProfile.DecayRate +
             (accelerateHeld
-                ? tuningProfile.AccelerateRiseRate
+                ? tuningProfile.AccelerateRiseRate * catchTensionMultiplier
                 : 0f) +
             lateralRate;
 

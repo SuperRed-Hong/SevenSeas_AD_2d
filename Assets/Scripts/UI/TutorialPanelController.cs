@@ -8,10 +8,32 @@ public class TutorialPanelController : MonoBehaviour
     [SerializeField] private Button previousButton;
     [SerializeField] private Button nextButton;
 
+    private System.Action onCompleted;
+    private System.Action onCancelled;
+
     private int currentPage;
+    private bool hasReachedLastPage;
 
     public void Open()
     {
+        onCompleted = null;
+        onCancelled = null;
+        Show();
+    }
+
+    public bool OpenForFirstGame(System.Action completed, System.Action cancelled)
+    {
+        if (tutorialRoot == null || pages == null || pages.Length == 0)
+            return false;
+        onCompleted = completed;
+        onCancelled = cancelled;
+        Show();
+        return true;
+    }
+
+    private void Show()
+    {
+        hasReachedLastPage = false;
         ShowPage(0);
         tutorialRoot.transform.SetAsLastSibling();
         tutorialRoot.SetActive(true);
@@ -42,10 +64,18 @@ public class TutorialPanelController : MonoBehaviour
        }
        if (previousButton != null) previousButton.interactable = currentPage > 0;
        if (nextButton != null) nextButton.interactable = currentPage < pages.Length - 1;
+       if (currentPage == pages.Length - 1) hasReachedLastPage = true;
     }
 
     public void Close()
     {
+        bool completedTutorial = onCompleted != null && hasReachedLastPage;
+        var callback = completedTutorial ? onCompleted : onCancelled;
+        // Clear callbacks before continuing so repeated close clicks cannot start twice.
+        onCompleted = null;
+        onCancelled = null;
+        if (completedTutorial) LocalPlayerProgress.TutorialCompleted = true;
         tutorialRoot.SetActive(false);
+        callback?.Invoke();
     }
 }

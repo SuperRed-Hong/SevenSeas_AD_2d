@@ -4,6 +4,7 @@ public sealed class FishingPauseController : MonoBehaviour
 {
     [SerializeField] private Behaviour[] pausedBehaviours;
     [SerializeField] private FishingSceneEntryGuard entryGuard;
+    [SerializeField] private FishingAudioFeedback audioFeedback;
     private Object owner;
     private bool[] previousStates;
     private float previousTimeScale;
@@ -22,6 +23,7 @@ public sealed class FishingPauseController : MonoBehaviour
             pausedBehaviours[i].enabled = false;
         }
         Time.timeScale = 0f;
+        audioFeedback?.SetPaused(true);
         return true;
     }
 
@@ -30,6 +32,7 @@ public sealed class FishingPauseController : MonoBehaviour
         if (owner == null || owner != requester) return;
         owner = null;
         Time.timeScale = previousTimeScale;
+        audioFeedback?.SetPaused(false);
         for (int i = 0; i < pausedBehaviours.Length; i++)
             if (pausedBehaviours[i] != null) pausedBehaviours[i].enabled = previousStates[i];
     }

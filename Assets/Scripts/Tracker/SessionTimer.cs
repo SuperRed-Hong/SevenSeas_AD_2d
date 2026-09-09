@@ -1,6 +1,8 @@
 using System;
 using UnityEngine;
 
+// Expire before default-order gameplay updates can award a same-frame catch.
+[DefaultExecutionOrder(-100)]
 public sealed class SessionTimer : MonoBehaviour
 {
     [SerializeField, Min(1f)]
@@ -47,6 +49,25 @@ public sealed class SessionTimer : MonoBehaviour
     public void StopTimer()
     {
         IsRunning = false;
+    }
+
+    public float AddTime(float seconds)
+    {
+        if (!IsRunning || TimeRemaining <= 0f ||
+            seconds <= 0f || float.IsNaN(seconds) || float.IsInfinity(seconds))
+        {
+            return 0f;
+        }
+
+        float updatedTime = TimeRemaining + seconds;
+        if (float.IsInfinity(updatedTime))
+        {
+            return 0f;
+        }
+
+        float grantedSeconds = updatedTime - TimeRemaining;
+        TimeRemaining = updatedTime;
+        return grantedSeconds;
     }
 
     public void ResetTimer()
