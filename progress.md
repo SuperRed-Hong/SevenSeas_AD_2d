@@ -1,5 +1,36 @@
 # Fishing Loop Progress
 
+## 2026-09-09 — 统一设置中的 Leaderboard 外观
+
+- 根据用户截图将白底普通字体改为同组蓝底、白色像素字体和相同字号/边距/交互色。仅修改场景视觉字段，本地引用检查通过，导航事件保留；未运行 Play Mode。
+
+## 2026-09-09 — Strike Tuning / Leaderboard 入口归入 Setting
+
+- 新增设置内 Strike Tuning 按钮并接线，移除运行时顶部调参入口；关闭调参回到设置。主菜单独立右上 Leaderboard 移入设置，布局调整为五项，结算排行榜入口保留。未修改张力条、美术或用户最新 HUD 调整。
+- 命令行编译 0 errors、3 条已有 MSB3277 warnings；场景引用/ID 与五项按钮布局静态核对通过。未运行 Play Mode；待验证 Setting 内两个入口、关闭调参恢复、Start 后无常驻按钮以及 GameOver 查看排行榜。
+
+## 2026-09-09 — 校准面板风格统一与自动关闭
+
+- 更新共享 MotionCalibrationPanel：羊皮纸底板、深棕像素文字、金色 SET / 进度条、CANCEL；说明和传感器不可用提示精简。保持菜单及游戏内两套实例引用与原有校准规则。成功由服务 Completed 事件通知面板自动关闭。
+- 项目编译 0 errors、3 条已有 MSB3277 warnings；Prefab 本地引用/ID 检查通过。独立检查引用实际面板代码、使用服务/UI 替身，覆盖已有校准打开、无关完成、成功自动关闭、取消保留旧校准、启动失败、重复尝试、无服务，全部通过。
+- 未执行 Unity Play Mode 视觉验收或 Android 传感器实测；需验证竖屏文字/布局、实际握稳完成后自动返回设置，以及强制开局校准完成后转场。
+
+## 2026-09-09 — UI 启动策略提升到管理层
+
+- 新增 FishingSceneUIController 并挂到 SceneEntry，统一初始化/渐隐转场/正式游戏 Canvas 显隐；原分散初始化迁移，三处场景接线同步。编辑器中临时开启教程、设置或 HUD，或关闭主菜单，不再决定已登记 UI 的运行时初始状态。
+- 项目编译 0 errors、3 条已有 MSB3277 warnings；三场景 ID / 本地引用检查通过。临时独立 C# 检查引用实际管理源文件，覆盖 128 种初始开关组合、重复初始化不重置已打开面板、转场及正式游戏显隐、Canvas/CanvasGroup 恢复，全部通过；使用 Unity 类型替身，不等于 Unity 生命周期验证。
+- 未运行 Play Mode / Android / WebGL。下一步在编辑器故意打开 HUD 与弹窗、关闭 MenuCanvas 后进入 Play，验证仅菜单显示，再测 Setting、教程返回、Start 并行转场及 HUD 出现。
+
+## 2026-09-09 — 统一菜单入口 UI 初始状态
+
+- 用户反馈菜单与游戏 HUD 混杂。只读核对发现 GamePlayCanvas 默认启用，入口已有运行时隐藏代码；修正场景默认状态，并把 UI 显隐初始化提前到玩法初始化之前，集中配置初始隐藏面板。
+- 编译 0 errors、3 条已有 MSB3277 warnings；新增场景引用与 ID 完整性检查通过。未运行 Play Mode，不宣称已复现或修复截图中的运行时问题；需确认截图拍摄模式，并验证进入 Play 仅主菜单、Start 转场后仅 HUD、Settings/Tutorial/Calibration 默认关闭。
+
+## 2026-09-09 — 设置面板与教程接线
+
+- 新增 MenuSettingsPanel，创建 SettingsPanel 和 Set Calibration / Tutorial / Close，改接原 Setting 按钮；复用已存在的校准与教程面板，不更改启动、校准规则、教程素材与翻页按钮布局。教程每次从第一页打开，首尾页禁用对应导航。
+- 编译 0 errors，3 条已有 MSB3277 warnings；场景 ID 唯一性、本地引用、三个设置按钮事件与教程组件引用静态检查通过。未运行 Unity Play Mode / Android / WebGL。下一步验证 Setting → 教程翻页 → Close → 校准 → Close → 设置 Close → Start，校准设备行为需单独测试。
+
 ## 2026-09-08 — 暂停按钮改为真正暂停
 
 - 已实现 FishingPauseController / FishingPauseMenu，并改好现有 PausePanelButton 的场景事件；保留原按钮位置、美术与其他菜单配置。暂停面板提供继续和独立返回菜单；调参共用暂停控制，避免相互误恢复。

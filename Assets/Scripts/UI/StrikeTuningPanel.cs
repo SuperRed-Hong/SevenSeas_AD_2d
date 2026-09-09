@@ -20,7 +20,6 @@ public sealed class StrikeTuningPanel : MonoBehaviour
     private GameObject panel;
     private GameObject canvasObject;
     private bool isOpen;
-    private Button openButton;
 
     private void Start()
     {
@@ -35,8 +34,6 @@ public sealed class StrikeTuningPanel : MonoBehaviour
         scaler.referenceResolution = new Vector2(1440f, 2304f);
         scaler.matchWidthOrHeight = 0.5f;
 
-        openButton = MakeButton("STRIKE TUNING", canvas.transform, new Vector2(0.02f, 0.95f),
-            new Vector2(0.31f, 0.985f), Open);
         RectTransform shade = MakeRect("StrikeTuningPanel", canvas.transform, Vector2.zero, Vector2.one);
         panel = shade.gameObject;
         shade.gameObject.AddComponent<Image>().color = new Color(0.015f, 0.035f, 0.06f, 0.98f);
@@ -76,6 +73,7 @@ public sealed class StrikeTuningPanel : MonoBehaviour
         MakeButton("DEFAULTS", shade, new Vector2(0.37f, 0.04f), new Vector2(0.63f, 0.10f), ResetDefaults);
         MakeButton("CLOSE", shade, new Vector2(0.68f, 0.04f), new Vector2(0.94f, 0.10f), Close);
         panel.SetActive(false);
+        canvasObject.SetActive(false);
     }
 
     public void Open()
@@ -86,6 +84,7 @@ public sealed class StrikeTuningPanel : MonoBehaviour
         isOpen = true;
         RefreshValues();
         message.text = "Runtime only. The project Profile asset stays unchanged.";
+        canvasObject.SetActive(true);
         panel.SetActive(true);
     }
 
@@ -123,13 +122,8 @@ public sealed class StrikeTuningPanel : MonoBehaviour
         if (!isOpen) return;
         isOpen = false;
         panel.SetActive(false);
+        canvasObject.SetActive(false);
         pauseController.Resume(this);
-    }
-
-    private void Update()
-    {
-        if (openButton != null)
-            openButton.interactable = pauseController != null && pauseController.CanPause;
     }
 
     private void OnDisable()

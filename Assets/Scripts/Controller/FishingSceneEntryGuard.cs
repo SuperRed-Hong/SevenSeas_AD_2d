@@ -10,9 +10,7 @@ public sealed class FishingSceneEntryGuard : MonoBehaviour
     [SerializeField]
     private AttitudeCalibrationPanel calibrationPanel;
 
-    [SerializeField] private GameObject menuCanvas;
-    [SerializeField] private MenuCanvasFader menuFader;
-    [SerializeField] private GameObject gameplayCanvas;
+    [SerializeField] private FishingSceneUIController sceneUI;
     [SerializeField] private AttitudeCalibrationPanel menuCalibrationPanel;
     [SerializeField] private FishingCameraController cameraController;
     [SerializeField] private Button exitButton;
@@ -24,6 +22,14 @@ public sealed class FishingSceneEntryGuard : MonoBehaviour
 
     private void Awake()
     {
+        if (sceneUI == null)
+        {
+            Debug.LogError("Fishing scene entry requires a FishingSceneUIController.", this);
+            enabled = false;
+            return;
+        }
+        sceneUI.Initialize();
+
         if (gameplayRoot == null)
         {
             Debug.LogError(
@@ -46,7 +52,6 @@ public sealed class FishingSceneEntryGuard : MonoBehaviour
         // Spawn fish and show actors immediately; only gameplay control waits.
         loopController.PrepareForEntry();
         gameplayRoot.SetActive(true);
-        if (gameplayCanvas != null) gameplayCanvas.SetActive(false);
     }
 
     private void Start()
@@ -54,10 +59,8 @@ public sealed class FishingSceneEntryGuard : MonoBehaviour
         if (exitButton != null && Application.platform == RuntimePlatform.WebGLPlayer)
             exitButton.interactable = false;
         bool requestedGameplay = SceneLoader.ConsumeGameplayRequest();
-        if (menuCanvas != null)
+        if (sceneUI.HasMenu)
         {
-            menuCanvas.SetActive(true);
-            menuCalibrationPanel?.ClosePanel();
             cameraController?.ShowMenu();
             if (!requestedGameplay) return;
         }
@@ -118,7 +121,7 @@ public sealed class FishingSceneEntryGuard : MonoBehaviour
         }
 
         isWaitingForCalibration = true;
-        if (menuCalibrationPanel == null && gameplayCanvas != null) gameplayCanvas.SetActive(true);
+        if (menuCalibrationPanel == null) sceneUI.ShowGameplayCalibration();
         entryPanel.OpenPanel();
     }
 
@@ -167,21 +170,13 @@ public sealed class FishingSceneEntryGuard : MonoBehaviour
     private IEnumerator BeginAfterTransition()
     {
 
-        if (calibrationPanel != null)
-        {
-            calibrationPanel.ClosePanel();
-        }
-        menuCalibrationPanel?.ClosePanel();
-        if (gameplayCanvas != null) gameplayCanvas.SetActive(false);
-
         Coroutine cameraTransition = cameraController != null
             ? StartCoroutine(cameraController.TransitionToOverview()) : null;
-        if (menuFader != null) yield return menuFader.FadeOut();
-        if (menuCanvas != null) menuCanvas.SetActive(false);
+        yield return sceneUI.FadeMenuForGameplay();
         if (cameraTransition != null) yield return cameraTransition;
 
         loopController.enabled = true;
-        if (gameplayCanvas != null) gameplayCanvas.SetActive(true);
+        sceneUI.ShowGameplay();
 
         // Entry validation is complete; no further polling is needed.
         enabled = false;

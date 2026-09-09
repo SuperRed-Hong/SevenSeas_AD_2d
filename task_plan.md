@@ -1,5 +1,17 @@
 # Fishing Loop Teaching Plan
 
+- 2026-09-09 设置排行榜按钮样式：[scene updated / static checked / Play Mode pending] Leaderboard 与 Tutorial 统一背景、交互色、像素字体、字号及文本边距，保留原导航事件。
+
+- 2026-09-09 调参/排行榜入口收纳：[implemented / compile passed / static wiring checked / Play Mode pending] 移除 StrikeTuningPanel 创建的常驻左上按钮，改为 Setting → Strike Tuning；调参 Canvas 默认及关闭后整体隐藏。原主菜单右上 Leaderboard 移入 SettingsPanel，结算页入口保留。设置五项依次为 Calibration / Tutorial / Strike Tuning / Leaderboard / Close。
+
+- 2026-09-09 校准面板修缮：[implemented / compile passed / isolated behavior checks passed / Play Mode pending] 共享 MotionCalibrationPanel 改为项目现有羊皮纸底图、像素字体、棕金按钮与进度条，简化持握说明与状态文字。本次校准完成事件自动关闭面板；已有校准后重新打开仍允许重新设置，取消按钮保留。
+
+- 2026-09-09 高层 UI 管理：[implemented / compile passed / isolated state checks passed / Play Mode pending] 新增 SceneEntry 上的 FishingSceneUIController，统一代码策略：初始化显示菜单并关闭 HUD/设置/教程/结束/校准，转场渐隐菜单且 HUD 关闭，正式游戏仅开启 HUD。入口委托阶段转换，移除设置/教程零散 Awake 初始显隐。已迁移所有三处 Entry 场景引用。
+
+- 2026-09-09 UI 初始显隐修正：[implemented / compile passed / Play Mode pending] GamePlayCanvas 场景默认关闭；SceneEntry.InitializeEntryUI 在玩法初始化前统一关闭 HUD、教程、设置、GameOver 和两套校准面板，显示主菜单。开局仍在转场后启用 HUD。截图是否为 Play Mode 尚待用户确认。
+
+- 2026-09-09 设置/教程入口：[implemented / compile passed / static wiring checked / Play Mode pending] Setting 打开场景内 SettingsPanel，提供 Set Calibration、Tutorial、Close。教程/校准显示在设置上方，关闭子面板回到设置。现有教程导航接线保留，补充首尾页按钮禁用和全屏点击遮挡。
+
 - 2026-09-08 真正暂停：[implemented / compile passed / static wiring checked / Play Mode pending] PausePanelButton 从直接加载 MainMenu 改为打开暂停面板；Resume 保留本局并恢复，Main Menu 独立结束本局返回。FishingPauseController 统一保存/恢复时间和 12 个玩法输入组件，与 StrikeTuningPanel 互斥，避免重复暂停覆盖状态。待试玩各玩法阶段暂停、继续及返回菜单。
 
 - 2026-09-08 游戏内提竿调参：[implemented / compile passed / static wiring checked / Play Mode pending] StrikeTuning 根组件在运行时创建独立 uGUI 面板，左上 STRIKE TUNING 入口，8 个滑条、Apply / Defaults / Close。打开暂停时间和玩法组件，关闭恢复原启用状态；开局转场期间禁止打开。运行时 Profile 副本保留至场景退出，每次 BeginCheck 快照保证本轮判定稳定；下一次判定使用已应用参数。震屏幅度/时长已实际接入拒绝反馈；Profile 资产原值不覆盖。

@@ -9,6 +9,7 @@ public sealed class AttitudeCalibrationPanel : MonoBehaviour
     [SerializeField] private TMP_Text statusText;
 
     private AttitudeCalibrationService calibrationService;
+    private bool startedCalibration;
 
     private void OnEnable()
     {
@@ -16,11 +17,15 @@ public sealed class AttitudeCalibrationPanel : MonoBehaviour
             ? AppRoot.Instance.AttitudeCalibration
             : null;
 
+        startedCalibration = false;
+        if (calibrationService != null) calibrationService.Completed += HandleCompleted;
         RefreshView();
     }
 
     private void OnDisable()
     {
+        if (calibrationService != null) calibrationService.Completed -= HandleCompleted;
+        startedCalibration = false;
         if (calibrationService != null &&
             calibrationService.State ==
             AttitudeCalibrationState.Calibrating)
@@ -49,8 +54,14 @@ public sealed class AttitudeCalibrationPanel : MonoBehaviour
             return;
         }
 
-        calibrationService.BeginCalibration();
+        startedCalibration = calibrationService.BeginCalibration();
         RefreshView();
+    }
+
+    private void HandleCompleted()
+    {
+        // An existing calibration must not close a newly opened panel.
+        if (startedCalibration) ClosePanel();
     }
 
     private void RefreshView()
@@ -59,7 +70,7 @@ public sealed class AttitudeCalibrationPanel : MonoBehaviour
         {
             calibrateButton.interactable = false;
             progressSlider.SetValueWithoutNotify(0f);
-            statusText.text = "Calibration service unavailable.";
+            statusText.text = "MOTION CONTROLS UNAVAILABLE\nReturn to the menu to continue.";
             return;
         }
 
@@ -73,7 +84,7 @@ public sealed class AttitudeCalibrationPanel : MonoBehaviour
 
         if (!calibrationService.IsSensorReady)
         {
-            statusText.text = "Motion sensor unavailable.";
+            statusText.text = "WAITING FOR YOUR DEVICE\nMotion sensor not detected.";
             return;
         }
 
@@ -81,17 +92,17 @@ public sealed class AttitudeCalibrationPanel : MonoBehaviour
         {
             case AttitudeCalibrationState.Uncalibrated:
                 statusText.text =
-                    "Set a neutral pose, then press Calibrate.";
+                    "READY WHEN YOU ARE\nPress SET to save your neutral pose.";
                 break;
 
             case AttitudeCalibrationState.Calibrating:
                 statusText.text =
-                    $"Hold still... {calibrationService.Progress01:P0}";
+                    $"HOLD STEADY\n{calibrationService.Progress01:P0}";
                 break;
 
             case AttitudeCalibrationState.Calibrated:
                 statusText.text =
-                    "Calibration complete. You can recalibrate at any time.";
+                    "YOUR POSE IS SAVED\nPress SET to adjust it again.";
                 break;
         }
     }

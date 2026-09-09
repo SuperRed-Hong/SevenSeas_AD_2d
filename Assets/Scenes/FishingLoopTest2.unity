@@ -6818,6 +6818,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1636518287}
   - component: {fileID: 1636518286}
+  - component: {fileID: 2111000000}
   m_Layer: 0
   m_Name: FishingSceneEntry
   m_TagString: Untagged
@@ -6840,12 +6841,10 @@ MonoBehaviour:
   gameplayRoot: {fileID: 1088370656}
   loopController: {fileID: 0}
   calibrationPanel: {fileID: 1960739751}
-  menuCanvas: {fileID: 0}
-  menuFader: {fileID: 0}
-  gameplayCanvas: {fileID: 0}
   menuCalibrationPanel: {fileID: 0}
   cameraController: {fileID: 0}
   exitButton: {fileID: 0}
+  sceneUI: {fileID: 2111000000}
 --- !u!4 &1636518287
 Transform:
   m_ObjectHideFlags: 0
@@ -9697,6 +9696,25 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 000c2f0612f7c8f4db8c4c2a6c4812dc, type: 3}
+--- !u!114 &2111000000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1636518285}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f360a20188df4b0684bce1eed32fca31, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::FishingSceneUIController
+  menuCanvas: {fileID: 0}
+  gameplayCanvas: {fileID: 0}
+  menuFader: {fileID: 0}
+  menuOverlays: []
+  gameOverPanel: {fileID: 1973554389}
+  menuCalibrationPanel: {fileID: 0}
+  gameplayCalibrationPanel: {fileID: 1960739751}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

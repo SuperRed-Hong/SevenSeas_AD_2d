@@ -1,5 +1,35 @@
 # Fishing Loop Findings
 
+## 2026-09-09 — 排行榜按钮样式遗漏
+
+- 上一步仅迁移 Leaderboard 入口位置，保留了旧白底和默认字体，与设置按钮不一致。本次复制同面板 Tutorial 的视觉字段，保留 Leaderboard 对象 ID、布局槽位和导航引用。
+
+## 2026-09-09 — 非玩法入口收进设置
+
+- Strike Tuning 原由独立运行时 Canvas 创建常驻按钮，故会覆盖游戏画面；现删除该按钮及 Update 交互刷新，设置组件 OpenStrikeTuning 调用已有调参 Open。调参打开/关闭时同步切换整个 Canvas，原参数副本、Apply、Defaults 和暂停恢复保持。
+- 原右上 LEADERBOARD 实际是 MenuCanvas 子对象，并非 GamePlayCanvas 内常驻按钮；现移动到 SettingsPanel 内，沿用原按钮/文本和导航事件。结算页 GameOverPanel 下另一个入口保留，仅结束显示。
+
+## 2026-09-09 — 校准界面与成功自动关闭
+
+- 复用 UI Parts 下 Point 过滤的 Map-PullOut Sprite（GUID 99c7c95e5fd647942a31e8dd2904364e、fileID 5410595409154769235）及 PressStart2P SDF 字体，不生成/修改美术素材。共享 MotionCalibrationPanel 原 GUID、组件和按钮事件保留，改为归一化锚点、Scale 1，增加羊皮纸、标题、说明、CancelLabel；旧 X 装饰停用，进度条改为不可操作的显示条。
+- AttitudeCalibrationService 在写入 NeutralAttitude、Progress01=1、State=Calibrated 后发送 Completed。面板启用时订阅、关闭时解绑，只对本次 BeginCalibration 返回 true 的尝试自动关闭，避免打开已校准面板立即关闭。取消时仍调用既有 CancelCalibration，保留先前有效校准。开局守卫仍根据服务 IsCalibrated 继续转场。
+
+## 2026-09-09 — Canvas 显隐单一管理入口
+
+- 用户明确要求运行时初始状态独立于 Inspector 预览开关。新增 FishingSceneUIController，放在独立 SceneEntry 上，以 DefaultExecutionOrder(-500) 提前初始化，Entry 再显式调用幂等 Initialize。初始策略写在代码中，Inspector 只负责对象引用。显示 Canvas 时同时恢复 Canvas.enabled 与 CanvasGroup.alpha/interactable/blocksRaycasts。
+- Entry 不再持有 menuCanvas/gameplayCanvas/menuFader 或初始隐藏列表，调用 FadeMenuForGameplay / ShowGameplay，仍负责相机等待和玩法启用。MenuSettingsPanel / TutorialPanelController 移除 Awake 初始关闭，各自保留交互职责。GameOver、校准、暂停等子功能继续按事件管理自身内容，不新增通用 UI 框架。
+- FishingLoopTest 1、FishingLoopTest2 也引用同一 Entry 类型，已迁移原 UI 引用到管理组件，保留旧场景缺少菜单时直接开局及校准回退路径。未来新增菜单弹窗需登记到 Menu Overlays；本实现不按名字自动扫描未知 UI。
+
+## 2026-09-09 — UI 初始状态与预览
+
+- 当前场景保存的 GamePlayCanvas 为启用，菜单也为启用；未运行的 Game 预览因此会叠加 HUD 和菜单。截图占位文字与此一致，但不能单凭截图断定运行时初始化未执行。入口原本已有隐藏 HUD 的 Awake，只是放在玩法根初始化之后。
+- 本次把 UI 初始显隐提前为独立 InitializeEntryUI，序列化 Initially Hidden Panels（TutorialRoot / SettingsPanel / GameOverPanel），两套校准面板也统一关闭；GamePlayCanvas 保存为关闭。保留菜单背景鱼运行、转场后开启 HUD 的设计。当前日志未提供能证明本次截图由运行时异常导致的证据，历史教程异常不作当前根因。
+
+## 2026-09-09 — 设置选择面板
+
+- 用户明确要求直接实施 Setting → Set Calibration / Tutorial。原 Setting 直接调用入口守卫 OpenSettings（实际打开校准）；现改接 MenuSettingsPanel.Open，复用现有校准组件和 TutorialPanelController。新面板与三个按钮序列化在 MenuCanvas 下，可直接编辑布局。
+- 子面板打开时移到同级末尾，设置面板保留在其下方，因此关闭教程/校准后返回选择。TutorialRoot 新增透明全屏 Image 阻挡下层点击，保留页面与动画布局。菜单控制器继续挂在 MenuCanvas，Awake 关闭教程和设置，避免首次激活时自关闭。
+
 ## 2026-09-08 — 暂停按钮接线修正
 
 - 原 PausePanelButton 的 OnClick 实际绑定 SceneNavigationButton.Navigate、targetScene MainMenu，因此点击会重载场景丢失本局。现移除该按钮的旧导航组件，接入 FishingPauseMenu.Open；运行时独立 Canvas 显示 PAUSED、RESUME、MAIN MENU，遮罩阻挡背后操作。

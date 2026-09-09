@@ -35,6 +35,7 @@ public sealed class AttitudeCalibrationService : MonoBehaviour
     public bool IsSensorReady =>
         attitudeReader != null && attitudeReader.HasSample;
     public bool IsCalibrated => State == AttitudeCalibrationState.Calibrated;
+    public event System.Action Completed;
     
     private void Awake()
     {
@@ -124,6 +125,7 @@ public sealed class AttitudeCalibrationService : MonoBehaviour
 
         Progress01 = 1f;
         State = AttitudeCalibrationState.Calibrated;
+        Completed?.Invoke();
     }
     
     private Quaternion CalculateAverageAttitude()
