@@ -14,6 +14,7 @@ public sealed class FishingSceneEntryGuard : MonoBehaviour
     [SerializeField] private AttitudeCalibrationPanel menuCalibrationPanel;
     [SerializeField] private FishingCameraController cameraController;
     [SerializeField] private Button exitButton;
+    [SerializeField] private TutorialPanelController tutorial;
 
     private AttitudeCalibrationService calibrationService;
     private bool isWaitingForCalibration;
@@ -71,6 +72,22 @@ public sealed class FishingSceneEntryGuard : MonoBehaviour
     {
         if (isStarting) return;
         isStarting = true;
+        if (!LocalPlayerProgress.TutorialCompleted)
+        {
+            if (tutorial == null || !tutorial.OpenForFirstGame(ContinueStart, CancelStart))
+            {
+                Debug.LogError("First-game tutorial references are incomplete.", this);
+                isStarting = false;
+            }
+            return;
+        }
+        ContinueStart();
+    }
+
+    private void CancelStart() => isStarting = false;
+
+    private void ContinueStart()
+    {
         // Desktop and Editor use non-motion controls,
         // so attitude calibration is not required.
         if (!Application.isMobilePlatform)
@@ -176,6 +193,7 @@ public sealed class FishingSceneEntryGuard : MonoBehaviour
         if (cameraTransition != null) yield return cameraTransition;
 
         loopController.enabled = true;
+        LocalPlayerProgress.RecordGameStarted();
         sceneUI.ShowGameplay();
 
         // Entry validation is complete; no further polling is needed.

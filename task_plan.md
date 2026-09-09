@@ -1,3 +1,9 @@
+## 2026-09-09 最新状态入口：准备五线并行开发
+
+用户已确认首次教程看完点 X 自动继续开始可用。当前教程/Developer、排行榜、生成避障及用户动画美术进展准备统一提交同步；本轮不实施新功能。下一对话明确使用 subagent，由主代理统一接线与集成。
+
+五条待推进线：手机震动（失败优先，其他时机待讨论）；暂停内鱼获仓库（素材已有，跨局/计分展示待确认）；鱼群 Idle/转向追饵/逃离/捕食；按大小奖励时间与影响张力增长；音频音效。均区分需求确认与实施完成，数值和待决规则不得擅定。详见 [并行开发交接](docs/reference/2026-09-09-parallel-development-handoff.md)，其中含分波次、文件所有权、共享结果契约和验收。以下旧进度保留为历史，冲突以本入口与交接为准。
+
 # Fishing Loop Teaching Plan
 
 ## 2026-09-09 — 最新阶段交接：人物动画完成，鱼群行为待实施
@@ -417,3 +423,43 @@ Status: **not-started**
 ## 2026-09-09 — 人物抛竿动画与鱼竿显隐
 
 - [已实现／待运行验证] 人物重复抛竿与独立鱼竿显隐修复。下一步连续完成两次抛竿（含一次成功和一次失败），确认每次完整挥竿、持竿期间无重复鱼竿、返回待机恢复独立鱼竿。鱼钩与动画释放帧同步仍未实施。
+
+
+## 2026-09-09 — 鱼群阶段第一步
+
+- [实现完成／待场景试玩] 本轮按推荐规则直接实现生成避障与落点失败：先选鱼品类，再按实例的 SpriteRenderer 和 Collider2D 世界包围盒加 0.05 单位边距检测生成区域和障碍，保留 0.75 中心间距、每鱼 50 次尝试，失败跳过该鱼并汇总告警。落水点命中 ReelingObstacle 时走统一扣钩失败路径，进入 PostAttemptCooldown，不进入 Baiting、不锁倍率；不检查飞行路径。
+- [采用推荐规则／后续实施] 食肉大鱼只捕食已挂钩小鱼，每次抛竿最多替换一次，上岸按最终鱼计分；具体概率与范围待原型调参。
+- [未实施] 常态移动、追饵转向、逃离与捕食替换。先验收本步生成与落点行为再继续。
+
+- 后续复盘材料：docs/reference/2026-09-09-fish-spawn-obstacle-review.md；待用户启动独立练习，不改变当前鱼群实施顺序。
+
+
+## 2026-09-09 — 街机结算与排行榜
+
+- [源码/主场景接线完成／待运行验收] 用户明确要求将排行榜改为街机式结算流程：Game Over 展示本局分数，5 秒后自动进入 Leaderboard，点 Play Again 立即重开并取消自动跳转；Settings 和结算页的手动 Leaderboard 入口移除。
+- GameOverPanel 的 GameOverPresentation.leaderboardDelay 默认 5 秒，使用 unscaledDeltaTime，在 LateUpdate 检查超时，让本帧 UI 点击先取消等待；OnDisable 取消倒计时，防止重复导航。
+- 排行榜沿用项目羊皮纸 Sprite、PressStart2P 字体和棕金按钮；显示本局成绩、排名或未入前十，按 sessionId 高亮对应记录。保存结构与前十规则不变。
+- 验收：结算等待5秒只跳转一次、临界时刻 Play Again 不再跳榜、暂停时间不阻止跳转、前十/未入榜/保存失败显示正确；Android/WebGL 和真实 UI 仍待验证。
+- 鱼群阶段计划保留，本次仅调整结算流程。
+
+
+## 2026-09-09 — 排行榜入口范围更正
+
+- 用户更正：Settings 中保留 Leaderboard 手动入口；只将 Game Over 的手动进榜改为自动等待进榜。已恢复 Settings 按钮、导航接线与七项布局，保留 5 秒自动跳转和 Play Again 取消逻辑。场景本地引用及唯一 ID 检查通过，未运行 Play Mode。此前“移除 Settings 入口”的记录已被本条取代。
+
+## 2026-09-09 — 首次教程与开发者入口
+
+- [源码/场景接线完成，待运行验收] Start 读取本地 TutorialCompleted；false 时先打开现有三页教程，最后一页 Start Fishing 保存 true 并继续校准/过渡流程。提前关闭保持 false，重新 Start 从第一页开始。Settings 中 Tutorial 仍为手动回看。
+- Settings 新增 Developer，保留 Leaderboard 等原有入口。点击 Tutorial Completed 状态按钮立即切换并保存，影响下一次 Start，不中断当前局。显示 GamesStarted，实际结束开场过渡并启用玩法时才增加。
+- MenuCanvas 上 DeveloperPanel 组件预留 7 项 Developer Names；开发者面板纳入 FishingSceneUIController.menuOverlays，初始化强制隐藏。
+- 下一步：退出 Play Mode 后加载磁盘场景，测试 false→Start→提前关闭→再次Start→末页Start Fishing，以及再次开局跳过教程；手机检查教程后校准；填写七人署名。鱼群后续阶段继续保留。
+
+## 2026-09-09 — 教程关闭即开始（取代 Start Fishing 按钮）
+
+- 用户修正规则：首次教程已翻到最后一页后，点击现有 X 保存 TutorialCompleted 并直接继续校准/开场流程；移除独立 Start Fishing 按钮及其场景组件/引用。已看完后返回前页回看，再点击 X 也算完成。
+- 未看完时 X 仍取消本次开始且不标完成；Settings 手动回看 X 只关闭。回调先清空再执行，重复点击不重复启动。
+- 编译 0 errors、3 条既有警告；6 项隔离检查通过（提前关闭、重开第一页、到末页等待 X、X 完成一次、手动回看只关闭、看完返回前页后完成）。场景 fileID 完整无重复。未运行 Unity Play Mode/设备验证，未提交。
+
+## Git 交接分支（2026-09-09）
+
+fetch 后发现本地 main 与 origin/main 分叉（提交前本地独有2、远端独有6；远端头9de9266，包含 WaterTest/tiling/pixelization 工作）。当前进度保存并推送至 codex/parallel-development-handoff-20260909，未强推、未合并远端 main。下一对话从此交接分支及当前实际代码开始；集成远端是单独的待办，需审阅场景/美术差异并验证，不能假设 main 已包含此次功能。当前用户确认的是本地交接版本。避免开新任务时默认从旧 main 建工作树而遗漏本轮进度。

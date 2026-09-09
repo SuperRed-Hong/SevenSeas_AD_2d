@@ -7,6 +7,9 @@ public sealed class MenuSettingsPanel : MonoBehaviour
     [SerializeField] private AttitudeCalibrationPanel calibration;
     [SerializeField] private FishingSceneEntryGuard entryGuard;
     [SerializeField] private StrikeTuningPanel strikeTuning;
+    [SerializeField] private DeveloperPanel developerPanel;
+
+    public void OpenDeveloper() => developerPanel?.Open();
 
     public void Open()
     {

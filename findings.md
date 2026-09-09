@@ -1,3 +1,9 @@
+## 2026-09-09 — 五线并行接入调查
+
+本轮只读核实：HandleRetrievalCompleted 在 AddScore 后立即停用鱼并清空 HookedFish，仓库/奖励/反馈需要同一成功结果快照；SessionTimer 尚无增加时间接口；FishingPauseController 用单一 owner 管理暂停，仓库关闭不能擅自恢复游戏；FishAppearanceProfile 是四个 Sprite 列表，没有据此确认稳定品种存档方案。Audio 目录已有素材但未试听，仓库素材确切路径待下轮定位。上述是设计接入依据，尚未实施五项新功能。
+
+用户明确授权下一对话采用 subagent 并行；当前未派代理。主代理独占共享协调层、场景与进度文档写入，各模块代理先独立调查，再按批准规则分波次实现。详情见 docs/reference/2026-09-09-parallel-development-handoff.md。
+
 # Fishing Loop Findings
 
 ## 可复用技术资产候选台账（2026-09-09 起持续维护）
@@ -298,3 +304,41 @@
 - 下一阶段需求及待决规则集中登记于 task_plan.md 最新交接，当前未实现鱼群新行为。捕食替换会影响唯一挂鱼引用、表现、基础分及收线结果，不能仅替换 Sprite；落点障碍检查必须先于 Baiting/竞赛启动。具体实现需以实际代码与 Collider 配置调查为准。
 - 可复用候选：Sprite PPU/Pivot 一致性、序列帧附着点关键帧、玩法事件驱动表现和独立部件显隐。项目耦合为 Animator 名称及鱼竿素材；验证欠账为跨素材/第二用例、重入与中断；后续练习是在另一套人物素材上独立完成接入。
 - Notion 个人技术资产库已创建：https://app.notion.com/p/3d6b8a4f3e3581cf8c8cca1bfd05bf36 ，已有 PPU 笔记、资产数据库和写作模板。当前项目记录仍负责实施证据；原型结束后再集中提炼，不把候选视为已掌握能力。
+
+
+## 2026-09-09 — 合并后 Tutorial 入口布局
+
+- 上次磁盘检查与合并前相同，刷新原因只是推测。本次用户保存后的场景明确显示 TutorialButton 锚点被设为中心 (0.5,0.5)，SizeDelta=100×100，导致入口缩小居中。已仅恢复该 RectTransform 的锚点 (0.2,0.62)～(0.8,0.695)、SizeDelta=0，保留新加第三页教程引用及其他用户修改。静态差异检查完成，未运行 Play Mode。
+
+
+## 2026-09-09 — 生成避障及落点失败依据
+
+- 本轮按推荐规则直接实现生成避障与落点失败：先选鱼品类，再按实例的 SpriteRenderer 和 Collider2D 世界包围盒加 0.05 单位边距检测生成区域和障碍，保留 0.75 中心间距、每鱼 50 次尝试，失败跳过该鱼并汇总告警。落水点命中 ReelingObstacle 时走统一扣钩失败路径，进入 PostAttemptCooldown，不进入 Baiting、不锁倍率；不检查飞行路径。
+- 检测使用带标记的启用 Collider2D，显式包含 Trigger，不依赖新增 Layer。鱼包围盒不包含水花/涟漪 Renderer；按生成 BoxCollider2D 的局部坐标检查四角，支持偏移和旋转。保守包围盒不是像素轮廓，也不是游动路径避障。
+- 场景 98 个障碍标记对应 97 个对象，其中 4 个原本缺 Collider（647159900、1450760607、1690327378、1903091375）。没有同 Sprite 的现成碰撞形状可复用，因此按各 Sprite 实际裁切矩形/PPU、Center Pivot 补齐 BoxCollider2D，沿用现有障碍 Trigger 配置；未改变美术位置或大小。现有重复标记不属于本次修改范围。
+
+
+## 2026-09-09 — 排行榜流程与表现
+
+- 用户明确要求将排行榜改为街机式结算流程：Game Over 展示本局分数，5 秒后自动进入 Leaderboard，点 Play Again 立即重开并取消自动跳转；Settings 和结算页的手动 Leaderboard 入口移除。
+- 检查发现旧 GameOverPanel 只有 Leaderboard 按钮，没有 Play Again，因此复用该按钮并改接 GameOverPresentation.PlayAgain；禁用旧 LeaderboardSaveStatus，倒计时统一显示保存失败提示。移除 Settings 的按钮及其专属组件并重排剩余六项，避免空位。
+- LocalLeaderboard 临时保存最近 sessionId/score/保存结果，跨场景展示使用，不改变 PlayerPrefs 持久化格式。相同分数按 sessionId 识别当前局，未入前十只显示分数及 OUTSIDE TOP 10，不高亮其他局。
+- 最近会话临时状态在 SubsystemRegistration 清空，支持关闭域重载的 Editor Play。新结算组件只接正式 FishingLoopTest，旧实验场景没有批量迁移。
+
+
+## 2026-09-09 — 排行榜入口范围更正
+
+- 用户更正：Settings 中保留 Leaderboard 手动入口；只将 Game Over 的手动进榜改为自动等待进榜。已恢复 Settings 按钮、导航接线与七项布局，保留 5 秒自动跳转和 Play Again 取消逻辑。场景本地引用及唯一 ID 检查通过，未运行 Play Mode。此前“移除 Settings 入口”的记录已被本条取代。
+
+## 2026-09-09 — 新手引导本地进度依据
+
+- LocalPlayerProgress 使用 SevenSeas.TutorialCompleted / SevenSeas.GamesStarted 两个 PlayerPrefs key，每次更新 Save；不缓存第二份布尔值，不改排行榜数据。默认未完成、0次；已存在的玩家若此前没有此标记，也会首次进入教程。
+- TutorialPanelController 区分手动回看与首次开局回调。完成前清理回调再进入开局，重复按钮不会重复启动；关闭回调释放 FishingSceneEntryGuard.isStarting，继续复用原校准流程。教程完成不等于实际开局，计数在过渡结束才记录。
+- DeveloperPanel 使用作者可编辑的场景 UI 与像素字体、蓝色按钮；Developer Names 七项初始为空，显示编号占位。Settings 调整为八项布局；开发者面板由统一 UI 管理器初始化隐藏。
+- 技术资产候选：本地引导进度与可重置调试入口。可迁移部分为完成标记/启动门控/取消语义；项目耦合为三页教程、校准与场景过渡。适用于单设备本地存档，清除应用/浏览器数据会重置，不识别跨设备真实玩家。验证欠账为真实 PlayerPrefs 持久化、移动端校准及第二用例；后续练习独立重建带取消与调试重置的引导。
+
+## 2026-09-09 — 教程关闭即开始（取代 Start Fishing 按钮）
+
+- 用户修正规则：首次教程已翻到最后一页后，点击现有 X 保存 TutorialCompleted 并直接继续校准/开场流程；移除独立 Start Fishing 按钮及其场景组件/引用。已看完后返回前页回看，再点击 X 也算完成。
+- 未看完时 X 仍取消本次开始且不标完成；Settings 手动回看 X 只关闭。回调先清空再执行，重复点击不重复启动。
+- 编译 0 errors、3 条既有警告；6 项隔离检查通过（提前关闭、重开第一页、到末页等待 X、X 完成一次、手动回看只关闭、看完返回前页后完成）。场景 fileID 完整无重复。未运行 Unity Play Mode/设备验证，未提交。

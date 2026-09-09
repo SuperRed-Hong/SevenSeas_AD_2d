@@ -1,3 +1,9 @@
+## 2026-09-09 — 文档同步与下一阶段交接
+
+用户确认教程看完点击 X 后开始可用（用户试玩反馈，平台范围未说明）。本轮仅更新开发记录与新增并行开发交接，未实施震动、仓库、后续鱼行为、鱼获时间/大小张力、音频功能；未启动子代理。将当前工作区既有源码、场景、用户字体/教程动画/HoldRod/Close 素材一并纳入获授权的 GitHub 进度快照。
+
+交接文档：docs/reference/2026-09-09-parallel-development-handoff.md。列出五项待决设计、共享上岸结果数据、最多主代理+3子代理时的分波次安排、独占文件、集成验收与下一聊天启动语。保留旧记录，不将静态证据升级为设备通过。推送结果以本次交付与 git log 为准。
+
 # Fishing Loop Progress
 
 ## 2026-09-09 — 长期技术资产积累约定
@@ -394,3 +400,49 @@
 - 用户授权本地提交此前进展：包含人物动画/素材导入与场景调整、鱼线、旧体感测试接入 Settings/共享服务，以及技术资产协作约定和开发记录。不推送远端。
 - 历史个人级约定已完成更新；Notion 个人技术资产库及 PPU 条目已实际创建，旧计划中“本轮未修改个人级文件”仅描述当时阶段。
 - 本次提交前重新编译：0 errors、3 条既有 MSB3277 警告。未运行新的 Play Mode、Android、WebGL 或全流程回归。
+
+
+## 2026-09-09 — 合并后 Tutorial 入口布局
+
+- 上次磁盘检查与合并前相同，刷新原因只是推测。本次用户保存后的场景明确显示 TutorialButton 锚点被设为中心 (0.5,0.5)，SizeDelta=100×100，导致入口缩小居中。已仅恢复该 RectTransform 的锚点 (0.2,0.62)～(0.8,0.695)、SizeDelta=0，保留新加第三页教程引用及其他用户修改。静态差异检查完成，未运行 Play Mode。
+
+
+## 2026-09-09 — 鱼群第一步验证
+
+- 已实现生成避障、落点扣钩冷却和 4 块岩石 Collider 接线，保留用户其他未提交改动。
+- Assembly-CSharp 编译 0 错误、3 条既有 MSB3277 警告。临时隔离检查使用当前 HandleHookLanded/TransitionTo/LoseHookAndFinishAttempt 方法及引擎/服务替身，验证障碍落点扣钩且不 Baiting/锁倍率、冷却门控、重复落点不重复扣钩、最后一钩结束、水面正常入 Baiting、结束后落点忽略，六项检查通过。
+- 静态确认 97 个障碍对象有启用的 2D Collider、新 ID 无重复。尚未运行 Unity Play Mode、真实 Physics2D 查询或 Android/WebGL；生成数量、岩石边缘范围和失败反馈待试玩。未提交或推送。
+
+## 2026-09-09 — 生成避障复盘文档
+
+- 按用户要求新增 docs/reference/2026-09-09-fish-spawn-obstacle-review.md，整理实际算法、流程图、接线、局限、验证证据和独立重建练习。本轮仅写文档，未修改玩法代码或提交。
+
+
+## 2026-09-09 — 自动排行榜交付
+
+- 已实现结算倒计时/重开取消、移除主场景手动入口、排行榜羊皮纸与像素棕金样式、本局高亮。保留此前鱼群、教程、美术未提交修改；未提交或推送。
+- Assembly-CSharp 编译 0 错误、3 条既有 MSB3277 警告；新组件编译通过临时 MSBuild Include 验证，未修改生成 csproj。两场景本地 fileID 完整、无重复ID。
+- 十项隔离检查直接编译 GameOverPresentation/LeaderboardView/LocalLeaderboard/LeaderboardData 与引擎替身：不提前跳转、5秒非缩放时间只跳一次、重开取消及防连点、面板禁用取消、非GameOver不跳转、AppRoot路径、同分按session识别、未入前十、保存失败和损坏数据处理均通过。
+- 未运行 Unity Play Mode 或实际视觉截图验收、Android/WebGL；独立测试不代表真实 UI/场景加载已通过。
+
+
+## 2026-09-09 — 排行榜入口范围更正
+
+- 用户更正：Settings 中保留 Leaderboard 手动入口；只将 Game Over 的手动进榜改为自动等待进榜。已恢复 Settings 按钮、导航接线与七项布局，保留 5 秒自动跳转和 Play Again 取消逻辑。场景本地引用及唯一 ID 检查通过，未运行 Play Mode。此前“移除 Settings 入口”的记录已被本条取代。
+
+## 2026-09-09 — 首次教程与 Developer 实现
+
+- 实现 LocalPlayerProgress、DeveloperPanel，扩展 TutorialPanelController / FishingSceneEntryGuard / MenuSettingsPanel；FishingLoopTest 新增 Developer 入口、完整面板与末页 Start Fishing，接入统一显隐初始化。保留用户教程素材及其他未提交修改，未提交或推送。
+- Assembly-CSharp 编译通过：0 errors、3 条既有 MSB3277。使用临时 MSBuild Include 加入新脚本，未改生成 csproj。场景 fileID 无缺失/重复。
+- 临时独立工程直接编译当前 TutorialPanelController / LocalPlayerProgress，配合 Unity 与内存 PlayerPrefs 替身通过10项：初始状态、提前完成拦截、关闭保持未完成、重开第一页、末页按钮、一次完成且不提前计数、手动回看、回看关闭无旧回调、开发者重置、实际开始计数。测试未触碰玩家真实存档。
+- 未运行 Unity Play Mode、实际布局截图、Android/WebGL；真实持久化、移动端教程后校准、返回/重开流程待用户试玩。七位开发者姓名留空，用户在 MenuCanvas 的 DeveloperPanel.Developer Names 填写。
+
+## 2026-09-09 — 教程关闭即开始（取代 Start Fishing 按钮）
+
+- 用户修正规则：首次教程已翻到最后一页后，点击现有 X 保存 TutorialCompleted 并直接继续校准/开场流程；移除独立 Start Fishing 按钮及其场景组件/引用。已看完后返回前页回看，再点击 X 也算完成。
+- 未看完时 X 仍取消本次开始且不标完成；Settings 手动回看 X 只关闭。回调先清空再执行，重复点击不重复启动。
+- 编译 0 errors、3 条既有警告；6 项隔离检查通过（提前关闭、重开第一页、到末页等待 X、X 完成一次、手动回看只关闭、看完返回前页后完成）。场景 fileID 完整无重复。未运行 Unity Play Mode/设备验证，未提交。
+
+## Git 交接分支（2026-09-09）
+
+fetch 后发现本地 main 与 origin/main 分叉（提交前本地独有2、远端独有6；远端头9de9266，包含 WaterTest/tiling/pixelization 工作）。当前进度保存并推送至 codex/parallel-development-handoff-20260909，未强推、未合并远端 main。下一对话从此交接分支及当前实际代码开始；集成远端是单独的待办，需审阅场景/美术差异并验证，不能假设 main 已包含此次功能。当前用户确认的是本地交接版本。避免开新任务时默认从旧 main 建工作树而遗漏本轮进度。

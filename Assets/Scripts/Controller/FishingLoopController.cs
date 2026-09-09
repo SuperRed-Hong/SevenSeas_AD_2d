@@ -141,7 +141,8 @@ public sealed class FishingLoopController : MonoBehaviour
 
         bool shouldStartCooldown =
             nextState == FishingLoopState.ReadyToCast &&
-            (CurrentState == FishingLoopState.Striking || CurrentState == FishingLoopState.Reeling);
+            (CurrentState == FishingLoopState.Casting ||
+             CurrentState == FishingLoopState.Striking || CurrentState == FishingLoopState.Reeling);
 
 
         ExitState(CurrentState);
@@ -254,6 +255,14 @@ public sealed class FishingLoopController : MonoBehaviour
     {
         if (CurrentState != FishingLoopState.Casting)
         {
+            return;
+        }
+
+        // Resolve blocked landings before starting any baiting or bite race.
+        Physics2D.SyncTransforms();
+        if (ReelingObstacle.ContainsPoint(landingPosition))
+        {
+            LoseHookAndFinishAttempt("Hook landed on an obstacle.");
             return;
         }
 
