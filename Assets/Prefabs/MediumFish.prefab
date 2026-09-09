@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 4580026359424680700}
   - component: {fileID: 6102094363224459725}
   - component: {fileID: -8155743055767789198}
+  - component: {fileID: 2851342742810421303}
   m_Layer: 6
   m_Name: MediumFish
   m_TagString: Untagged
@@ -81,7 +82,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1567055959
-  m_SortingLayer: 2
+  m_SortingLayer: 3
   m_SortingOrder: 1
   m_MaskInteraction: 0
   m_Sprite: {fileID: -5064425782845983647, guid: 0e23235ad7ddcfe49b560816636f1533, type: 3}
@@ -156,7 +157,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a8033f08dbe793f4ba689ed184391b19, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FishWaterVFX
-  waterRipplePrefab: {fileID: 5559508911341606237, guid: 112437d31648e3d46a5e70fcfad05459, type: 3}
-  waterSplashPrefab: {fileID: 7633407273455485754, guid: 3f7520e2f53c48b4ea673744ea7c4e2c, type: 3}
-  rippleSpawnInterval: 0.7
-  splashSpawnInterval: 0.9
+  swimRipple: {fileID: 0}
+  hookedSplash: {fileID: 0}
+  swimRippleInterval: {x: 1.2, y: 2.2}
+--- !u!95 &2851342742810421303
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1661166179766530865}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 5a62a2fee5c17124682335dfd15048f9, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
