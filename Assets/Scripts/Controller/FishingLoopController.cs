@@ -63,6 +63,9 @@ public sealed class FishingLoopController : MonoBehaviour
     public float CurrentDistanceMultiplier { get; private set; } = 1f;
 
     public event System.Action DistanceMultiplierLocked;
+
+    public event System.Action<FishingLoopState> StateChanged;
+    
     public float AcceleratedCatchDistance { get; private set; }
 
     public FishingLoopState CurrentState { get; private set; } = FishingLoopState.ReadyToCast;
@@ -146,6 +149,8 @@ public sealed class FishingLoopController : MonoBehaviour
         castCooldownRemaining = shouldStartCooldown ? loopProfile.PostAttemptCooldown : 0f;
         CurrentState = nextState;
         EnterState(CurrentState);
+        
+        StateChanged?.Invoke(CurrentState);
     }
 
 

@@ -1,5 +1,47 @@
 # Fishing Loop Findings
 
+## 可复用技术资产候选台账（2026-09-09 起持续维护）
+
+以下均为候选，不代表已通用化或已完成设备验收。后续每项补充原问题、实现证据、通用部分、项目耦合、边界和验证欠账。
+
+| 候选 / 领域 | 当前依据与可迁移价值 | 主要耦合 / 下一项验证或练习 |
+|---|---|---|
+| 语义输入与平台路由 | FishingInputSource / Router，设备与玩法隔离 | 依赖钓鱼动作命名与 AppRoot；用另一种角色控制验证接口 |
+| 传感器校准与手势检测 | AttitudeCalibrationService、CastGestureDetector，稳定采样/四元数平均/阈值重置 | 平台采样、冷却与生命周期；真实设备延迟、重连和退出回归未完成 |
+| 状态驱动 UI 与转场 | FishingSceneUIController / Entry / Fader，初始化不依赖 Inspector 开关 | 具体场景与校准入口；第二流程验证显隐和输入时序 |
+| 暂停所有权与恢复 | FishingPauseController，共享面板互斥与组件状态快照 | 暂停名单、组件 OnDisable 副作用；验证不同玩法状态恢复 |
+| 动态连线表现 | FishingLineView，世界端点/LateUpdate/视觉和逻辑分离 | FishingLoopState 与 HookedFish；用户从零重建，再连接其他动态对象 |
+| 运行时调参和判定快照 | StrikeWindowProfile / StrikeController，资产默认值与运行副本分离 | 固定参数数组/钓鱼判定；用另一种 Profile 检验数据接口与约束 |
+| 本地排行榜与存档边界 | LocalLeaderboard 与排序/去重检查，持久化与纯数据规则分离 | PlayerPrefs/WebGL 行为；重启保存、坏档、第二种成绩数据迁移 |
+| 运动和风险算法 | HookFlight、实际位移驱动张力/加速计分、倾斜死区与限位 | 坐标与钓鱼规则；提炼数学核心，验证限位/零输入/帧率差异 |
+| 资源配置与外观揭示 | FishAppearanceProfile 分类列表、随机身份缓存、失败恢复 | Fish 类别、生命周期、美术尺寸；第二类实体的配置复用 |
+| 安全施工与验证流程 | GUID 保留、局部 YAML 修改、增量编译、独立源码检查和进度记录 | 检查脚本尚散落临时目录；整理最小工具并明确不能替代 Play/设备验证 |
+| 人物动画状态机（待实现） | 当前教学准备中的状态/动画/移动分工 | 先完成项目用例，再决定值得提炼的动画参数与映射 |
+
+验收目标：在明确领域内可扩展和迁移，而非预先保证任何项目都适用。实现复用与个人理解分别验收。
+
+## 2026-09-09 — 鱼线教学偏好
+
+- 用户首次接触此类 LineRenderer 表现，希望后续完整亲手实现，每次一个可验证步骤。当前只记录复习安排，不影响开发进度；具体清单维护在 task_plan.md，不另建计划文档。用户已反馈当前鱼线效果不错。
+
+## 2026-09-09 — 人物至 Hook / 鱼的视觉连线
+
+- Hook 飞行使用独立 HookVisual 表现虚拟高度，因此 Casting 端点必须引用 HookVisual，不能使用水面位置 Hook 根。Reeling 挂鱼在 FishController.LateUpdate 跟随 Hook，FishingLineView 使用 DefaultExecutionOrder(1000) 的 LateUpdate 后绘制，避免端点落后。
+- 以 Loop.CurrentState 决定 Casting/Reeling 可见性，不用 FishState.Hooked（咬钩即设定，早于提竿成功）。Reeling 无鱼时连接 Hook 根，结算/失败/其他阶段隐藏。复用现有 StrikeRingMaterial、不修改材质；Player 层 order 8，位于人物及 Hook 后，宽度默认 0.035，浅米黄色。起点沿用 HookLaunchPoint，局部 Player Offset 可微调而不改变实际抛竿起点。
+
+## 2026-09-09 — 手机 Strike 延迟与 Cooldown 分层分析
+
+- 实际场景 StrikeDetector 是 CastGestureDetector 第二实例，StrikeTuningProfile 为 X 正向、Trigger 1.25 rad/s、Rearm 0.45、SampleWindow 0.05 s、CooldownDuration 0；场景检测结果展示时长覆盖为 0。Ready 且 armed 时检查原始 DirectedVelocity>=阈值，当帧同步 GestureTriggered，Mobile/Router 转发到 Strike.HandleAttempt，不等待滤波和采样峰值；这是电平条件，并非严格前后帧越阈判断。
+- StrikeWindowProfile 保存 AttemptCooldown=0.35 s，仅判定失败后生效，HandleAttempt 对所有输入统一拦截；冷却期传感器可继续触发事件，但被判定层丢弃且不缓存。检测器已经进入 Sampling、isArmed=false，因此被丢弃挥动仍会消耗采样/状态切换/回落重置周期。再次准备需回落到 Rearm 阈值内；无可用输入反馈容易被理解为延迟。
+- 抛竿另用 CastDetected，等待 0.35 s 峰值采样后才发射；Cast Profile 冷却 0.75 s，结果展示 0.2 s。检测器 OnEnable/ResetDetector 会清空自身冷却；正式一轮结束后的再次抛竿由 Loop.PostAttemptCooldown=0.8 s 控制。Reeling 加速由 UI 按住控制，不消费提竿冷却。
+- GyroscopeReader、检测器、StrikeController、StrikeWindowHUD 均在 Update 读写，没有这条链路的显式执行顺序和传感器时间戳配对。可能读上一帧传感器缓存或环半径，产生帧级时差；当前未做手机性能/传感器端到端采样，不能断言具体延迟毫秒数。运行时调参按 BeginCheck 快照，下次判定生效，静态保存参数不等于当前运行副本值。
+
+## 2026-09-09 — 旧 Gyro / Attitude 测试与当前服务衔接
+
+- 两测试场景各带本地 Reader，且 Reader.OnDisable 会 DisableDevice；与常驻 AppRoot 同时启用会有退出测试影响全局传感器的风险。场景本地 Reader 默认禁用，MotionTestServices 供 CastTestController / CastDebugHUD / GyroscopeDebugHUD / GyroscopeHistoryGraphic / AttitudeCircleController 统一选择全局服务，仅无 AppRoot 时启用已序列化本地 Reader。
+- AttitudeCircleController 原以单帧姿态自动设零，现读取 AttitudeCalibrationService.NeutralAttitude / IsCalibrated，无校准时自动启动同样的稳定采样；按 Calibrate 可重新校准，重复点击不会重启正在进行的采样。退出时取消本测试发起且仍在进行的校准，保留服务既有取消规则和原移动轴/限位/平滑参数。场景新增底部校准状态与 Calibrate，Main Menu 调整到同排。
+- 无 AppRoot 的主菜单入口通过 SceneLoader 保存一次性测试目标、加载 BootStrap，AppRoot.Start 消费目标；普通 Bootstrap 仍进主菜单。现有 AppRoot 直接切测试，返回仍使用 MainMenu → FishingLoopTest，不自动开始新局。Gyro 测试与正式场景引用同一个 CastTuningProfile，未更改其参数。
+
 ## 2026-09-09 — 排行榜按钮样式遗漏
 
 - 上一步仅迁移 Leaderboard 入口位置，保留了旧白底和默认字体，与设置按钮不一致。本次复制同面板 Tutorial 的视觉字段，保留 Leaderboard 对象 ID、布局槽位和导航引用。
@@ -243,3 +285,16 @@
 - 现有正式飞行仍用 minimumCastDistance / maximumCastDistance / flightDuration。用户明确不满意固定飞行时间，但没有确定抛物线方案或可见弧线范围。不要将建议当成获批设计，也不要将独立 CastBallController/GyroscopeCastTest 直接替换正式控制器。
 - 将来虚拟高度仅用于表现时，距离 HUD、倍率和水面逻辑必须读取逻辑坐标，避免把腾空高度算成抛远距离。此项是拟议方案的技术边界，尚未实现。
 - 新计划见 docs/reference/2026-09-07-progress-and-plan.md；旧两日安排不自动延长。技巧奖励数值、时间耗尽的待结算奖励处理和实际截止时间仍有待确定。
+
+
+## 2026-09-09 — 人物抛竿动画与鱼竿显隐
+
+- 当前 PlayerAnimator 的 IsHoldingROd 与脚本 IsHoldingRod 大小写不一致；Cast → Hold 无条件且未开启 Exit Time，会立即跳过动画。已统一名称并设置 Exit Time=1。第二次抛竿症状仍需运行复验，不能仅由静态检查断言唯一原因。独立 FishingPole 显隐由人物表现脚本控制 SpriteRenderer，结合持竿参数与当前/过渡动画，避免动画结束前提前显示重复鱼竿。
+
+
+## 2026-09-09 — 人物动画交接与鱼群设计边界
+
+- HoldRod 只含一个 RodTip 位置关键帧；此前 Cast 末尾 y=3.05、Hold y=3.22，切换产生向上偏移。用户对齐后明确反馈正常，属于用户验证；未独立运行复测。
+- 下一阶段需求及待决规则集中登记于 task_plan.md 最新交接，当前未实现鱼群新行为。捕食替换会影响唯一挂鱼引用、表现、基础分及收线结果，不能仅替换 Sprite；落点障碍检查必须先于 Baiting/竞赛启动。具体实现需以实际代码与 Collider 配置调查为准。
+- 可复用候选：Sprite PPU/Pivot 一致性、序列帧附着点关键帧、玩法事件驱动表现和独立部件显隐。项目耦合为 Animator 名称及鱼竿素材；验证欠账为跨素材/第二用例、重入与中断；后续练习是在另一套人物素材上独立完成接入。
+- Notion 个人技术资产库已创建：https://app.notion.com/p/3d6b8a4f3e3581cf8c8cca1bfd05bf36 ，已有 PPU 笔记、资产数据库和写作模板。当前项目记录仍负责实施证据；原型结束后再集中提炼，不把候选视为已掌握能力。

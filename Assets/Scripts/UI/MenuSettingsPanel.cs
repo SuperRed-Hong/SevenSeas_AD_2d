@@ -27,6 +27,16 @@ public sealed class MenuSettingsPanel : MonoBehaviour
         strikeTuning?.Open();
     }
 
+    public void OpenGyroTest() => OpenTest(E_SceneID.GyroscopeTest);
+    public void OpenAttitudeTest() => OpenTest(E_SceneID.AttitudeControlTest);
+
+    private void OpenTest(E_SceneID scene)
+    {
+        if (entryGuard != null && entryGuard.IsStartingGame) return;
+        if (AppRoot.Instance != null) AppRoot.Instance.SceneLoader.LoadScene(scene);
+        else SceneLoader.LoadWithoutAppRoot(scene);
+    }
+
     public void OpenCalibration()
     {
         if (calibration == null) return;

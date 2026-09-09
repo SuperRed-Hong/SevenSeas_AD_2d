@@ -25,6 +25,11 @@ public sealed class CastDebugHUD : MonoBehaviour
 
     private float nextRefreshTime;
 
+    private void Awake()
+    {
+        reader = MotionTestServices.Resolve(reader);
+    }
+
     private void Update()
     {
         if (Time.unscaledTime < nextRefreshTime)

@@ -1,5 +1,47 @@
 # Fishing Loop Teaching Plan
 
+## 2026-09-09 — 最新阶段交接：人物动画完成，鱼群行为待实施
+
+- [用户确认] 左右移动两帧循环、抛竿单次播放与 HoldRod 姿势已接入；统一人物 PPU / Pivot，RodTip 随挥竿动画变化，Cast / Hold 坐标衔接问题已由用户确认解决。
+- [源码/接线完成] 独立 FishingPole 在挥竿及持竿时隐藏，返回空手动画恢复；连续多次抛竿及显隐完整回归仍需明确运行证据。鱼钩发射与动画释放帧同步尚未实施。
+- [本次仅记录] 下一阶段鱼群行为：常态停留/游动；追饵先转向再移动；Reeling 时小鱼主动远离钩饵；食肉大鱼有概率吞掉已挂钩小鱼并替代成为被钓对象。
+- [本次仅记录] Spawn 避开障碍物；抛竿落到障碍物时直接失败，不进入 Baiting。
+- 建议施工顺序（尚未实施）：生成避障与落点失败 → 常态移动/追饵转向 → 小鱼逃离 → 捕食与挂鱼替换。
+- 待用户决定：落点失败是否扣一钩并进入现有冷却；捕食是否每次抛竿最多一次、仅大吃小、最终只计大鱼分；教学或直接实现方式。
+- 后续实施前需确定：捕食机会/概率/范围、逃离范围、常态运动边界和转向时间；概率建议按一次机会抽取而非逐帧抽取。生成检测需考虑鱼尺寸、障碍 Layer/Collider、有限重试及无合法位置时的处理。
+- 验收目标：生成范围不与障碍重叠；落点失败仅触发一次且不启动咬钩竞赛；追饵先完成转向；逃离鱼不抢钩；捕食替换始终只有一个挂鱼对象、正确计分且失败/结束清理一致。
+- 新规则与原咬钩竞赛/挂鱼/计分流程存在设计差异：本节作为待设计修订的需求说明，不代表 Claude 已批准，不改写其设计文档。
+- 擦边奖励及从零鱼线复习继续保留；透视相机探索继续延期。Prototype 技术资产集中整理尚未启动。
+
+
+## Prototype 结束后的技术资产整理阶段（2026-09-09 登记，当前不启动）
+
+- 开发中持续在 findings.md 积累可复用候选；继续当前人物 Animator 教学，不把本要求替换为立即架构重构。个人级 AGENTS.md 建议仅放长期原则，本轮未修改个人级文件。
+- [ ] 用户确认 Prototype 阶段结束后，梳理候选及验证证据，按复用价值、第二用例、耦合与整理成本选择优先级。
+- [ ] 按输入/运动、状态与表现、数据持久化、工程流程等领域建立个人知识与资产索引。
+- [ ] 逐项明确接口、依赖、配置、适用边界、失败行为和接入步骤；仅在有真实差异时增加扩展点。
+- [ ] 提供独立最小示例与关键验证，在第二个不同场景或干净项目中接入，记录迁移成本。
+- [ ] 用户亲自解释取舍、重建核心最小实现并完成迁移；通过后才标为已掌握/可复用，不以复制代码作验收。
+- [ ] 总结维护、版本兼容与后续练习；保留项目专有部分，不为所有工作强行建框架。
+
+## 后续复习计划 — 从零实现鱼线（2026-09-09 记录，待用户启动）
+
+- 用户希望亲手从头到尾按步骤实现，之前未接触 LineRenderer；现在只记录，不开始教学，不打断实施进度，不撤销或重做当前已接受的鱼线。
+- 教学方式：用户动手，Codex 每次讲解一个可验证步骤，等待反馈后继续；开始时先安排独立练习对象，保留正式实现。
+- [ ] 认识 LineRenderer，创建对象并连接两个固定点，理解 positionCount、世界/局部坐标、材质、颜色、线宽和排序。
+- [ ] 通过两个 Transform 引用动态更新端点，理解 SetPosition 和 playerAnchor.TransformPoint(playerOffset)。
+- [ ] 连接人物与空中 HookVisual，比较 Hook 根对象的水面位置和视觉高度。
+- [ ] 根据 Casting / Reeling 状态选择 Hook 或当前挂鱼，处理空钩和无效引用；其他阶段隐藏。
+- [ ] 理解 Update、LateUpdate 和 DefaultExecutionOrder，观察先移动后画线与帧滞后的关系。
+- [ ] 完成 Inspector 接线，亲测抛竿、挂鱼/空钩收回、暂停、失败、上岸和结束后的显隐，并用自己的话解释表现与玩法分离。
+
+
+- 2026-09-09 Casting/Reeling 鱼线：[implemented / compile passed / static wiring checked / Play Mode pending] 新增 GameplayRoot/FishingLine，Casting 连接人物 HookLaunchPoint 与 HookVisual，Reeling 连接挂鱼（空钩则 Hook 根）；其他状态隐藏。仅视觉表现，不改移动和张力规则。线宽/颜色/人物端偏移可在 Inspector 调整。
+
+- 2026-09-09 Strike 延迟/冷却审查：[analysis only / device timing pending] 用户反馈手机提竿延迟、冷却似乎无效。已追踪原始 X 越阈 → GestureTriggered → Mobile → Router → Strike.HandleAttempt；没有采样/滤波等待。发现检测器和判定冷却独立、冷却内被吞动作仍消耗检测周期，以及 Update 时序可能产生帧级差异；尚未修改规则或参数。
+
+- 2026-09-09 旧体感测试接入设置：[implemented / compile passed / isolated integration checks passed / device pending] Settings 新增 Gyro Test / Attitude Test，两场景已有 SceneCatalog / Build 登记保留。优先共用 AppRoot Reader 与校准，直接测试场景独立运行用局部服务；从无 AppRoot 的主菜单进入测试经 Bootstrap 初始化后到目标场景。Attitude 改为稳定采样、增加校准按钮/状态。
+
 - 2026-09-09 设置排行榜按钮样式：[scene updated / static checked / Play Mode pending] Leaderboard 与 Tutorial 统一背景、交互色、像素字体、字号及文本边距，保留原导航事件。
 
 - 2026-09-09 调参/排行榜入口收纳：[implemented / compile passed / static wiring checked / Play Mode pending] 移除 StrikeTuningPanel 创建的常驻左上按钮，改为 Setting → Strike Tuning；调参 Canvas 默认及关闭后整体隐藏。原主菜单右上 Leaderboard 移入 SettingsPanel，结算页入口保留。设置五项依次为 Calibration / Tutorial / Strike Tuning / Leaderboard / Close。
@@ -370,3 +412,8 @@ Status: **not-started**
 |---|---:|---|
 | A single patch tried to delete and re-add each planning file | 1 | Split replacement into one delete patch followed by one add patch. |
 | A broad status patch matched the wrong milestone heading | 1 | Re-read the exact M5/M6 lines and applied a heading-scoped correction. |
+
+
+## 2026-09-09 — 人物抛竿动画与鱼竿显隐
+
+- [已实现／待运行验证] 人物重复抛竿与独立鱼竿显隐修复。下一步连续完成两次抛竿（含一次成功和一次失败），确认每次完整挥竿、持竿期间无重复鱼竿、返回待机恢复独立鱼竿。鱼钩与动画释放帧同步仍未实施。

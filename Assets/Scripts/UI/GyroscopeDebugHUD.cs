@@ -22,10 +22,7 @@ public sealed class GyroscopeDebugHUD : MonoBehaviour
 
     private void Awake()
     {
-        if (reader == null)
-        {
-            reader = FindFirstObjectByType<GyroscopeReader>();
-        }
+        reader = MotionTestServices.Resolve(reader);
 
         if (historyGraphic != null)
         {

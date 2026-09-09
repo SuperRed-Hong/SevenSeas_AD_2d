@@ -36,10 +36,7 @@ public sealed class GyroscopeHistoryGraphic : MaskableGraphic
         base.Awake();
         raycastTarget = false;
 
-        if (reader == null)
-        {
-            reader = FindFirstObjectByType<GyroscopeReader>();
-        }
+        reader = MotionTestServices.Resolve(reader);
     }
 
     private void Update()

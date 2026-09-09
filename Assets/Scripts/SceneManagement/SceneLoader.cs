@@ -5,9 +5,21 @@ public sealed class SceneLoader : MonoBehaviour
 {
     [SerializeField] private SceneCatalog sceneCatalog;
     private static bool gameplayRequested;
+    private static E_SceneID? bootstrapDestination;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void ResetEntryRequest() => gameplayRequested = false;
+    private static void ResetEntryRequest()
+    {
+        gameplayRequested = false;
+        bootstrapDestination = null;
+    }
+
+    public static E_SceneID ConsumeBootstrapDestination()
+    {
+        E_SceneID destination = bootstrapDestination ?? E_SceneID.MainMenu;
+        bootstrapDestination = null;
+        return destination;
+    }
 
     public static bool ConsumeGameplayRequest()
     {
@@ -35,6 +47,15 @@ public sealed class SceneLoader : MonoBehaviour
 
     public static void LoadWithoutAppRoot(E_SceneID sceneId)
     {
+        if (AppRoot.Instance == null &&
+            (sceneId == E_SceneID.AttitudeControlTest || sceneId == E_SceneID.GyroscopeTest))
+        {
+            bootstrapDestination = sceneId;
+            gameplayRequested = false;
+            Time.timeScale = 1f;
+            SceneManager.LoadSceneAsync("BootStrap");
+            return;
+        }
         string sceneName;
         switch (sceneId)
         {

@@ -1,5 +1,30 @@
 # Fishing Loop Progress
 
+## 2026-09-09 — 长期技术资产积累约定
+
+- 用户希望开发伴随积累，Prototype 结束后由 Codex 引导整理个人技术栈，并要求本人理解、重建与迁移。已写入项目 AGENTS.md 长期约定、task_plan.md 后续阶段及 findings.md 候选台账，涵盖模块、算法和施工/验证流程。
+- 本轮仅改文档，未改代码/场景，也未修改个人级 AGENTS.md；不立即启动通用化，不打断人物动画状态机教学。候选不是已验收通用资产，设备及运行验证欠账继续保留。
+
+## 2026-09-09 — 鱼线复习需求已登记（未启动）
+
+- 用户反馈鱼线效果不错，希望之后从零亲手逐步实现。已写入 task_plan.md 的后续复习计划：LineRenderer 基础、动态端点、坐标、状态切换、LateUpdate 时序、接线与验证。当前继续开发，不开始复习，不替换已接受实现。仅更新开发记录，未修改代码、场景或资产；用户体验认可不替代尚未完成的平台回归。
+
+## 2026-09-09 — Casting / Reeling 鱼线已接入
+
+- 新增 FishingLineView 和场景 FishingLine 对象/LineRenderer，人物连到当前飞钩或挂鱼，挂鱼对象每帧动态读取，原鱼尺寸、美术和移动流程保持。首次只做直线，无绳索物理；暂停时保留静止连线，结束时随状态隐藏。
+- 命令行编译 0 errors、3 条已有 MSB3277 warnings；场景本地引用/ID 完整性和端点接线检查通过。未运行 Play Mode / Android / WebGL；需观察相机远近下粗细、竿尖起点对齐，以及 Casting 高度、Reeling 空钩/挂鱼和失败后显隐。
+
+## 2026-09-09 — Strike 手势与冷却只读分析
+
+- 已核对正式场景两个 Detector 的 Profile/展示时长覆盖，追踪 Mobile → Router → Strike 判定与三个冷却范围。确认第一次有效原始角速度越阈是当帧事件，无等待采样；抛竿实际等 0.35 秒采样。判定冷却手机路径同样经过，没有源码证据支持绕过。
+- 已记录潜在原因：冷却吞事件仍消耗检测状态、回落重置条件、Update 时序与缺少端到端时间戳；运行参数需区分资产与当前快照。未改代码/场景/Profile，未运行手机复现。建议下一步先加检测/判定/拒绝原因时间戳，确认后再讨论独立 Strike 检测器与反馈调整。
+
+## 2026-09-09 — 测试关卡入口与旧代码适配
+
+- Setting 七项布局新增 Gyro Test / Attitude Test，同组按钮样式及场景导航。修复测试 Reader 与 AppRoot 服务重复管理设备的风险；抛投测试/HUD/曲线用同一 Reader，Attitude 采用共享稳定采样校准并显示状态，保留原测试运动逻辑和曲线。
+- 编译 0 errors、3 条已有 MSB3277 warnings；三个场景本地引用和 ID 检查通过。独立检查引用真实 MotionTestServices / SceneLoader 源码，覆盖两条 Bootstrap 目标、一次性消费、已有 AppRoot 直达、MainMenu/Play Again 回归、共享 Reader 不启用本地 Reader、直接测试回退及本地校准单实例，全部通过。替身检查不包含真实 Unity 生命周期/传感器。
+- 未运行 Unity Play Mode / Android / WebGL。待验证 Settings 进出两关、Unity Remote / 手机角速度与姿态数据、Attitude 校准与重复校准、退出测试后正式游戏体感仍正常；无传感器平台显示离线/等待，未添加模拟数据。
+
 ## 2026-09-09 — 统一设置中的 Leaderboard 外观
 
 - 根据用户截图将白底普通字体改为同组蓝底、白色像素字体和相同字号/边距/交互色。仅修改场景视觉字段，本地引用检查通过，导航事件保留；未运行 Play Mode。
@@ -355,3 +380,17 @@
 - 局部检查：Unity 6000.3.23f1；Canvas 为 Screen Space - Overlay，Scale With Screen Size，参考分辨率 1440×2304，Match 0.5。未发现项目编辑模式脚本自动重排该 HUD。
 - 用户按建议将 Game 与 Scene 并排保持可见，并固定 Game 为 1440×2304 竖屏预设后，明确反馈问题解决。支持隐藏 Game View 后尺寸/Canvas 刷新不及时的判断；未独立复现，不认定为某个已确认 Unity bug。
 - 不需要重摆 UI、改游戏代码或修改 Canvas 缩放配置。此为用户确认有效的编辑器布局规避方式。
+
+
+## 2026-09-09 — 人物抛竿动画与鱼竿显隐
+
+- 修正 Animator 持竿参数拼写、Cast → Hold 完整播放条件；PlayerAnimationController 启用时同步玩法状态，抛竿/持竿隐藏独立鱼竿，并在回到空手动画时恢复。FishingLoopTest 已接 FishingPole SpriteRenderer，保留用户 LaunchPoint 布局。编译 0 errors、3 条既有 MSB3277 警告；参数、过渡条件和场景引用静态检查通过。未运行 Unity Play Mode 或设备测试。
+
+
+## 2026-09-09 — 阶段保存与下一阶段计划
+
+- 用户确认人物移动循环、Cast/Hold 播放与 RodTip 位置衔接正常；独立 FishingPole 显隐源码和场景接线已完成。鱼钩仍按原流程发射，尚未与动画释放帧同步。
+- 按用户要求仅更新鱼群下一阶段计划，列出明确需求、未决参数、施工建议及验收条件，没有提前实现捕食、逃离或障碍落点失败。
+- 用户授权本地提交此前进展：包含人物动画/素材导入与场景调整、鱼线、旧体感测试接入 Settings/共享服务，以及技术资产协作约定和开发记录。不推送远端。
+- 历史个人级约定已完成更新；Notion 个人技术资产库及 PPU 条目已实际创建，旧计划中“本轮未修改个人级文件”仅描述当时阶段。
+- 本次提交前重新编译：0 errors、3 条既有 MSB3277 警告。未运行新的 Play Mode、Android、WebGL 或全流程回归。
