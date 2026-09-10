@@ -1,3 +1,17 @@
+## 2026-09-10 最新补充：计时条与记分板 UI
+
+- [源码完成／编译通过／场景未接线／Play Mode 待验证] `PullOutPanel`、`TimerBarHUD`、`ScoreBoardHUD` 及 Editor 工具 `Tools/Seven Seas/Build Fishing HUD` 已实现，三张 UI Parts 素材的内腔与文字区按原图像素定位。两者都可点击收放，记分板另有加分自动弹出。
+- 待办：在 FishingLoopTest 与 Level 1/2/3 分别运行工具生成节点并保存场景；Play 验证点击收放与自动弹出四条路径；确认 1440x2304 下的 pixelScale 取值；决定是否移除 `FishingSessionHUD.statusText` 中重复的 Score/Time 行。
+
+## 2026-09-10 设计已定稿，待实现：鱼群生态第二批 + 取消钩数
+
+- [设计完成，未实现] 用户确认五条生态需求（饱食度、落钩惊吓、大鱼通吃中小鱼与二次挣扎、中鱼不捕食、Special 不吃不被吃）及取消钩数机制。规则见 [生态设计修订](docs/design/2026-09-10-fish-ecology-design.md)，实现工单见 [Codex 工单](docs/design/2026-09-10-fish-ecology-codex-brief.md)。
+- 本批**反转**两条既有记录：`specialCanPredate` 由 true 改 false（原为 2026-09-09 用户决定，findings.md:17）；捕食概率按猎物分类拆分。另更正 progress.md 中 `predationProbability = 0.3` 的记载，资产实际值为 **0.5**。
+- 分批顺序：B0 取消钩数 → B1 捕食关系 → B2 饱食度 → B3 落钩惊吓 → B4 二次挣扎。B4 单独提交。
+- 三个已定位的实现陷阱：`CancelRetrieval` 清零张力（挣扎不能做成顶层 State）、`BeginApproach` 遇外部导航直接 return（惊吓会让鱼静默不参赛）、猎物类别判定分散在两处（漏一处则大鱼追而不食）。
+- 待核对项：PC 上 `strikeAction` 与 `accelerateAction` 是否同为空格。静态资产解析不出（meta 的 `internalIDToNameTable` 为空），须在编辑器确认；结论影响挣扎窗口时长。
+- 验收由 Claude 执行，清单见设计第 10 节。
+
 ## 2026-09-09 最新补充：暂停风格与UI音效
 
 - [实现/场景/编译完成，正式场景交互听感待验收] 暂停页统一羊皮纸、像素字体、棕金按钮；全场景Button自动UI音效，运行时按钮已注册，保留手动绑定且不重播。

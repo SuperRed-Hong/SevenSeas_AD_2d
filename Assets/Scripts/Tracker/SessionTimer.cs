@@ -13,6 +13,9 @@ public sealed class SessionTimer : MonoBehaviour
 
     public bool IsRunning { get; private set; }
 
+    // 显示层要把剩余时间换算成比例，必须知道满格时长；规则判定仍只在计时器内部。
+    public float SessionDuration => sessionDuration;
+
     public event Action Expired;
 
     private void Awake()

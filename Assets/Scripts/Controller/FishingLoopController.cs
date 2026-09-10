@@ -62,6 +62,8 @@ public sealed class FishingLoopController : MonoBehaviour
     public int CurrentAttemptId => attemptId;
     public event System.Action<CatchResult> CatchCompleted;
     public event System.Action<AttemptFailureResult> AttemptFailed;
+    public event System.Action HookedFishReplaced;
+    public event System.Action StrikeRejected;
     private readonly string leaderboardSessionId = System.Guid.NewGuid().ToString("N");
     public bool FinalScoreSaved { get; private set; }
     public bool IsCastCoolingDown => castCooldownRemaining > 0f;
@@ -88,6 +90,8 @@ public sealed class FishingLoopController : MonoBehaviour
 
     private float castDistance;
     public float CurrentCastDistance => reelingController.DistanceToShore;
+    // Polled by audio every frame, including while no retrieval is active.
+    public float ReelingTension01 => reelingController != null ? reelingController.Tension01 : 0f;
     public float CastDistance => castDistance;
 
     #endregion
@@ -399,6 +403,7 @@ public sealed class FishingLoopController : MonoBehaviour
 
         cameraController.PlayStrikeRejectedShake(
             strikeController.RejectedShakeAmplitude, strikeController.RejectedShakeDuration);
+        StrikeRejected?.Invoke();
     }
 
     #endregion
@@ -434,6 +439,7 @@ public sealed class FishingLoopController : MonoBehaviour
 
         // Preserve the cast multiplier, accrued tension and accelerated retrieval distance.
         Debug.Log($"Predation replaced {expectedPrey.name} with {predator.name}.", this);
+        HookedFishReplaced?.Invoke();
         return true;
     }
 
