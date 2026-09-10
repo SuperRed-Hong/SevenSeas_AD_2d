@@ -1,10 +1,13 @@
 fileFormatVersion: 2
-guid: 2ab16f68186c7fb408b52ecf80ca7530
+guid: 443d733a50e1e9c4bbd84abe6697d74c
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -4929522692749430478
-    second: Fishing-UI_0015_Arrow-Right_0
+      213: -4300257584246913964
+    second: Device03_04_0
+  - first:
+      213: -7284983178702726040
+    second: Device03_04_1
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -113,12 +116,34 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Fishing-UI_0015_Arrow-Right_0
+      name: Device03_04_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 5
+        x: 35
+        y: 21
+        width: 27
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4548848c28a6254c0800000000000000
+      internalID: -4300257584246913964
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Device03_04_1
+      rect:
+        serializedVersion: 2
+        x: 41
+        y: 60
+        width: 14
         height: 9
       alignment: 0
       pivot: {x: 0, y: 0}
@@ -128,8 +153,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 231717a8a31d69bb0800000000000000
-      internalID: -4929522692749430478
+      spriteID: 86c5abe756a86ea90800000000000000
+      internalID: -7284983178702726040
       vertices: []
       indices: 
       edges: []
@@ -148,7 +173,8 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Fishing-UI_0015_Arrow-Right_0: -4929522692749430478
+      Device03_04_0: -4300257584246913964
+      Device03_04_1: -7284983178702726040
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

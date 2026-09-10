@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 2ab16f68186c7fb408b52ecf80ca7530
+guid: c71ee56a7f81267449102451431bd56d
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -4929522692749430478
-    second: Fishing-UI_0015_Arrow-Right_0
+      213: -5698321631576524998
+    second: tutorial01_character_0010_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Fishing-UI_0015_Arrow-Right_0
+      name: tutorial01_character_0010_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 5
-        height: 9
+        x: 17
+        y: 72
+        width: 65
+        height: 66
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 231717a8a31d69bb0800000000000000
-      internalID: -4929522692749430478
+      spriteID: a37f4f5caae7be0b0800000000000000
+      internalID: -5698321631576524998
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Fishing-UI_0015_Arrow-Right_0: -4929522692749430478
+      tutorial01_character_0010_0: -5698321631576524998
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
