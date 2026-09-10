@@ -530,3 +530,10 @@ fetch 后发现本地 main 与 origin/main 分叉（提交前本地独有2、远
 - 合并源码Runtime/Editor MSBuild 0错误，仅既有MSB3277告警。FishingLoopTest、Leaderboard、Level 1/2/3本地fileID无重复或缺失。
 - Unity 6000.3.23f1隔离Play Mode使用真实Animator通过8/8：动画推进、揭示保持5个周期、子VFX持续、恢复动画、禁用恢复、重启无残留、原禁用状态两种路径保持。受测源码SHA256与集成树一致。证据在临时SevenSeasNativeAppearance-2ad6a9a9dd1a4d7cb8b2e5094cef38e9工程；日志有一次Editor.Search初始化异常，不影响8项完成。
 - 正式合并场景完整Play Mode及Android/WebGL仍待验证；隔离生成动画素材不代表main真实素材视觉验收。后续测试应使用合并后的main。
+
+
+## 2026-09-09 — 本地 Map fix 合并冲突修复
+- 用户授权直接处理：局部解决 FishingLoopTest 的15处冲突，保留本地 Tilemap/地图/障碍调整与合入版本玩法、UI、动画、反馈接线。未改 C#、Prefab 或设计规则。
+- 场景已 git add，未解决冲突列表为空；未提交、未推送。原冲突文件备份在 C:/Users/u1591680/AppData/Local/Temp/SevenSeas-conflict-backup-vi7w8vg1/FishingLoopTest.unity。
+- 606个对象内容与三方合并预期完全一致，内部 fileID 无缺失或重复；忽略继承的 Unity YAML 空字段行尾空格后 diff --check 通过。未运行本次 Unity 编译、正式场景 Play Mode 或 Android/WebGL。下一步在 Unity 确认地图和玩法，再由用户 Continue merge。
+- 补充静态检查：含 Prefab stripped Transform 的父子层级检查通过（139条边）；完整外部资源 GUID 扫描随后正常完成，Assets/Packages/Library PackageCache 中无缺失引用（排除 Unity 内建 GUID）。
