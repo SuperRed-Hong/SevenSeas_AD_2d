@@ -83,6 +83,11 @@ public sealed class FishController : MonoBehaviour
         return geometry.IsPoseAllowed(position, transform.rotation, movementArea, padding);
     }
 
+    public bool IsSpawnPoseAllowed(Vector3 position, float padding = 0f)
+    {
+        return geometry.IsPoseAllowed(position, transform.rotation, movementArea, padding, true);
+    }
+
     public void SetAmbientMovementEnabled(bool enabled)
     {
         ambientMovementEnabled = enabled;

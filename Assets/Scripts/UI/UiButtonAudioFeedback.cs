@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
@@ -5,10 +6,11 @@ using UnityEngine.UI;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Button))]
-public sealed class UiButtonAudioFeedback : MonoBehaviour, IPointerEnterHandler, ISelectHandler
+public sealed class UiButtonAudioFeedback : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, ISelectHandler
 {
     [SerializeField] private UiButtonSound clickSound = UiButtonSound.Auto;
     private Button button;
+    private readonly HashSet<int> hoveringPointers = new();
 
     private void Awake() => Bind(GetComponent<Button>());
 
@@ -27,8 +29,29 @@ public sealed class UiButtonAudioFeedback : MonoBehaviour, IPointerEnterHandler,
         if (button != null) button.onClick.RemoveListener(HandleClick);
     }
 
-    public void OnPointerEnter(PointerEventData eventData) => PlaySelection();
-    public void OnSelect(BaseEventData eventData) => PlaySelection();
+    private void OnDisable() => hoveringPointers.Clear();
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (!isActiveAndEnabled || !hoveringPointers.Add(eventData.pointerId)) return;
+        PlaySelection();
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        // A raycast can move between the button background and its text/image children
+        // without leaving the button. Only a real exit permits another hover sound.
+        GameObject target = eventData.pointerCurrentRaycast.gameObject;
+        if (target != null && target.transform.IsChildOf(transform)) return;
+        hoveringPointers.Remove(eventData.pointerId);
+    }
+
+    public void OnSelect(BaseEventData eventData)
+    {
+        // Mouse clicks also select the button; their feedback is handled by onClick.
+        if (eventData is PointerEventData) return;
+        PlaySelection();
+    }
 
     private void PlaySelection()
     {

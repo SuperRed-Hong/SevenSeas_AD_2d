@@ -3,6 +3,15 @@ using System.Collections.Generic;
 
 public sealed class ReelingObstacle : MonoBehaviour
 {
+    public static bool IsBlockingCollider(Collider2D collider)
+    {
+        if (collider == null || !collider.enabled || !collider.gameObject.activeInHierarchy) return false;
+        ReelingObstacle marker = collider.GetComponentInParent<ReelingObstacle>();
+        return (marker != null && marker.isActiveAndEnabled) ||
+            collider is UnityEngine.Tilemaps.TilemapCollider2D ||
+            (collider is CompositeCollider2D && collider.GetComponent<UnityEngine.Tilemaps.TilemapCollider2D>() != null);
+    }
+
     private static readonly List<Collider2D> queryResults = new();
 
     public static bool ContainsPoint(Vector2 position)
@@ -34,9 +43,7 @@ public sealed class ReelingObstacle : MonoBehaviour
         Physics2D.CircleCast(start, radius, delta / distance, QueryFilter(), segmentResults, distance);
         foreach (RaycastHit2D hit in segmentResults)
         {
-            if (hit.collider == null) continue;
-            ReelingObstacle obstacle = hit.collider.GetComponentInParent<ReelingObstacle>();
-            if (obstacle != null && obstacle.isActiveAndEnabled) return true;
+            if (IsBlockingCollider(hit.collider)) return true;
         }
         return false;
     }
@@ -49,9 +56,7 @@ public sealed class ReelingObstacle : MonoBehaviour
         Physics2D.Linecast(start, end, QueryFilter(), segmentResults);
         foreach (RaycastHit2D hit in segmentResults)
         {
-            if (hit.collider == null) continue;
-            ReelingObstacle obstacle = hit.collider.GetComponentInParent<ReelingObstacle>();
-            if (obstacle != null && obstacle.isActiveAndEnabled) return true;
+            if (IsBlockingCollider(hit.collider)) return true;
         }
         return false;
     }
@@ -79,8 +84,7 @@ public sealed class ReelingObstacle : MonoBehaviour
     {
         foreach (Collider2D candidate in queryResults)
         {
-            ReelingObstacle obstacle = candidate.GetComponentInParent<ReelingObstacle>();
-            if (obstacle != null && obstacle.isActiveAndEnabled)
+            if (IsBlockingCollider(candidate))
             {
                 return true;
             }

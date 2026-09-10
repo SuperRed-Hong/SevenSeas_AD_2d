@@ -16,7 +16,7 @@ MonoBehaviour:
   fleeExitRadius: 4
   fleeSpeedMultiplier: 1.5
   predatorDetectionRadius: 5
-  predationProbability: 0.3
+  predationProbability: 0.5
   predatorSpeedMultiplier: 1.5
   mouthContactTolerance: 0.1
   largeCanPredate: 1

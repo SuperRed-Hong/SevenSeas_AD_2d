@@ -15,7 +15,11 @@ public sealed class FishingHaptics : MonoBehaviour
 
     private void OnEnable()
     {
-        if (loop == null) return;
+        if (loop == null)
+        {
+            Debug.LogWarning("FishingHaptics requires a FishingLoopController reference.", this);
+            return;
+        }
         loop.AttemptFailed += HandleFailure;
         loop.StateChanged += HandleStateChanged;
     }
@@ -49,6 +53,20 @@ public sealed class FishingHaptics : MonoBehaviour
         if (!isActiveAndEnabled || !vibrationEnabled || Time.timeScale <= 0f || !Application.isFocused) return;
 #if UNITY_ANDROID && !UNITY_EDITOR
         Handheld.Vibrate();
+#elif UNITY_EDITOR || DEVELOPMENT_BUILD
+        Debug.Log("FishingHaptics received a vibration event. Physical vibration requires an Android native build; Editor, Device Simulator and WebGL are not supported.", this);
 #endif
+    }
+
+    [ContextMenu("Test Vibration (Play Mode / Android)")]
+    private void TestVibration()
+    {
+        if (!Application.isPlaying) return;
+        if (!isActiveAndEnabled || !vibrationEnabled || Time.timeScale <= 0f || !Application.isFocused)
+        {
+            Debug.Log("Vibration test blocked: enable this component and vibration, resume the game, and focus the game window.", this);
+            return;
+        }
+        VibrateIfAllowed();
     }
 }

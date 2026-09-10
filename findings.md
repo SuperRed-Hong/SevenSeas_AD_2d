@@ -420,3 +420,24 @@
 - 本地 99ef369 与合入 84a9a75 的 FishingLoopTest 出现 15 处文本冲突。按共同祖先及 fileID 比较，无双方修改同一对象、无删除/修改冲突、无新增 ID 撞号。
 - 本地修改22、新增26个序列化对象；合入修改58、新增125个。局部修复6段覆盖15处冲突，保留其他原文，最终606个对象逐块匹配预期三方结果，内部 fileID 无重复/缺失。
 - 可复用排错候选：先按 Unity 对象身份比较三方，再局部解决文本冲突并检查引用；并非适用于双方修改同一对象的通用合并器，静态检查不代表运行验收。
+
+## 2026-09-09 — FishingLoopTest接线核对
+
+- 更正目标为main分支的FishingLoopTest，Level 1/2/3修改已撤回。正式场景两Spawner、移动Profile、Layer 6/mask64、生态和震动引用静态完整；需要Unity实际解析结果才能排除导入/内存状态问题。新增只读接线采集，不把静态存在GUID当作运行通过。
+
+
+## 2026-09-09 — UI Select 悬停音效排查
+
+- UI Select 听感排查：FishingLoopTest 的 Select/Confirm/Back 均引用 UI select & firm & back.mp3。解码显示时长0.444秒，包络有多段起伏；不能仅凭波形证明事件重复。UiAudioRouter 使用非循环 PlayOneShot 且合并同帧请求，未发现悬停循环播放代码。先将 Select 单独换为现有 Select 1.wav（一次快速衰减），保留其余音效和音量。运行事件计数及实际听感待验证。
+
+## 2026-09-09 — UI hover 复现补充与修复（更正）
+
+- 用户补充：同一按钮内移动时反复响，前条素材听感假设不足以解释；已恢复原 uiSelect 引用。当前 InputSystem 在命中背景与子文字切换时可能向按钮再次派发 Enter，原组件每次都 Queue；同帧合并无法消除跨帧重复。UiButtonAudioFeedback 以 pointerId 记录悬停，Exit 时检查当前命中是否仍属按钮层级，真实离开才清除；OnDisable 清空，指针 Select 不另播，键盘 Select 保留。
+
+## 2026-09-09 — 随机地图展示时机与开场演出
+
+- 当前随机选择在FishingMapSelector.Awake，碰撞准备后FishSpawner.Start生成；Entry菜单镜头仍看得到本局地图。用户指出这是展示流程冲突，决定引入独立空镜及Start后的地图巡览，不等同于要求改为多个Unity场景或延迟随机算法。
+- 现有TransitionToOverview只切镜头并等待Cinemachine混合；BeginAfterTransition结束才启用Loop，Loop.Start才开始计时。新演出应保留此门控并接回旧流程，避免正常收线/失败ShowOverview被开场逻辑污染。
+- 两图同显曾有现场日志证据：mapContainer空引用导致初始化直接退出；已补场景引用及共同父推导。测试必须覆盖引用缺失，并检查实际导入/运行，不只测有效配置。
+- 技术资产候选：可取消的开场演出与玩法启动交接。当前仅需求/方案候选，尚未实现或验证；可迁移部分为阶段编排、输入计时门控、完成/取消一次性语义，项目耦合为Cinemachine三镜头、教程和手机校准。后续待实现后用独立小场景重建，不能宣称已掌握。
+- 完整交接见docs/reference/2026-09-09-map-intro-camera-handoff.md。三份文档索引冲突状态仍保留，本轮只更新正文。

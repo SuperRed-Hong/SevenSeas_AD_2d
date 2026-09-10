@@ -537,3 +537,25 @@ fetch 后发现本地 main 与 origin/main 分叉（提交前本地独有2、远
 - 场景已 git add，未解决冲突列表为空；未提交、未推送。原冲突文件备份在 C:/Users/u1591680/AppData/Local/Temp/SevenSeas-conflict-backup-vi7w8vg1/FishingLoopTest.unity。
 - 606个对象内容与三方合并预期完全一致，内部 fileID 无缺失或重复；忽略继承的 Unity YAML 空字段行尾空格后 diff --check 通过。未运行本次 Unity 编译、正式场景 Play Mode 或 Android/WebGL。下一步在 Unity 确认地图和玩法，再由用户 Continue merge。
 - 补充静态检查：含 Prefab stripped Transform 的父子层级检查通过（139条边）；完整外部资源 GUID 扫描随后正常完成，Assets/Packages/Library PackageCache 中无缺失引用（排除 Unity 内建 GUID）。
+## 2026-09-09 — FishingLoopTest接线检查（范围更正）
+
+- 用户明确目标是main分支的FishingLoopTest，撤回本轮对Level 1/2/3的全部33行/场景修改；不将那些关卡配置缺口解释为用户故障。
+- 静态逐项检查：两个Spawner均绑定真实Movement Profile和同一Loop；四个鱼Prefab资产存在，BasicFish启用并处于Layer 6，BiteRace mask=64；Loop各本地引用指向正确组件；Ecology Profile与Loop一致；GameFeedback和Haptics启用，loop引用正确、vibrationEnabled=true。未发现此范围内的序列化断线。
+- 加入只读Tools/Seven Seas/Capture Fishing Scene Wiring菜单与脚本重载后自动采集，记录Unity实际解析后的对象引用、启用状态、生成区域、平台和震动开关至系统临时SevenSeasFishingWiring.txt。Runtime/Editor编译通过，仅既有MSB3277警告。
+- 当前Editor尚未生成新报告；旧鱼日志16:01不能证明本次故障。需要用户切回Unity完成脚本重载/采集，再检查运行引用或复现；未声称Play Mode已通过，未更改FishingLoopTest场景或推送。
+
+## 2026-09-09 — UI Select 悬停音效排查
+
+- 针对用户反馈 hover 连响，检查触发链路和音频包络，仅替换 FishingLoopTest 的 uiSelect GUID 为现有 Select 1.wav。字节级检查确认本轮场景仅一处引用变更，资源存在且音频可解码。未改 C#，未运行 Unity Play Mode / Android / WebGL；不能宣称重复触发已排除。
+
+## 2026-09-09 — UI hover 复现补充与修复（更正）
+
+- 根据用户复现说明撤回 Select 1.wav 替换，修复 UiButtonAudioFeedback 重复 hover 入队。Assembly-CSharp MSBuild 0错误、3条既有MSB3277警告。临时工程直接编译该源码，Unity替身12项检查通过：首次进入、背景/文字切换、内部exit/enter、空白/其他UI移出重入、指针选择去重、点击确认、键盘选择、禁用重开、多指针及不可交互。此检查不代表原生输入事件或正式场景 Play Mode 已通过。
+
+## 2026-09-09 — 地图专项文档更新与开场镜头交接
+
+- 按用户要求更新三份进度与地图记录，新增docs/reference/2026-09-09-map-intro-camera-handoff.md。核对当前main/a9811ba工作区、Unity6000.3.23f1/Cinemachine3.1.7、CameraController/EntryGuard/SceneUI/选图与场景接线，以及用户Editor教学代码。
+- 汇入当前已实现内容：三图随机、预览状态覆盖及空父引用恢复；独立鱼矩形与生成避Tilemap/鱼；统一鱼钩障碍判定。原生地图64组合512断言/Play生命周期、物理14项为此前实际完成的专项证据，不冒充正式场景全流程或设备通过。
+- 记录用户新要求：独立空镜主菜单，Start后上方入场、电影画幅由上往下巡览，到ShorePlayer平台再交回原镜头。新镜头完全未实施；比例/节奏/跳过/教程校准编排交给下一chat讨论。
+- 原chat继续用户手写Editor工具：GetSelectedSprites已有，但OnGUI仍使用GetFiltered；下一步只接新方法与Count并验证。镜头任务不代写教学文件。
+- 本轮仅文档修改，未修改C#或场景，未运行新玩法测试。三份进度文档虽然无文本冲突标记，Git索引仍UU；未暂存、解决索引、提交或推送。

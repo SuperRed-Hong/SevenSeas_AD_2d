@@ -34,6 +34,8 @@ public class FishSpawner : MonoBehaviour
     private readonly List<Vector2> spawnedPositions = new();
     
     private BoxCollider2D spawnArea;
+    [SerializeField, Tooltip("Independent swimming boundary. The local BoxCollider2D remains the spawn region.")]
+    private BoxCollider2D movementArea;
     [SerializeField] private FishMovementProfile movementProfile;
     [SerializeField] private FishingLoopController loop;
 
@@ -60,6 +62,8 @@ public class FishSpawner : MonoBehaviour
 
     private void Start()
     {
+        if (movementProfile == null)
+            Debug.LogWarning("FishSpawner has no FishMovementProfile: idle movement, obstacle navigation, fleeing and predation movement are unavailable.", this);
         SpawnFish();
     }
 
@@ -88,7 +92,7 @@ public class FishSpawner : MonoBehaviour
             FishController fish = Instantiate(selectedPrefab, transform.position,
                 Quaternion.identity, transform);
             Physics2D.SyncTransforms();
-            fish.ConfigureMovement(spawnArea, movementProfile);
+            fish.ConfigureMovement(movementArea != null ? movementArea : spawnArea, movementProfile);
             bool positionFound = false;
             Vector2 spawnPosition = default;
 
@@ -103,7 +107,7 @@ public class FishSpawner : MonoBehaviour
                     continue;
                 }
 
-                if (!fish.IsNavigationPoseAllowed(new Vector3(candidatePosition.x,
+                if (!fish.IsSpawnPoseAllowed(new Vector3(candidatePosition.x,
                     candidatePosition.y, transform.position.z), obstacleSpawnPadding))
                 {
                     continue;
@@ -122,7 +126,7 @@ public class FishSpawner : MonoBehaviour
             fish.transform.position = new Vector3(spawnPosition.x,
                 spawnPosition.y, transform.position.z);
 
-            fish.ConfigureMovement(spawnArea, movementProfile);
+            fish.ConfigureMovement(movementArea != null ? movementArea : spawnArea, movementProfile);
             fish.SetAmbientMovementEnabled(loop == null || loop.CurrentState != FishingLoopState.GameOver);
 
             spawnedPositions.Add(spawnPosition);

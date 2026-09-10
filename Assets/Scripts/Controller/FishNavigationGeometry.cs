@@ -60,13 +60,13 @@ public sealed class FishNavigationGeometry
         }
     }
 
-    public bool IsPoseAllowed(Vector3 position, Quaternion rotation, BoxCollider2D area, float padding)
+    public bool IsPoseAllowed(Vector3 position, Quaternion rotation, BoxCollider2D area, float padding, bool avoidFish = false)
     {
         bool previous = Physics2D.queriesHitTriggers;
         try
         {
             Physics2D.queriesHitTriggers = true;
-            return PoseAllowed(position, rotation, area, padding);
+            return PoseAllowed(position, rotation, area, padding, avoidFish);
         }
         finally { Physics2D.queriesHitTriggers = previous; }
     }
@@ -94,7 +94,7 @@ public sealed class FishNavigationGeometry
         finally { Physics2D.queriesHitTriggers = previous; }
     }
 
-    private bool PoseAllowed(Vector3 position, Quaternion rotation, BoxCollider2D area, float padding)
+    private bool PoseAllowed(Vector3 position, Quaternion rotation, BoxCollider2D area, float padding, bool avoidFish = false)
     {
         LastBlocker = null;
         if (root == null || !HasShape) return false;
@@ -110,7 +110,10 @@ public sealed class FishNavigationGeometry
             else Physics2D.OverlapCapsule(center, size, body.direction, angle, Filter(), overlaps);
             foreach (Collider2D collider in overlaps)
             {
-                if (!IsObstacle(collider)) continue;
+                bool otherFish = avoidFish && collider != null && collider.enabled && collider.gameObject.activeInHierarchy &&
+                    collider.transform != root && !collider.transform.IsChildOf(root) &&
+                    collider.GetComponentInParent<FishController>() != null;
+                if (!IsObstacle(collider) && !otherFish) continue;
                 LastBlocker = collider;
                 return false;
             }
@@ -196,8 +199,7 @@ public sealed class FishNavigationGeometry
     {
         if (collider == null || !collider.enabled || !collider.gameObject.activeInHierarchy ||
             collider.transform == root || collider.transform.IsChildOf(root)) return false;
-        ReelingObstacle obstacle = collider.GetComponentInParent<ReelingObstacle>();
-        return obstacle != null && obstacle.isActiveAndEnabled;
+        return ReelingObstacle.IsBlockingCollider(collider);
     }
 
     private static ContactFilter2D Filter() => new ContactFilter2D { useTriggers = true, useLayerMask = false };
