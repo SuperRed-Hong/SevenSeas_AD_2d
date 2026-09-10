@@ -591,3 +591,36 @@ fetch 后发现本地 main 与 origin/main 分叉（提交前本地独有2、远
 - 应用户要求新增场景Cameras/IntroCamera（Cinemachine），独立承担入场/下巡/交回。MenuCamera保留菜单用途，切入同姿态避免额外混合等待，切出仍对齐Overview。原菜单布景装饰方式未改变。
 - 原生Unity速度专项16项通过：逐帧速度、路程/速度决定时长、终点不超越、跳过、timeScale=0及零速度约束。临时当前场景故意清空Intro引用，两轮正常/跳过通过；Brain确实选择IntroCamera、10%黑边和SKIP原生截图确认。随后对最终入口就绪保护补做回归。
 - 本次未操作用户当前Unity Play模式，未执行Android/WebGL。证据仍在SevenSeasIntro-643247fabe084c548704eb55e2099f1b临时目录：survey-speed-results.txt、dedicated-results.txt、survey-dedicated-screen.png和entry-guard-final.log。
+
+## 2026-09-10 — 移动菜单误触和重复音效修复
+
+- 用户确认地图/开场镜头部分完成。本轮定位Start大透明图片的整屏命中区域，以及触屏PointerEnter/Click双声。
+- 新增UiButtonHitArea，仅接到正式场景Start实例，以归一化矩形包住六帧可见内容与小边距；UiButtonAudioFeedback忽略触摸悬停，保留有效点击音/鼠标悬停/键盘选择。保留用户已有字体和场景修改，未改按钮动画与布局。
+- Unity6000.3.23f1临时副本编译和原生Input System检查通过，640×480、1440×2304各13项，覆盖故障复现、空白/有效点击、拖出/拖入、禁用和音效路由次数。场景本地fileID完整无重复。
+- 未运行Android/WebGL设备测试，真机听感待复测；未暂存、提交或推送。证据与接入说明见docs/reference/2026-09-10-mobile-menu-input-fix.md。
+
+## 2026-09-10 — GameOver 音频提示
+
+- FishingAudioFeedback在首次进入GameOver时停止局内循环/旧提示，播放独立gameOverClip；正式场景先复用Attempt Failure.mp3，gameOverLevel=1，可在Inspector独立换音和调音量。
+- 最后一钩的AttemptFailed在GameOver之后发布，因此跳过这次普通失败音，避免叠音；保留普通丢钩音。重复结束事件不重播，静音/组件重新启用不补播。
+- Unity6000.3.23f1临时副本编译通过；原生Play Mode音源专项9项通过（场景引用、播放、重复事件、最后一钩、静音/恢复、重新启用、普通失败与旧音替换）。测试直接调用音频事件处理器并使用可控长度测试音源；未跑整局计时/耗钩流程，未进行Android/WebGL听感验证。
+- 证据：临时SevenSeasIntro-643247fabe084c548704eb55e2099f1b/gameover-audio-results.txt和gameover-audio.log。未提交或推送。
+
+## 2026-09-10 — 结束展示与设置系列换肤
+
+- 用户确认：GameOver停留3秒→自动Inventory→1秒后显示Leaderboard/Play Again，由玩家决定离开时间。
+- 正式场景接线完成；新增结果模式与按钮，保留原局中关闭/分页、实际分数和保存失败提示。
+- Settings、Developer、校准、暂停、Strike Tuning统一深海墨绿/米白沙金，使用Empty_button__0；Developer保存截图七人名单并分行展示职位和姓名。
+- Unity6000.3.23f1隔离副本编译及18项原生专项通过；1440×2304截图已检查。最终5个C#源文件与测试副本hash一致，场景fileID无重复。测试调用真实计时结束入口，鱼获为注入测试数据，导航按钮验证Raycast与对应回调。
+- 未测试Android/WebGL实机、完整导航加载和刘海安全区。未提交或推送。详见docs/reference/2026-09-10-results-settings-ui.md；最终日志results-ui-delivery2.log。
+- [2026-09-10 Developer预览修复] 将双行富文本直接保存到场景，抽出RefreshNames并增加Refresh Credits Preview菜单。Unity隔离副本编译/编辑态检查通过：七个场景文本与运行格式函数输出完全一致；人员顺序未改。证据credits-preview-results.txt、credits-preview-fixed.log。
+- [2026-09-10 名单排序确认] 用户同意程序→设计→美术→技术美术→制作人。场景developerNames与七条预览同步更新，首位Programming / Shuo Hong (Flynn)，同组为Li/Zhao、Shu/Whitehouse。针对性静态核对七条格式/顺序通过，对象数不变；无C#修改，未重跑Play Mode。
+- [2026-09-10 隐藏教程开关] 按用户要求，Developer教程完成按钮移到右下角6%宽×4%高透明热区（x=.91-.97，y=.02-.06），隐藏状态文字和说明，关闭视觉过渡与键盘导航；保留ToggleTutorialCompleted。仅修改场景，针对性静态接线检查通过，未重跑Play Mode；玩家Settings/Tutorial入口不变。
+- [2026-09-10 名单顺序再次调整] 用户要求Production→Programming→Game Art→Technical Art。Jordan Reynolds首位、Shuo Hong (Flynn)第二位；未指定的Game Design / Yilin Qian保留在最后。场景数组与七条富文本同步，静态一致性检查通过；仅改数据，未重跑Play Mode。
+- [2026-09-10 名单自动生成] DeveloperPanel的Developer Names作为唯一维护入口，编辑模式修改/重排/Undo自动生成预览，运行Open复用同一函数；不再维护单独预览文案。隔离Unity编辑态18项检查通过，包含Undo、进度不被预览修改以及教程菜单切换。
+- [2026-09-10 游戏内Tutorial入口验证] Developer右下角小号Tutorial文字按钮：原生Unity Play Mode 6项通过，覆盖可见/无溢出、透明背景、Raycast、实际PointerClick切换及再次恢复，切换后不出现大状态文字；1440×2304截图已检查。证据developer-button-results.txt、developer-button-fixed.log、developer-small-tutorial.png；未测手机实机。
+- [2026-09-10 Developer清蓝版] 深海蓝底、白色姓名、蓝灰职位与青蓝点缀；名单收紧，Close缩窄上移。隐藏Games Started、角落Tutorial及说明，点击DEVELOPER标题仍切换教程完成状态。Unity临时副本编译/7项原生UI检查通过，1440×2304运行截图已检查；未测手机设备。证据developer-blue.log、developer-button-results.txt、developer-blue-title.png。本轮仅Developer页换色。
+- [2026-09-10 Settings配色跟进] 按用户要求将Settings主面板也换成Developer同款深海蓝底、白标题、青色像素按钮与深蓝按钮字；仅改正式场景18个颜色字段，按钮布局、事件、素材引用不变。
+- Settings新版已在Unity临时副本打开并检查1440×2304运行截图：settings-blue.png；主面板与八个按钮配色更新，文字可见，无需新增行为测试。未测手机实机。
+- [2026-09-10 GameOver直接鱼获] 用户取消过渡画面；OnEnable同步打开Inventory并移除Inventory Delay/倒计时，保留Actions Delay=1。Unity隔离副本编译和18项专项通过，含真实结束入口→HUD同帧打开Inventory、timeScale=0、延后按钮、分页/分数和保存失败提示。证据results-immediate.log与results-ui-checks.txt；未测Android/WebGL。
+- [2026-09-10 Settings配色防回退] 核实当前场景确已恢复旧色，修复为MenuSettingsPanel集中四个可编辑颜色并自动应用；Scene快照同步蓝色。Unity临时副本编译通过，运行测试故意注入旧绿底/米黄字/原色按钮后Open，背景、八按钮及全部标签均恢复指定配色。日志settings-palette-source.log、developer-button-results.txt；未测用户当前Editor会话与真机。

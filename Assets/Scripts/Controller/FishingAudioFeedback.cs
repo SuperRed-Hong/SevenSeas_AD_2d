@@ -13,6 +13,8 @@ public sealed class FishingAudioFeedback : MonoBehaviour
     [SerializeField] private AudioClip strikeSuccess;
     [SerializeField] private AudioClip catchSuccess;
     [SerializeField] private AudioClip attemptFailure;
+    [SerializeField, Tooltip("Played once when the session ends, whether time or hooks run out.")]
+    private AudioClip gameOverClip;
     [SerializeField, Tooltip("Played when a predator devours the hooked small fish.")]
     private AudioClip predationBite;
     [SerializeField, Tooltip("Looped while a hooked fish is being retrieved.")]
@@ -35,6 +37,7 @@ public sealed class FishingAudioFeedback : MonoBehaviour
     [SerializeField, Range(0f, 3f)] private float strikeSuccessLevel = 1f;
     [SerializeField, Range(0f, 3f)] private float catchSuccessLevel = 2f;
     [SerializeField, Range(0f, 3f)] private float attemptFailureLevel = 1f;
+    [SerializeField, Range(0f, 3f)] private float gameOverLevel = 1f;
     [SerializeField, Range(0f, 3f)] private float predationBiteLevel = 1.4f;
     [SerializeField, Range(0f, 3f)] private float strikeRejectedLevel = 0.8f;
     [SerializeField, Range(0f, 1f)] private float reelingLevel = 0.6f;
@@ -201,6 +204,7 @@ public sealed class FishingAudioFeedback : MonoBehaviour
         reelingActive = state == FishingLoopState.Reeling;
         if (state == FishingLoopState.GameOver)
         {
+            if (gameOver) return;
             gameOver = true;
             if (gameplaySource != null) gameplaySource.Stop();
             StopVaried();
@@ -209,6 +213,8 @@ public sealed class FishingAudioFeedback : MonoBehaviour
             if (musicSource != null) musicSource.Stop();
             ambientStarted = false;
             musicStarted = false;
+            StopReeling();
+            PlayGameplay(gameOverClip, gameOverLevel);
         }
         else if (!gameOver)
         {
@@ -247,8 +253,8 @@ public sealed class FishingAudioFeedback : MonoBehaviour
     private void HandleFailure(AttemptFailureResult result)
     {
         if (!settledAttempts.Add(result.AttemptId)) return;
-        // The last-hook failure is published after the coordinator enters GameOver.
-        PlayGameplay(attemptFailure, attemptFailureLevel);
+        // The last-hook failure follows GameOver, which already played the session verdict.
+        if (!gameOver) PlayGameplay(attemptFailure, attemptFailureLevel);
     }
 
 

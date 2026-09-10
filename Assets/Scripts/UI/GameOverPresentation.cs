@@ -1,42 +1,62 @@
-using TMPro;
 using UnityEngine;
 
 public sealed class GameOverPresentation : MonoBehaviour
 {
     [SerializeField] private FishingLoopController loopController;
-    [SerializeField] private TMP_Text countdownText;
-    [SerializeField, Min(0f)] private float leaderboardDelay = 5f;
+    [SerializeField] private CatchInventoryView inventoryView;
+    [SerializeField] private GameObject immediateActions;
+    [SerializeField, Min(0f)] private float actionsDelay = 1f;
 
     private float remaining;
     private bool waiting;
     private bool navigationStarted;
+    private bool actionsShown;
 
     private void OnEnable()
     {
         navigationStarted = false;
+        actionsShown = false;
         waiting = loopController != null && loopController.CurrentState == FishingLoopState.GameOver;
-        remaining = leaderboardDelay;
-        RefreshCountdown();
+        remaining = actionsDelay;
+        if (immediateActions != null) immediateActions.SetActive(false);
+        if (!waiting) return;
+        // Open synchronously when the HUD enters GameOver, before the next rendered frame.
+        if (inventoryView != null)
+        {
+            inventoryView.OpenResults(ShowLeaderboard, PlayAgain, loopController.FinalScoreSaved);
+            if (remaining <= 0f) ShowActions();
+        }
+        else if (immediateActions != null) immediateActions.SetActive(true);
     }
 
     private void LateUpdate()
     {
-        if (!waiting || navigationStarted) return;
+        if (!waiting || navigationStarted || actionsShown) return;
         if (loopController == null || loopController.CurrentState != FishingLoopState.GameOver)
         {
             waiting = false;
             return;
         }
 
-        // Run after UI clicks so Play Again wins over a timeout in the same frame.
+        // UI timing continues while gameplay is stopped.
         remaining = Mathf.Max(0f, remaining - Time.unscaledDeltaTime);
-        RefreshCountdown();
-        if (remaining <= 0f) Navigate(E_SceneID.Leaderboard);
+        if (remaining <= 0f) ShowActions();
+    }
+
+    private void ShowActions()
+    {
+        actionsShown = true;
+        if (inventoryView != null) inventoryView.ShowResultActions();
     }
 
     public void PlayAgain()
     {
         if (waiting && !navigationStarted) Navigate(E_SceneID.GameScene);
+    }
+
+    public void ShowLeaderboard()
+    {
+        if (waiting && !navigationStarted) Navigate(E_SceneID.Leaderboard);
     }
 
     private void Navigate(E_SceneID destination)
@@ -46,13 +66,6 @@ public sealed class GameOverPresentation : MonoBehaviour
         Time.timeScale = 1f;
         if (AppRoot.Instance != null) AppRoot.Instance.SceneLoader.LoadScene(destination);
         else SceneLoader.LoadWithoutAppRoot(destination);
-    }
-
-    private void RefreshCountdown()
-    {
-        if (countdownText == null || !waiting) return;
-        string saveWarning = loopController.FinalScoreSaved ? "" : "SCORE NOT SAVED\n";
-        countdownText.text = $"{saveWarning}HIGH SCORES IN {Mathf.CeilToInt(remaining)}";
     }
 
     private void OnDisable()

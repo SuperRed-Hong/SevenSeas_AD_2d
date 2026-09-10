@@ -454,3 +454,32 @@
 
 - 保存场景EntryGuard.intro再次为空，导致旧fallback直接切Overview；此前调整Survey Seconds/Bar Height并未参与这个调用链。通过同对象组件恢复和有组件但未准备好时阻止启动修复；验证必须故意清空引用再执行入口，不能仅测试有效配置。
 - 独立IntroCamera已实现。Survey改为世界单位/秒匀速，避免SmoothStep下中段速度更快造成调参含义不直观。
+
+## 2026-09-10 — Start透明留白误触与触屏双音
+
+- Start动画100×160图片仅约X21..74/Y84..99可见，但Image以放大后的整张矩形射线检测。实际关闭过滤器可复现透明区命中；新增归一化ICanvasRaycastFilter限定可见按钮附近，保留布局/动画，不需要贴图可读。
+- 触屏Enter与Button.onClick跨帧分别排队Select/Confirm，是按下/抬起双声来源；按ExtendedPointerEventData设备类型排除Touch悬停，保留鼠标和键盘反馈。
+- 可迁移候选、当前美术耦合、边界、测试与后续练习见docs/reference/2026-09-10-mobile-menu-input-fix.md；未扩展为任意Sprite轮廓识别工具。
+
+## 2026-09-10 — GameOver 无声原因
+
+- 结束状态原先只停止音乐/环境/旧音，没有结束音入口；计时结束无AttemptFailed，所以完全没有提示。最后一钩则先StateChanged(GameOver)再AttemptFailed。
+- 现在结束状态统一播一次独立Game Over Clip，结束后的普通失败音跳过，避免两种结算提示重叠。当前复用现有Attempt Failure.mp3，后续可独立换素材；不新增声音资产。
+- 排错经验候选：表现层应核对状态事件与结果事件的先后顺序，避免同一次结算双声。可迁移的是一次性反馈门控；本项目耦合为FishingLoopState与失败事件顺序。原生音源专项通过，设备听感和第二用例未验证，后续练习可重建计时/耗尽两条事件链解释去重。
+
+## 2026-09-10 — 结算Inventory与设置外观
+
+- 用户确认3秒GameOver→本局Inventory→1秒后显示Leaderboard/Play Again，取代5秒自动排行榜。鱼获沿用原CatchInventory，不从展示层生成计分。
+- Developer截图内容未进入磁盘developerNames，原Refresh会以空数组覆盖成占位符；本次保存七人名单并按职位/姓名分行。
+- 极深UI底色在Linear渲染下，即使alpha=0.98仍能明显透出浅色后层按钮；阅读面板改不透明，避免叠字。
+- 配置、设计差异和验证边界见docs/reference/2026-09-10-results-settings-ui.md。继续复用现有UI组件，不新增通用皮肤框架。
+- [2026-09-10 更正] Developer的双行富文本此前仅由Open刷新，Scene保存单行导致预览不一致。本次把七行富文本写入场景，并增加Refresh Credits Preview组件菜单供修改名单后同步；人员顺序仍待用户决定，未调整。
+- [2026-09-10 排序落定] 替代前述“排序待决定”：用户批准程序、设计、美术、技术美术、制作人顺序；姓名采用Shuo Hong (Flynn)。本次仅修改场景名单及对应富文本，静态一致性核对通过。
+- [2026-09-10] 用户明确Developer的Tutorial Completed是开发者隐藏开关；显示状态标签与说明不再适用。场景热区右下角6%×4%，Image透明但保留raycast，状态TMP禁用但引用保留，Refresh不会重新显示。
+- [2026-09-10 最新名单决定] 取代此前程序首位：用户希望Production先、本人其次、美术后技术美术；未指定的设计署名保留末尾，编辑预览与运行数据已同步。
+- [2026-09-10 名单单一来源] Developer Names为唯一维护入口；ExecuteAlways与延迟OnValidate生成编辑预览，Open复用同一格式函数。TMP场景文本仅为自动生成显示，不再手动同步。编辑预览不读取或修改游戏进度，修改/重排和Undo专项通过。
+- [2026-09-10 教程入口更正] 用户强调游戏里应能找到并修改，不要全隐形。改为Developer面板右下角、Close右侧小号Tutorial文本，保持透明背景与无说明；点击仍调用原ToggleTutorialCompleted，组件右键入口只是补充。
+- [2026-09-10 Developer视觉方向更正] 用户否定暗绿/土黄并同意标题隐藏教程入口。Developer单页改深海蓝、清白姓名、青蓝标题/按钮、蓝灰职位；收紧名单、隐藏Games Started与独立Tutorial标签，保留点击DEVELOPER标题切换。其他设置页面本轮未扩展换肤。
+- [2026-09-10] 用户继续否定Settings旧绿色，主设置页配色同步Developer新版；其他子面板尚维持各自当前配色，不能宣称全部面板已改蓝。
+- [2026-09-10 结束流程最新修订] 用户取消GameOver过渡页。GameOverPresentation.OnEnable同步OpenResults，删除Inventory Delay和倒计时逻辑，避免依靠下一帧或零秒延时切换；Actions Delay保留1秒。Inventory仍接收保存状态，结束音由原音频组件负责。
+- [2026-09-10 Settings旧色复现] 当前磁盘Scene的Settings颜色重新变成绿底/米黄字和白色按钮Tint，确实与用户截图一致；不能断言具体是谁回写，可能是已打开的旧场景后来保存。新增MenuSettingsPanel Settings Colors作为颜色维护入口，编辑态延迟OnValidate/OnEnable与每次Open应用，旧Graphic颜色不再决定外观。

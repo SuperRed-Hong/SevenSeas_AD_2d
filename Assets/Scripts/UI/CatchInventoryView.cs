@@ -11,6 +11,7 @@ public sealed class CatchInventoryView : MonoBehaviour
     [SerializeField] private Sprite previousPageSprite;
     [SerializeField] private Sprite nextPageSprite;
     [SerializeField] private TMP_FontAsset font;
+    [SerializeField] private Sprite actionButtonSprite;
 
     private const int PageSize = 12;
     private static readonly Color Ink = new(0.20f, 0.14f, 0.09f);
@@ -24,6 +25,13 @@ public sealed class CatchInventoryView : MonoBehaviour
     private Button nextButton;
     private Action onClosed;
     private int page;
+    private GameObject resultActions;
+    private Button closeButton;
+    private Action leaderboardAction;
+    private Action playAgainAction;
+    private bool resultsMode;
+    private bool scoreSaved = true;
+    private RectTransform boardBounds;
     public bool IsOpen => panel != null && panel.activeSelf;
 
     private void OnEnable()
@@ -41,6 +49,10 @@ public sealed class CatchInventoryView : MonoBehaviour
         }
 
         if (panel == null) BuildPanel();
+        resultsMode = false;
+        closeButton.gameObject.SetActive(true);
+        resultActions.SetActive(false);
+        SetResultsLayout(false);
         onClosed = closed;
         page = 0;
         panel.SetActive(true);
@@ -49,11 +61,44 @@ public sealed class CatchInventoryView : MonoBehaviour
 
     public void Close()
     {
+        if (resultsMode) return;
         if (!IsOpen) return;
         panel.SetActive(false);
         Action callback = onClosed;
         onClosed = null;
         callback?.Invoke();
+    }
+
+    public void OpenResults(Action leaderboard, Action playAgain, bool saved = true)
+    {
+        Open();
+        if (!IsOpen) return;
+        resultsMode = true;
+        scoreSaved = saved;
+        leaderboardAction = leaderboard;
+        playAgainAction = playAgain;
+        closeButton.gameObject.SetActive(false);
+        SetResultsLayout(true);
+        Refresh();
+    }
+
+    public void ShowResultActions()
+    {
+        if (IsOpen && resultsMode) resultActions.SetActive(true);
+    }
+
+    private void SetResultsLayout(bool results)
+    {
+        float offset = results ? 0.11f : 0f;
+        boardBounds.anchorMin = new Vector2(0.08f, 0.16f + offset);
+        ((RectTransform)emptyLabel.transform).anchorMin = new Vector2(0.12f, 0.11f + offset);
+        ((RectTransform)emptyLabel.transform).anchorMax = new Vector2(0.88f, 0.15f + offset);
+        foreach (RectTransform rect in new[] { (RectTransform)previousButton.transform,
+            (RectTransform)nextButton.transform, (RectTransform)pageLabel.transform })
+        {
+            rect.anchorMin = new Vector2(rect.anchorMin.x, 0.04f + offset);
+            rect.anchorMax = new Vector2(rect.anchorMax.x, 0.10f + offset);
+        }
     }
 
     private void OnDisable()
@@ -78,11 +123,12 @@ public sealed class CatchInventoryView : MonoBehaviour
         scaler.matchWidthOrHeight = 0.5f;
 
         RectTransform shade = Rect("Shade", panel.transform, Vector2.zero, Vector2.one);
-        shade.gameObject.AddComponent<Image>().color = new Color(0.035f, 0.025f, 0.015f, 0.96f);
+        shade.gameObject.AddComponent<Image>().color = new Color(0.025f, 0.075f, 0.068f, 1f);
         summary = Label("Summary", shade, new Vector2(0.08f, 0.87f), new Vector2(0.92f, 0.97f), 48f);
         summary.color = new Color(0.91f, 0.81f, 0.59f);
 
-        RectTransform bounds = Rect("BoardBounds", shade, new Vector2(0.08f, 0.16f), new Vector2(0.92f, 0.86f));
+        RectTransform bounds = Rect("BoardBounds", shade, new Vector2(0.08f, 0.26f), new Vector2(0.92f, 0.86f));
+        boardBounds = bounds;
         RectTransform board = Rect("InventoryBoard", bounds, Vector2.zero, Vector2.one);
         Image background = board.gameObject.AddComponent<Image>();
         background.sprite = inventorySprite;
@@ -110,15 +156,25 @@ public sealed class CatchInventoryView : MonoBehaviour
             scores[i].fontSizeMax = 30f;
         }
 
-        emptyLabel = Label("Empty", shade, new Vector2(0.12f, 0.11f), new Vector2(0.88f, 0.15f), 28f);
+        emptyLabel = Label("Empty", shade, new Vector2(0.12f, 0.22f), new Vector2(0.88f, 0.26f), 28f);
         emptyLabel.color = summary.color;
         previousButton = Button("<", previousPageSprite, shade,
-            new Vector2(0.16f, 0.04f), new Vector2(0.29f, 0.10f), PreviousPage);
+            new Vector2(0.16f, 0.16f), new Vector2(0.29f, 0.21f), PreviousPage);
         nextButton = Button(">", nextPageSprite, shade,
-            new Vector2(0.71f, 0.04f), new Vector2(0.84f, 0.10f), NextPage);
-        pageLabel = Label("Page", shade, new Vector2(0.30f, 0.04f), new Vector2(0.70f, 0.10f), 36f);
+            new Vector2(0.71f, 0.16f), new Vector2(0.84f, 0.21f), NextPage);
+        pageLabel = Label("Page", shade, new Vector2(0.30f, 0.16f), new Vector2(0.70f, 0.21f), 36f);
         pageLabel.color = summary.color;
-        Button("X", closeSprite, shade, new Vector2(0.89f, 0.92f), new Vector2(0.98f, 0.98f), Close);
+        closeButton = Button("X", closeSprite, shade, new Vector2(0.89f, 0.92f), new Vector2(0.98f, 0.98f), Close);
+        resultActions = Rect("ResultActions", shade, new Vector2(0.1f, 0.015f), new Vector2(0.9f, 0.15f)).gameObject;
+        ResultButton("LEADERBOARD", new Vector2(0.1f, 0.53f), new Vector2(0.9f, 0.98f), () => leaderboardAction?.Invoke());
+        ResultButton("PLAY AGAIN", new Vector2(0.1f, 0.02f), new Vector2(0.9f, 0.47f), () => playAgainAction?.Invoke());
+        resultActions.SetActive(false);
+    }
+
+    private void ResultButton(string text, Vector2 min, Vector2 max, UnityEngine.Events.UnityAction action)
+    {
+        Button button = Button(text, actionButtonSprite, resultActions.transform, min, max, action);
+        if (actionButtonSprite != null) Label(text, button.transform, Vector2.zero, Vector2.one, 30f).text = text;
     }
 
     private void PreviousPage()
@@ -139,6 +195,7 @@ public sealed class CatchInventoryView : MonoBehaviour
         int pages = Mathf.Max(1, (inventory.Count + PageSize - 1) / PageSize);
         page = Mathf.Clamp(page, 0, pages - 1);
         summary.text = $"THIS RUN\n{inventory.Count} FISH   {inventory.TotalScore:N0} PTS";
+        if (resultsMode && !scoreSaved) summary.text += "\nSCORE NOT SAVED";
         pageLabel.text = $"{page + 1} / {pages}";
         emptyLabel.text = inventory.Count == 0 ? "NO FISH CAUGHT YET" : "ACTUAL POINTS PER CATCH";
         previousButton.interactable = page > 0;

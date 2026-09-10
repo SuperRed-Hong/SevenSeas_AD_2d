@@ -5,6 +5,8 @@ using UnityEngine.UI;
 public sealed class StrikeTuningPanel : MonoBehaviour
 {
     [SerializeField] private StrikeController strikeController;
+    [SerializeField] private Sprite buttonSprite;
+    [SerializeField] private TMP_FontAsset font;
     [SerializeField] private FishingPauseController pauseController;
 
     private readonly string[] labels =
@@ -36,7 +38,7 @@ public sealed class StrikeTuningPanel : MonoBehaviour
 
         RectTransform shade = MakeRect("StrikeTuningPanel", canvas.transform, Vector2.zero, Vector2.one);
         panel = shade.gameObject;
-        shade.gameObject.AddComponent<Image>().color = new Color(0.015f, 0.035f, 0.06f, 0.98f);
+        shade.gameObject.AddComponent<Image>().color = new Color(0.025f, 0.075f, 0.068f, 1f);
         MakeText("STRIKE TUNING / PAUSED", shade, new Vector2(0.06f, 0.90f), new Vector2(0.94f, 0.96f), 48f);
         MakeText("Changes apply to the next strike check", shade,
             new Vector2(0.06f, 0.85f), new Vector2(0.94f, 0.9f), 30f);
@@ -51,13 +53,13 @@ public sealed class StrikeTuningPanel : MonoBehaviour
                 new Vector2(0.93f, top), 34f);
             RectTransform track = MakeRect(labels[i], shade, new Vector2(0.08f, top - 0.065f),
                 new Vector2(0.92f, top - 0.043f));
-            track.gameObject.AddComponent<Image>().color = new Color(0.15f, 0.22f, 0.28f);
+            track.gameObject.AddComponent<Image>().color = new Color(0.10f, 0.20f, 0.17f);
             RectTransform fill = MakeRect("Fill", track, Vector2.zero, Vector2.one);
-            fill.gameObject.AddComponent<Image>().color = new Color(0.2f, 0.65f, 0.85f);
+            fill.gameObject.AddComponent<Image>().color = new Color(0.66f, 0.62f, 0.40f);
             RectTransform handle = MakeRect("Handle", track, Vector2.zero, new Vector2(0f, 1f));
             handle.sizeDelta = new Vector2(34f, 12f);
             Image handleImage = handle.gameObject.AddComponent<Image>();
-            handleImage.color = new Color(1f, 0.8f, 0.3f);
+            handleImage.color = new Color(0.91f, 0.84f, 0.67f);
             Slider slider = track.gameObject.AddComponent<Slider>();
             slider.fillRect = fill;
             slider.handleRect = handle;
@@ -142,29 +144,35 @@ public sealed class StrikeTuningPanel : MonoBehaviour
         return rect;
     }
 
-    private static TMP_Text MakeText(string text, Transform parent, Vector2 minimum, Vector2 maximum, float size)
+    private TMP_Text MakeText(string text, Transform parent, Vector2 minimum, Vector2 maximum, float size)
     {
         TextMeshProUGUI label = MakeRect(text, parent, minimum, maximum).gameObject.AddComponent<TextMeshProUGUI>();
         label.text = text;
+        if (font != null) label.font = font;
+        label.enableAutoSizing = true;
+        label.fontSizeMin = 18f;
+        label.fontSizeMax = size;
         label.fontSize = size;
-        label.color = new Color(0.92f, 0.96f, 1f);
+        label.color = new Color(0.91f, 0.84f, 0.67f);
         label.alignment = TextAlignmentOptions.MidlineLeft;
         label.raycastTarget = false;
         return label;
     }
 
-    private static Button MakeButton(string text, Transform parent, Vector2 minimum, Vector2 maximum,
+    private Button MakeButton(string text, Transform parent, Vector2 minimum, Vector2 maximum,
         UnityEngine.Events.UnityAction action)
     {
         RectTransform rect = MakeRect(text, parent, minimum, maximum);
         Image background = rect.gameObject.AddComponent<Image>();
-        background.color = new Color(0.1f, 0.32f, 0.48f);
+        background.sprite = buttonSprite;
+        background.color = buttonSprite != null ? Color.white : new Color(0.91f, 0.84f, 0.67f);
         Button button = rect.gameObject.AddComponent<Button>();
         button.targetGraphic = background;
         button.onClick.AddListener(action);
         UiAudioRouter.RegisterButton(button);
         TMP_Text label = MakeText(text, rect, Vector2.zero, Vector2.one, 30f);
         label.alignment = TextAlignmentOptions.Center;
+        label.color = new Color(0.16f, 0.20f, 0.16f);
         return button;
     }
 }

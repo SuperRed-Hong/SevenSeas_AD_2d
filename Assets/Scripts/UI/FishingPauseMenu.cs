@@ -11,6 +11,7 @@ public sealed class FishingPauseMenu : MonoBehaviour
     [Header("Menu Artwork")]
     [SerializeField] private Sprite panelSprite;
     [SerializeField] private Sprite closeSprite;
+    [SerializeField] private Sprite buttonSprite;
     [SerializeField] private TMP_FontAsset font;
 
     private static readonly Color Ink = new(0.23f, 0.16f, 0.10f);
@@ -35,14 +36,14 @@ public sealed class FishingPauseMenu : MonoBehaviour
         scaler.referenceResolution = new Vector2(1440f, 2304f);
         scaler.matchWidthOrHeight = 0.5f;
         RectTransform shade = MakeRect("Shade", panel.transform, Vector2.zero, Vector2.one);
-        shade.gameObject.AddComponent<Image>().color = new Color(0.035f, 0.025f, 0.015f, 0.78f);
+        shade.gameObject.AddComponent<Image>().color = new Color(0.025f, 0.075f, 0.068f, 1f);
         safeArea = MakeRect("SafeArea", shade, Vector2.zero, Vector2.one);
         UpdateSafeArea();
         RectTransform bounds = MakeRect("BoardBounds", safeArea, new Vector2(0.06f, 0.04f), new Vector2(0.94f, 0.96f));
         RectTransform board = MakeRect("PauseBoard", bounds, Vector2.zero, Vector2.one);
         Image paper = board.gameObject.AddComponent<Image>();
         paper.sprite = panelSprite;
-        paper.color = panelSprite != null ? Color.white : Cream;
+        paper.color = new Color(0.055f, 0.14f, 0.12f);
         paper.raycastTarget = false;
         AspectRatioFitter fitter = board.gameObject.AddComponent<AspectRatioFitter>();
         fitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
@@ -177,7 +178,7 @@ public sealed class FishingPauseMenu : MonoBehaviour
         label.enableAutoSizing = true;
         label.fontSizeMin = 12f;
         label.fontSizeMax = size;
-        label.color = Ink;
+        label.color = Cream;
         label.alignment = TextAlignmentOptions.Center;
         label.raycastTarget = false;
         return label;
@@ -188,16 +189,17 @@ public sealed class FishingPauseMenu : MonoBehaviour
     {
         RectTransform rect = MakeRect(text, parent, minimum, maximum);
         Image border = rect.gameObject.AddComponent<Image>();
-        border.color = Ink;
+        border.color = Color.clear;
         Image fill = MakeRect("Fill", rect, new Vector2(0.012f, 0.065f), new Vector2(0.988f, 0.935f))
             .gameObject.AddComponent<Image>();
+        fill.sprite = buttonSprite;
         fill.color = Color.white;
         fill.raycastTarget = false;
         Button button = rect.gameObject.AddComponent<Button>();
         button.targetGraphic = fill;
         ColorBlock colors = button.colors;
-        colors.normalColor = primary ? new Color(0.34f, 0.23f, 0.14f) : new Color(0.76f, 0.65f, 0.44f);
-        colors.highlightedColor = primary ? new Color(0.48f, 0.34f, 0.20f) : new Color(0.9f, 0.79f, 0.56f);
+        colors.normalColor = Color.white;
+        colors.highlightedColor = new Color(1f, 0.96f, 0.83f);
         colors.selectedColor = colors.highlightedColor;
         colors.pressedColor = new Color(0.58f, 0.43f, 0.25f);
         colors.disabledColor = new Color(0.5f, 0.46f, 0.38f, 0.65f);
@@ -206,7 +208,7 @@ public sealed class FishingPauseMenu : MonoBehaviour
         button.onClick.AddListener(action);
         UiAudioRouter.RegisterButton(button, sound);
         TMP_Text label = MakeText(text, rect, new Vector2(0.04f, 0.06f), new Vector2(0.96f, 0.94f), 38f);
-        label.color = primary ? Cream : Ink;
+        label.color = Ink;
         return button;
     }
 }

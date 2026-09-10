@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 
 [DisallowMultipleComponent]
@@ -33,6 +35,10 @@ public sealed class UiButtonAudioFeedback : MonoBehaviour, IPointerEnterHandler,
 
     public void OnPointerEnter(PointerEventData eventData)
     {
+        // Touch has no hover: a finger landing must not play Select before the release click.
+        if (eventData is ExtendedPointerEventData pointer
+            ? pointer.pointerType == UIPointerType.Touch || pointer.device is Touchscreen
+            : eventData.pointerId >= 0) return;
         if (!isActiveAndEnabled || !hoveringPointers.Add(eventData.pointerId)) return;
         PlaySelection();
     }
