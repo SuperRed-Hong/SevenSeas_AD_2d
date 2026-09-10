@@ -63,9 +63,11 @@ public sealed class FishingSceneEntryGuard : MonoBehaviour
         if (exitButton != null && Application.platform == RuntimePlatform.WebGLPlayer)
             exitButton.interactable = false;
         bool requestedGameplay = SceneLoader.ConsumeGameplayRequest();
+        bool requestedDeveloper = SceneLoader.ConsumeDeveloperRequest();
         if (sceneUI.HasMenu)
         {
             cameraController?.ShowMenu();
+            if (requestedDeveloper && !requestedGameplay) sceneUI.OpenDeveloper();
             if (!requestedGameplay) return;
         }
         StartGame();

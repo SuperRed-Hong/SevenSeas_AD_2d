@@ -483,3 +483,4 @@
 - [2026-09-10] 用户继续否定Settings旧绿色，主设置页配色同步Developer新版；其他子面板尚维持各自当前配色，不能宣称全部面板已改蓝。
 - [2026-09-10 结束流程最新修订] 用户取消GameOver过渡页。GameOverPresentation.OnEnable同步OpenResults，删除Inventory Delay和倒计时逻辑，避免依靠下一帧或零秒延时切换；Actions Delay保留1秒。Inventory仍接收保存状态，结束音由原音频组件负责。
 - [2026-09-10 Settings旧色复现] 当前磁盘Scene的Settings颜色重新变成绿底/米黄字和白色按钮Tint，确实与用户截图一致；不能断言具体是谁回写，可能是已打开的旧场景后来保存。新增MenuSettingsPanel Settings Colors作为颜色维护入口，编辑态延迟OnValidate/OnEnable与每次Open应用，旧Graphic颜色不再决定外观。
+- [2026-09-10 Leaderboard返回入口] 用户澄清：只改Leaderboard的Main Menu按钮。新增一次性Developer菜单请求，SceneLoader仍加载MainMenu/FishingLoopTest并在入口Start打开Developer，Close自然露出菜单；不是修改Inventory导航。请求只在有效MainMenu加载时设置、消费后清空，普通导航重置；含无AppRoot直跑路径。

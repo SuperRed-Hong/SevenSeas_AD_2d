@@ -6100,6 +6100,7 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::LeaderboardNavigationButton
   targetScene: 0
+  showDeveloperOnMainMenu: 1
 --- !u!1 &2100000268
 GameObject:
   m_ObjectHideFlags: 0

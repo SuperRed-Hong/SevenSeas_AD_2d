@@ -41575,12 +41575,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.CanvasScaler
-  m_UiScaleMode: 0
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 1440, y: 2304}
   m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
+  m_MatchWidthOrHeight: 0.5
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
@@ -71813,6 +71813,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LeaderboardNavigationButton
   targetScene: 5
+  showDeveloperOnMainMenu: 0
 --- !u!1 &2101000026
 GameObject:
   m_ObjectHideFlags: 0
@@ -73516,6 +73517,7 @@ MonoBehaviour:
   gameOverPanel: {fileID: 1973554389}
   menuCalibrationPanel: {fileID: 2101000003}
   gameplayCalibrationPanel: {fileID: 1960739751}
+  developerPanel: {fileID: 2118000000}
 --- !u!114 &2111000001
 MonoBehaviour:
   m_ObjectHideFlags: 0

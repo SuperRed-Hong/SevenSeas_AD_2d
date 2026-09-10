@@ -606,3 +606,5 @@ fetch 后发现本地 main 与 origin/main 分叉（提交前本地独有2、远
 - [2026-09-10] Settings主页面跟进深海蓝/白/青色，替代暗绿/米黄色。
 - [2026-09-10 最新规则] GameOver直接打开Inventory，取代此前3秒过渡；1秒后出现Leaderboard/Play Again。
 - [2026-09-10 Settings配色修复] 四个颜色集中到MenuSettingsPanel的Settings Colors；编辑预览与运行打开都应用，恢复当前Scene蓝色快照。
+- [2026-09-10] Leaderboard Main Menu→Developer→Close回Main Menu；Inventory及Play Again保持原路线，完整场景跳转验证中。
+- [已验证 2026-09-10] Leaderboard→Developer→Main Menu：Unity真实导航34项通过，包含直接运行与BootStrap两种入口；设备待复测。
