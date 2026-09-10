@@ -15,14 +15,17 @@ public sealed class FishingSceneEntryGuard : MonoBehaviour
     [SerializeField] private FishingCameraController cameraController;
     [SerializeField] private Button exitButton;
     [SerializeField] private TutorialPanelController tutorial;
+    [SerializeField] private FishingIntroController intro;
 
     private AttitudeCalibrationService calibrationService;
     private bool isWaitingForCalibration;
     private bool isStarting;
+    private bool transitionStarted;
     public bool IsStartingGame => isStarting && enabled;
 
     private void Awake()
     {
+        if (intro == null) intro = GetComponent<FishingIntroController>();
         if (sceneUI == null)
         {
             Debug.LogError("Fishing scene entry requires a FishingSceneUIController.", this);
@@ -70,7 +73,7 @@ public sealed class FishingSceneEntryGuard : MonoBehaviour
 
     public void StartGame()
     {
-        if (isStarting) return;
+        if (!isActiveAndEnabled || isStarting) return;
         isStarting = true;
         if (!LocalPlayerProgress.TutorialCompleted)
         {
@@ -180,6 +183,15 @@ public sealed class FishingSceneEntryGuard : MonoBehaviour
 
     private void BeginGameplay()
     {
+        if (transitionStarted) return;
+        if (intro != null && (!intro.isActiveAndEnabled || !intro.IsPrepared))
+        {
+            Debug.LogError("Fishing intro is present but not ready. Check its scene references before starting.", this);
+            isWaitingForCalibration = false;
+            isStarting = false;
+            return;
+        }
+        transitionStarted = true;
         isWaitingForCalibration = false;
         StartCoroutine(BeginAfterTransition());
     }
@@ -187,10 +199,13 @@ public sealed class FishingSceneEntryGuard : MonoBehaviour
     private IEnumerator BeginAfterTransition()
     {
 
-        Coroutine cameraTransition = cameraController != null
-            ? StartCoroutine(cameraController.TransitionToOverview()) : null;
+        Coroutine cameraTransition = intro != null && intro.IsPrepared
+            ? intro.StartCoroutine(intro.Play())
+            : cameraController != null ? StartCoroutine(cameraController.TransitionToOverview()) : null;
         yield return sceneUI.FadeMenuForGameplay();
         if (cameraTransition != null) yield return cameraTransition;
+
+        if (intro != null && intro.IsPrepared && !intro.HasCompleted) yield break;
 
         loopController.enabled = true;
         LocalPlayerProgress.RecordGameStarted();

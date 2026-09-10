@@ -640,8 +640,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 'POWER :'
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: dd8d574598480c14eb2d72e7b14b3d9f, type: 2}
+  m_sharedMaterial: {fileID: -5148439811500758748, guid: dd8d574598480c14eb2d72e7b14b3d9f, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -23878,8 +23878,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: DISTANCE x1.00
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: dd8d574598480c14eb2d72e7b14b3d9f, type: 2}
+  m_sharedMaterial: {fileID: -5148439811500758748, guid: dd8d574598480c14eb2d72e7b14b3d9f, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -24113,8 +24113,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 'DISTANCE :'
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: dd8d574598480c14eb2d72e7b14b3d9f, type: 2}
+  m_sharedMaterial: {fileID: -5148439811500758748, guid: dd8d574598480c14eb2d72e7b14b3d9f, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -24555,8 +24555,8 @@ Transform:
   m_GameObject: {fileID: 942265428}
   serializedVersion: 2
   m_LocalRotation: {x: -0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 0.018, y: 0.067, z: 0}
-  m_LocalScale: {x: 4.51, y: 0, z: 8.28}
+  m_LocalPosition: {x: 0.018, y: 47.1883, z: 0}
+  m_LocalScale: {x: 4.51, y: 0, z: 17.704838}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 774497538}
@@ -28957,6 +28957,7 @@ Transform:
   - {fileID: 1532451018}
   - {fileID: 973579487}
   - {fileID: 2101000002}
+  - {fileID: 2147000011}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1278519479
@@ -28974,6 +28975,7 @@ MonoBehaviour:
   overviewCamera: {fileID: 1532451017}
   hookFollowCamera: {fileID: 973579489}
   menuCamera: {fileID: 2101000001}
+  introCamera: {fileID: 2147000012}
   brain: {fileID: 827200676}
   strikeRejectedImpulseSource: {fileID: 1278519480}
 --- !u!114 &1278519480
@@ -30167,6 +30169,7 @@ GameObject:
   - component: {fileID: 1636518286}
   - component: {fileID: 2111000000}
   - component: {fileID: 2111000001}
+  - component: {fileID: 2147000000}
   m_Layer: 0
   m_Name: FishingSceneEntry
   m_TagString: Untagged
@@ -30194,6 +30197,7 @@ MonoBehaviour:
   cameraController: {fileID: 1278519479}
   exitButton: {fileID: 1666176386}
   tutorial: {fileID: 2101000052}
+  intro: {fileID: 2147000000}
 --- !u!4 &1636518287
 Transform:
   m_ObjectHideFlags: 0
@@ -54695,6 +54699,103 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e69c88d139af4bb4a9d5032a93ddbbfc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FishMovementArea
+--- !u!114 &2147000000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1636518285}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2d9820fdd6e4b37a4e06f94a9311ae3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FishingIntroController
+  profile: {fileID: 11400000, guid: c0b8dba7c2da44bcb1ae7b9d14324e13, type: 2}
+  maps: {fileID: 2111000001}
+  cameras: {fileID: 1278519479}
+  waterVisual: {fileID: 942265429}
+  fishMovementArea: {fileID: 2146000002}
+  fishSpawners:
+  - {fileID: 297207976}
+  - {fileID: 1539262650}
+  shorePlayer: {fileID: 1165585711}
+  uiFont: {fileID: 11400000, guid: dd8d574598480c14eb2d72e7b14b3d9f, type: 2}
+--- !u!1 &2147000010
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2147000011}
+  - component: {fileID: 2147000012}
+  m_Layer: 0
+  m_Name: IntroCamera
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &2147000011
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2147000010}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 8, z: -10}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1278519478}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2147000012
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2147000010}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9dfa5b682dcd46bda6128250e975f58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineCamera
+  Priority:
+    Enabled: 1
+    m_Value: 20
+  OutputChannel: 1
+  StandbyUpdate: 2
+  m_StreamingVersion: 20241001
+  m_LegacyPriority: 0
+  Target:
+    TrackingTarget: {fileID: 0}
+    LookAtTarget: {fileID: 0}
+    CustomLookAtTarget: 0
+  Lens:
+    FieldOfView: 60
+    OrthographicSize: 9
+    NearClipPlane: 0.3
+    FarClipPlane: 1000
+    Dutch: 0
+    ModeOverride: 0
+    PhysicalProperties:
+      GateFit: 2
+      SensorSize: {x: 21.946, y: 16.002}
+      LensShift: {x: 0, y: 0}
+      FocusDistance: 10
+      Iso: 200
+      ShutterSpeed: 0.005
+      Aperture: 16
+      BladeCount: 5
+      Curvature: {x: 2, y: 11}
+      BarrelClipping: 0.25
+      Anamorphism: 0
+  BlendHint: 0
 --- !u!1001 &7995426713447595577
 PrefabInstance:
   m_ObjectHideFlags: 0

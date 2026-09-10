@@ -559,3 +559,23 @@ fetch 后发现本地 main 与 origin/main 分叉（提交前本地独有2、远
 - 记录用户新要求：独立空镜主菜单，Start后上方入场、电影画幅由上往下巡览，到ShorePlayer平台再交回原镜头。新镜头完全未实施；比例/节奏/跳过/教程校准编排交给下一chat讨论。
 - 原chat继续用户手写Editor工具：GetSelectedSprites已有，但OnGUI仍使用GetFiltered；下一步只接新方法与Count并验证。镜头任务不代写教学文件。
 - 本轮仅文档修改，未修改C#或场景，未运行新玩法测试。三份进度文档虽然无文本冲突标记，Git索引仍UU；未暂存、解决索引、提交或推送。
+
+## 2026-09-09 — 地图开场镜头交付
+
+- 按用户讨论确认后“开始”的授权，实现不同地图的独立菜单场地（活动鱼、无人/无平台）、Start后电影黑边向下巡览、平台停留、正常镜头交接及每局可跳过。Profile保存时长/取景/黑边参数。保留原三图编辑布局和既有教程/校准顺序。
+- Runtime MSBuild通过；Unity6000.3.23f1临时工程加载当前正式场景的七轮专项103断言通过，补充零时长/暂停时非缩放演出两轮通过；校验受测六份源码、场景及Profile SHA256与工作区相同。
+- 原生1440×2304截图确认菜单、巡览与交回效果；720×1152新开场UI正常，现有菜单裁切已记录。本轮没有修改原菜单布局。临时测试环境有Unity Search及2D Tooling资源导入告警/异常，详细界限与证据路径见实施记录。
+- 尚未执行用户当前Editor完整试玩、Android/WebGL、实际手机校准、结算/排行榜/Play Again全链路。未改用户并行编辑的ObstablePrefabGeneratorWindow.cs，未暂存、提交或推送。
+
+## 2026-09-09 — 下巡时长更正与装饰编辑说明
+
+- 用户明确要求向下巡览本身为8秒；此前实现为下巡5秒、整段约8.75秒。已将实际FishingIntroProfile资产和新建Profile默认值改为8秒，下巡之外时长保持，总时长约11.75秒。静态核对Profile绑定及MoveTo读取surveySeconds；本次未重跑Play Mode。
+- 说明菜单为运行时复制地图，临时副本不能保存装饰；当前应在编辑态对应TileMapGrid根内添加装饰，会同时用于正式地图及菜单副本。仅菜单装饰与编辑态预览能力尚未实施，不擅自改动作者工作流。
+
+## 2026-09-09 — 巡览速度、独立电影镜头与入口断线修复
+
+- 用户要求Survey Seconds改Survey Speed：下巡改为MoveTowards匀速，默认2世界单位/秒，距离决定时长，非缩放时间；实际Profile资产和默认值同步迁移，不把旧秒数用FormerlySerializedAs误解释成速度。Bar Height说明为每条黑边占屏幕高度比例，0.1=上下各10%。
+- 用户反馈巡览/黑边仍未生效，现场保存的FishingSceneEntryGuard.intro为fileID 0，旧fallback只运行TransitionToOverview。补回场景引用，并在Awake从同对象恢复遗漏引用；Intro存在但未准备好时明确报错，不再走旧镜头流程。
+- 应用户要求新增场景Cameras/IntroCamera（Cinemachine），独立承担入场/下巡/交回。MenuCamera保留菜单用途，切入同姿态避免额外混合等待，切出仍对齐Overview。原菜单布景装饰方式未改变。
+- 原生Unity速度专项16项通过：逐帧速度、路程/速度决定时长、终点不超越、跳过、timeScale=0及零速度约束。临时当前场景故意清空Intro引用，两轮正常/跳过通过；Brain确实选择IntroCamera、10%黑边和SKIP原生截图确认。随后对最终入口就绪保护补做回归。
+- 本次未操作用户当前Unity Play模式，未执行Android/WebGL。证据仍在SevenSeasIntro-643247fabe084c548704eb55e2099f1b临时目录：survey-speed-results.txt、dedicated-results.txt、survey-dedicated-screen.png和entry-guard-final.log。

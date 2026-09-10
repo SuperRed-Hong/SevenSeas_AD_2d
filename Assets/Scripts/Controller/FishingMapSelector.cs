@@ -11,6 +11,20 @@ public sealed class FishingMapSelector : MonoBehaviour
 
     public GameObject SelectedMap { get; private set; }
 
+    // Choose scenery only after the gameplay draw; never reroll the gameplay map.
+    public GameObject ChooseMenuMap()
+    {
+        Initialize();
+        if (SelectedMap == null || maps.Length < 2) return null;
+        int choice = Random.Range(0, maps.Length - 1);
+        foreach (GameObject map in maps)
+        {
+            if (map == SelectedMap) continue;
+            if (choice-- == 0) return map;
+        }
+        return null;
+    }
+
     private void Awake()
     {
         Initialize();

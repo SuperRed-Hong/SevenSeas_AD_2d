@@ -34,6 +34,31 @@ public class FishSpawner : MonoBehaviour
     private readonly List<Vector2> spawnedPositions = new();
     
     private BoxCollider2D spawnArea;
+
+    // Build before Start, with an independent boundary and no gameplay event subscription.
+    public FishSpawner CreateAmbientCopy(Transform parent, Vector3 offset, BoxCollider2D boundary)
+    {
+        var root = new GameObject(name + " Menu");
+        root.SetActive(false);
+        root.transform.SetParent(parent, false);
+        root.transform.SetPositionAndRotation(transform.position + offset, transform.rotation);
+        root.transform.localScale = transform.lossyScale;
+        var area = root.AddComponent<BoxCollider2D>();
+        var sourceArea = GetComponent<BoxCollider2D>();
+        area.size = sourceArea.size;
+        area.offset = sourceArea.offset;
+        area.isTrigger = true;
+        var copy = root.AddComponent<FishSpawner>();
+        copy.fishPrefabs = fishPrefabs;
+        copy.FishCount = FishCount;
+        copy.minimumSpawnSpacing = minimumSpawnSpacing;
+        copy.maximumPlacementAttempts = maximumPlacementAttempts;
+        copy.obstacleSpawnPadding = obstacleSpawnPadding;
+        copy.movementArea = boundary;
+        copy.movementProfile = movementProfile;
+        root.SetActive(true);
+        return copy;
+    }
     [SerializeField, Tooltip("Independent swimming boundary. The local BoxCollider2D remains the spawn region.")]
     private BoxCollider2D movementArea;
     [SerializeField] private FishMovementProfile movementProfile;

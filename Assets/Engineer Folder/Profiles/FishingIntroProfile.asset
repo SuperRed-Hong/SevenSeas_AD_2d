@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 95a1d840447c496a84b59ae247e55cf5, type: 3}
+  m_Name: FishingIntroProfile
+  m_EditorClassIdentifier: Assembly-CSharp::FishingIntroProfile
+  entrySeconds: 2
+  surveySpeed: 4
+  platformHoldSeconds: 0.6
+  handoffSeconds: 0.8
+  skipSeconds: 0.35
+  barSeconds: 0.35
+  barHeight: 0.2
+  surveyOrthographicSize: 7
+  menuVerticalOffset: 55
+  sceneryGap: 4
