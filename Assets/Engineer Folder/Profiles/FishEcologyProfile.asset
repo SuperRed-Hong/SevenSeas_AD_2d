@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FishEcologyProfile
   fleeEnterRadius: 3
   fleeExitRadius: 4
-  fleeSpeedMultiplier: 1.5
+  fleeSpeedMultiplier: 2.5
   predatorDetectionRadius: 5
   predationProbability: 0.5
   predatorSpeedMultiplier: 1.5
