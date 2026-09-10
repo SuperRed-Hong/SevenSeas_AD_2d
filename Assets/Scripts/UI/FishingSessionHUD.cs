@@ -71,6 +71,7 @@ public sealed class FishingSessionHUD : MonoBehaviour
 
     private void LateUpdate()
     {
+        UpdateSessionDisplay();
         // Read after gameplay Update so the value and scale match this frame's flight.
         FishingLoopState state = loopController.CurrentState;
         if (state == FishingLoopState.Casting ||
@@ -97,7 +98,7 @@ public sealed class FishingSessionHUD : MonoBehaviour
         }
     }
 
-    private void Update()
+    private void UpdateSessionDisplay()
     {
         int secondsRemaining =
             Mathf.CeilToInt(sessionTimer.TimeRemaining);

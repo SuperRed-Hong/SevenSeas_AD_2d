@@ -1,4 +1,5 @@
 using UnityEngine;
+using TMPro;
 
 public enum GyroscopeAxis
 {
@@ -28,6 +29,7 @@ public sealed class AttitudeCircleController : MonoBehaviour
     [SerializeField, Range(0.1f, 1f)] private float movementRange = 0.85f;
     [SerializeField, Min(0f)] private float smoothing = 12f;
     [SerializeField, Min(0f)] private float autoCalibrationDelay = 0.5f;
+    [SerializeField] private TMP_Text calibrationStatus;
 
     private Camera targetCamera;
     private SpriteRenderer spriteRenderer;
@@ -35,6 +37,8 @@ public sealed class AttitudeCircleController : MonoBehaviour
     private Vector3 fallbackCenter;
     private float calibrationReadyTime;
     private DominantAxis dominantAxis;
+    private AttitudeCalibrationService calibrationService;
+    private bool startedCalibration;
 
     public bool IsCalibrated { get; private set; }
     public Vector2 TiltDegrees { get; private set; }
@@ -45,10 +49,8 @@ public sealed class AttitudeCircleController : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
         fallbackCenter = transform.position;
 
-        if (attitudeReader == null)
-        {
-            attitudeReader = FindFirstObjectByType<AttitudeReader>();
-        }
+        attitudeReader = MotionTestServices.Resolve(attitudeReader);
+        calibrationService = MotionTestServices.ResolveCalibration(attitudeReader);
     }
 
     private void OnEnable()
@@ -61,6 +63,12 @@ public sealed class AttitudeCircleController : MonoBehaviour
 
     private void Update()
     {
+        IsCalibrated = calibrationService != null && calibrationService.IsCalibrated;
+        if (calibrationStatus != null)
+            calibrationStatus.text = attitudeReader == null || !attitudeReader.HasSample
+                ? "Waiting for motion sensor"
+                : IsCalibrated ? "Neutral pose saved"
+                : $"Hold steady: {(calibrationService != null ? calibrationService.Progress01 : 0f):P0}";
         if (attitudeReader == null || !attitudeReader.IsEnabled || !attitudeReader.HasSample)
         {
             MoveTo(Vector2.zero);
@@ -75,9 +83,15 @@ public sealed class AttitudeCircleController : MonoBehaviour
                 return;
             }
 
-            Calibrate();
+            if (calibrationService != null &&
+                calibrationService.State != AttitudeCalibrationState.Calibrating) Calibrate();
+            TiltDegrees = Vector2.zero;
+            dominantAxis = DominantAxis.None;
+            MoveTo(Vector2.zero);
+            return;
         }
 
+        neutralAttitude = calibrationService.NeutralAttitude;
         Quaternion relativeAttitude = Quaternion.Inverse(neutralAttitude) * attitudeReader.Attitude;
         Vector3 relativeForward = relativeAttitude * Vector3.forward;
 
@@ -112,10 +126,21 @@ public sealed class AttitudeCircleController : MonoBehaviour
             return;
         }
 
-        neutralAttitude = attitudeReader.Attitude;
+        if (calibrationService == null ||
+            calibrationService.State == AttitudeCalibrationState.Calibrating) return;
+
+        startedCalibration = calibrationService.BeginCalibration();
         TiltDegrees = Vector2.zero;
         dominantAxis = DominantAxis.None;
-        IsCalibrated = true;
+        IsCalibrated = false;
+    }
+
+    private void OnDisable()
+    {
+        if (startedCalibration && calibrationService != null &&
+            calibrationService.State == AttitudeCalibrationState.Calibrating)
+            calibrationService.CancelCalibration();
+        startedCalibration = false;
     }
 
     private static float ReadAxis(Vector3 value, GyroscopeAxis axis)

@@ -7,6 +7,9 @@ public sealed class MenuSettingsPanel : MonoBehaviour
     [SerializeField] private AttitudeCalibrationPanel calibration;
     [SerializeField] private FishingSceneEntryGuard entryGuard;
     [SerializeField] private StrikeTuningPanel strikeTuning;
+    [SerializeField] private DeveloperPanel developerPanel;
+
+    public void OpenDeveloper() => developerPanel?.Open();
 
     public void Open()
     {
@@ -25,6 +28,16 @@ public sealed class MenuSettingsPanel : MonoBehaviour
     public void OpenStrikeTuning()
     {
         strikeTuning?.Open();
+    }
+
+    public void OpenGyroTest() => OpenTest(E_SceneID.GyroscopeTest);
+    public void OpenAttitudeTest() => OpenTest(E_SceneID.AttitudeControlTest);
+
+    private void OpenTest(E_SceneID scene)
+    {
+        if (entryGuard != null && entryGuard.IsStartingGame) return;
+        if (AppRoot.Instance != null) AppRoot.Instance.SceneLoader.LoadScene(scene);
+        else SceneLoader.LoadWithoutAppRoot(scene);
     }
 
     public void OpenCalibration()
