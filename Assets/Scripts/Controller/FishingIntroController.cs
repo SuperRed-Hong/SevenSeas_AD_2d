@@ -33,6 +33,8 @@ public sealed class FishingIntroController : MonoBehaviour
     public bool IsPrepared { get; private set; }
     public bool IsPlaying => playing;
     public bool HasCompleted => completed;
+    public bool HasStartedMovement { get; private set; }
+    public event System.Action MovementStarted;
     public GameObject MenuMap { get; private set; }
 
     private void Awake()
@@ -125,6 +127,8 @@ public sealed class FishingIntroController : MonoBehaviour
         overlay.SetActive(true);
         skipButton.interactable = true;
         yield return cameras.BeginIntro();
+        HasStartedMovement = true;
+        MovementStarted?.Invoke();
         yield return MoveTo(surveyTop, profile.surveyOrthographicSize, profile.entrySeconds, false);
         if (!skipRequested)
         {

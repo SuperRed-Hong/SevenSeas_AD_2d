@@ -1,5 +1,12 @@
 # 鱼移动矩形与生成避让
 
+## 2026-09-10 — 收线横移范围更正
+
+- 用户要求Reeling带鱼移动也使用FishMovementArea，取代此前沿用岸边左右限位的实现。
+- ReelingController新增movementArea引用，FishingLoopTest绑定同一个BoxCollider2D 2146000002。左右限位读取该矩形世界bounds；未配置的旧场景仍兼容leftLaneLimit/rightLaneLimit。ShoreLaneController不改。
+- 纵向仍自动收到shoreTarget，不以鱼矩形下边界截断，否则岸点在矩形外会无法完成上岸。横向约束的是鱼钩位置，挂钩鱼随鱼钩移动，并非完整鱼身的边缘收缩。当前适用于场景轴对齐矩形。
+- 保留限位后实际横移速度计算张力；timeScale为0时不执行位置限位。Runtime编译通过，场景本地引用完整且无重复；尚未在正式场景Play Mode实测。
+
 用户要求：岸边人物继续使用线段限位；鱼使用独立、可视化矩形；生成避免Tilemap与鱼重叠。
 
 ## 接线和调整

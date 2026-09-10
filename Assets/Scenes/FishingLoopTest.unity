@@ -3265,7 +3265,6 @@ GameObject:
   m_Component:
   - component: {fileID: 230135403}
   - component: {fileID: 230135406}
-  - component: {fileID: 230135405}
   - component: {fileID: 230135404}
   m_Layer: 0
   m_Name: obstacles9_0
@@ -3301,28 +3300,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e9095987503c2a54790ed06a801410d3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ReelingObstacle
---- !u!95 &230135405
-Animator:
-  serializedVersion: 7
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 230135402}
-  m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: c6a2cf03bc834e8449f8c7f4be3c171d, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_AnimatePhysics: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
 --- !u!212 &230135406
 SpriteRenderer:
   serializedVersion: 2
@@ -3892,7 +3869,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &273462854
 Transform:
   m_ObjectHideFlags: 0
@@ -42390,6 +42367,7 @@ MonoBehaviour:
   inputSource: {fileID: 503695418}
   leftLaneLimit: {fileID: 343555767}
   rightLaneLimit: {fileID: 588569526}
+  movementArea: {fileID: 2146000002}
   tuningProfile: {fileID: 11400000, guid: e15c0bd70e6d451d95c5e8fc1589a865, type: 2}
   logActualLateralSpeed: 0
 --- !u!50 &1322915250
@@ -44198,7 +44176,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1439141465}
   - component: {fileID: 1439141468}
-  - component: {fileID: 1439141467}
   - component: {fileID: 1439141466}
   m_Layer: 0
   m_Name: obstacles9_0 (1)
@@ -44234,28 +44211,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e9095987503c2a54790ed06a801410d3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ReelingObstacle
---- !u!95 &1439141467
-Animator:
-  serializedVersion: 7
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1439141464}
-  m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: c6a2cf03bc834e8449f8c7f4be3c171d, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_AnimatePhysics: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
 --- !u!212 &1439141468
 SpriteRenderer:
   serializedVersion: 2
@@ -45447,7 +45402,7 @@ Transform:
   m_GameObject: {fileID: 1539262648}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -4.35, y: 5.35, z: 0}
+  m_LocalPosition: {x: 0.08, y: 7.26, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -45511,7 +45466,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 6.69}
+  m_Offset: {x: -0.11653948, y: 7.645622}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -45521,7 +45476,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 11.21, y: 6.37}
+  m_Size: {x: 15.265569, y: 8.281243}
   m_EdgeRadius: 0
 --- !u!1 &1543115924
 GameObject:
@@ -49262,7 +49217,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1773603515}
   - component: {fileID: 1773603517}
-  - component: {fileID: 1773603516}
   m_Layer: 0
   m_Name: obstacles9_0
   m_TagString: Untagged
@@ -49279,34 +49233,12 @@ Transform:
   m_GameObject: {fileID: 1773603514}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -579.44604, y: -2335.9854, z: 0}
+  m_LocalPosition: {x: -579.44604, y: -2335.96, z: 0}
   m_LocalScale: {x: 1.4596, y: 1.4596, z: 1.4596}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1089990271}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!95 &1773603516
-Animator:
-  serializedVersion: 7
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1773603514}
-  m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: c6a2cf03bc834e8449f8c7f4be3c171d, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_AnimatePhysics: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
 --- !u!212 &1773603517
 SpriteRenderer:
   serializedVersion: 2
@@ -49354,7 +49286,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: -290899835
   m_SortingLayer: 4
-  m_SortingOrder: 0
+  m_SortingOrder: 3
   m_MaskInteraction: 0
   m_Sprite: {fileID: -3551156401708828796, guid: 37298af1ba2ee4040ac569b99c70a03d, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -58921,17 +58853,7 @@ Tilemap:
     second:
       serializedVersion: 2
       m_TileIndex: 0
-      m_TileSpriteIndex: 2
-      m_TileMatrixIndex: 2
-      m_TileColorIndex: 0
-      m_TileObjectToInstantiateIndex: 65535
-      dummyAlignment: 0
-      m_AllTileFlags: 1073741826
-  - first: {x: -2, y: 22, z: 0}
-    second:
-      serializedVersion: 2
-      m_TileIndex: 0
-      m_TileSpriteIndex: 10
+      m_TileSpriteIndex: 9
       m_TileMatrixIndex: 2
       m_TileColorIndex: 0
       m_TileObjectToInstantiateIndex: 65535
@@ -65711,7 +65633,7 @@ Tilemap:
     second:
       serializedVersion: 2
       m_TileIndex: 0
-      m_TileSpriteIndex: 5
+      m_TileSpriteIndex: 9
       m_TileMatrixIndex: 2
       m_TileColorIndex: 0
       m_TileObjectToInstantiateIndex: 65535
@@ -65737,32 +65659,22 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741826
-  - first: {x: 0, y: 44, z: 0}
-    second:
-      serializedVersion: 2
-      m_TileIndex: 0
-      m_TileSpriteIndex: 10
-      m_TileMatrixIndex: 2
-      m_TileColorIndex: 0
-      m_TileObjectToInstantiateIndex: 65535
-      dummyAlignment: 0
-      m_AllTileFlags: 1073741826
   m_AnimatedTiles: {}
   m_TileAssetArray:
-  - m_RefCount: 1615
+  - m_RefCount: 1613
     m_Data: {fileID: 11400000, guid: 77ea57f382d511b40bf9ac6b143602f8, type: 2}
   m_TileSpriteArray:
   - m_RefCount: 85
     m_Data: {fileID: 3297832230288211023, guid: e8efafc2699850245a73f5bc8f652dce, type: 3}
   - m_RefCount: 30
     m_Data: {fileID: -6533824496142482430, guid: 679afc231ca4b7f4cb464247648fdcec, type: 3}
-  - m_RefCount: 50
+  - m_RefCount: 49
     m_Data: {fileID: 7166617806413701054, guid: d2a42cd2f3fb22e43a20a2511c726266, type: 3}
   - m_RefCount: 26
     m_Data: {fileID: -2447827103765668594, guid: 871755505859d494c96ba459d1e8dd4d, type: 3}
   - m_RefCount: 46
     m_Data: {fileID: 6613152613353903307, guid: 46f1292e770b205449c204c0ec8ac699, type: 3}
-  - m_RefCount: 54
+  - m_RefCount: 53
     m_Data: {fileID: 158700372967280030, guid: dd631e486dac92046955507cf0c6b13f, type: 3}
   - m_RefCount: 38
     m_Data: {fileID: -3217658547712120505, guid: 9aebfa24ccecae74594e4ce99af09555, type: 3}
@@ -65770,9 +65682,9 @@ Tilemap:
     m_Data: {fileID: -6455420372256157183, guid: 11bbf4153ebeead4180fdbb0307a5959, type: 3}
   - m_RefCount: 35
     m_Data: {fileID: -5996674217499278600, guid: f547efcca9c26584e9837c57a2864394, type: 3}
-  - m_RefCount: 22
+  - m_RefCount: 24
     m_Data: {fileID: 6842970590801437049, guid: ac6dff4c76df2084eb3337ef9d291df4, type: 3}
-  - m_RefCount: 1185
+  - m_RefCount: 1183
     m_Data: {fileID: -2183621274959939339, guid: 1ada4061c5f302c489c4a588a569b495, type: 3}
   m_TileMatrixArray:
   - m_RefCount: 34
@@ -65811,7 +65723,7 @@ Tilemap:
       e31: 0
       e32: 0
       e33: 1
-  - m_RefCount: 1561
+  - m_RefCount: 1559
     m_Data:
       e00: 1
       e01: 0
@@ -65830,7 +65742,7 @@ Tilemap:
       e32: 0
       e33: 1
   m_TileColorArray:
-  - m_RefCount: 1615
+  - m_RefCount: 1613
     m_Data: {r: 1, g: 1, b: 1, a: 1}
   m_TileObjectToInstantiateArray: []
   m_AnimationFrameRate: 1
@@ -66816,7 +66728,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1890288896
 Transform:
   m_ObjectHideFlags: 0
@@ -68996,7 +68908,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1994766620}
   - component: {fileID: 1994766622}
-  - component: {fileID: 1994766621}
   m_Layer: 0
   m_Name: obstacles9_0 (1)
   m_TagString: Untagged
@@ -69019,28 +68930,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1089990271}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!95 &1994766621
-Animator:
-  serializedVersion: 7
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1994766619}
-  m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: c6a2cf03bc834e8449f8c7f4be3c171d, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_AnimatePhysics: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
 --- !u!212 &1994766622
 SpriteRenderer:
   serializedVersion: 2
@@ -71656,6 +71545,9 @@ MonoBehaviour:
   strikeSuccess: {fileID: 8300000, guid: b635420610c82f04a829da0bda385319, type: 3}
   catchSuccess: {fileID: 8300000, guid: 7984f6c229239f142aa324474a2f4364, type: 3}
   attemptFailure: {fileID: 8300000, guid: 70ed424ade0a71c409f21c2660f744e4, type: 3}
+  predationBite: {fileID: 8300000, guid: cb70c584592133b48a63d47cf7ffd9b5, type: 3}
+  reelingLoop: {fileID: 8300000, guid: e34284fb94d348f8889cdbd4892591ec, type: 3}
+  strikeRejected: {fileID: 8300000, guid: 75bd8b58572b96546a51ff5baa0ca2ca, type: 3}
   castLaunch: {fileID: 8300000, guid: 2f5b56365ee98fe4680230f19191e022, type: 3}
   musicLoop: {fileID: 8300000, guid: 3c423dd7d99661b40876dda9b42ebe32, type: 3}
   ambientLoop: {fileID: 8300000, guid: 26bb784d7d0821a41ac8b23b50dd7129, type: 3}
@@ -71664,14 +71556,23 @@ MonoBehaviour:
   musicLevel: 0.5
   ambientLevel: 0.35
   ambientFadeInSeconds: 1.5
-  uiSelectLevel: 3
+  uiSelectLevel: 0.78
   uiConfirmLevel: 1
   uiBackLevel: 1
   waterLandingLevel: 1
   strikeSuccessLevel: 1
   catchSuccessLevel: 2
   attemptFailureLevel: 1
+  predationBiteLevel: 1.4
+  strikeRejectedLevel: 0.8
+  reelingLevel: 0.6
+  reelingFadeSeconds: 0.25
+  reelingPitchMin: 0.95
+  reelingPitchMax: 1.15
+  reelingPitchSmoothing: 0.35
+  pitchVariation: 0.06
   castLaunchLevel: 1
+  intro: {fileID: 2147000000}
 --- !u!1 &2101000070
 GameObject:
   m_ObjectHideFlags: 0

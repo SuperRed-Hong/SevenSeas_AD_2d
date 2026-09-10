@@ -1,7 +1,6 @@
 using UnityEditor;
 using UnityEngine;
 using System.Collections.Generic;
-using System.Drawing;
 
 public class ObstablePrefabGeneratorWindow : EditorWindow
 {
@@ -48,6 +47,10 @@ public class ObstablePrefabGeneratorWindow : EditorWindow
         }
         
         
+        colliderShape = (ColliderShape)EditorGUILayout.EnumPopup(
+            new GUIContent("Collider Shape", "这一批障碍使用的碰撞框类型：Box 矩形、Capsule 胶囊、Polygon 多边形。"),
+            colliderShape);
+
         if (GUILayout.Button("Generate Prefabs"))
         {
             if (sprites.Count == 0)

@@ -1,3 +1,15 @@
+## 2026-09-10 — 像素计时条与可拉出记分板
+
+- 用户指定 `Fishing-UI_0011_Timer`、`Fishing-UI_0018_Score-Board-Default`、`Fishing-UI_0016_Score-Board-Pull-Out` 三张 UI Parts 做成一个 Timer bar 和一个 Score Board。逐像素读图确认：计时条 39x29，左边缘平切贴屏幕左缘，米色内腔 x[0,24) y[14,23)，右端金色怀表内圈 x[27,35) y[14,24)；记分板拉出图 61x22，右边缘平切贴屏幕右缘，米色文字区 x[20,59) y[3,21)；收起图 15x22 只剩鱼尾标签。三图 filterMode 已是 Point，spriteMode Multiple 各含一个 `_0` 子 Sprite。
+- 新增 `TimerBarHUD`：只读 `SessionTimer`，用锚点驱动内腔填充比例（不做 Image.Filled，避免依赖内置九宫 Sprite），怀表盘内显示剩余整秒。低时间按缩放时间闪烁，暂停时一起停；检测到剩余时间被拉长时闪一次加时色。为此给 `SessionTimer` 加只读 `SessionDuration`，规则判定仍只在计时器内部。
+- 用户追加要求：点击可收放，分数自动弹出保留。因此把抽屉行为抽成 `PullOutPanel`（两个真实调用点，不是提前通用化）：贴左/右缘、`RectMask2D` 裁剪、点击 `Toggle`、`OpenTemporarily(hold)` 临时弹出。自动弹出期间点击视为「钉住」而非关闭，玩家细看时不会被收走；`Close()` 同时清零停留时间，避免刚收回又弹出。`RectMask2D` 同时是 `ICanvasRaycastFilter`，收起时点击热区自然只剩露出的那一截。
+- 计时条收起靠位移而非换图（只有一张原图）：左移 24px 只留 x[24,39)，怀表连读数完整可见。收起读数必须仍可读，所以读数不进 `fadeWithOpen`。默认 `startExpanded = true`。
+- 新增 `ScoreBoardHUD`：订阅 `ScoreChanged`，加分时调 `OpenTemporarily`，文字按开合度淡入、单次放大回落。完全收起时 `PullOutPanel` 换回窄标签贴图，保证静止状态像素对齐。只读分数，不参与计分。
+- 玩法输入不经 EventSystem（手机端抛竿是姿态手势，桌面端是 InputAction），因此把 HUD 图设为 raycastTarget 不会和抛竿抢输入。场景 `activeInputHandler: 1` 且已有 `InputSystemUIInputModule`，点击可用。
+- 新增 Editor 工具 `Tools/Seven Seas/Build Fishing HUD (Timer + Score Board)`：按上述像素矩形在当前场景 Canvas 下生成 `TimerBar` / `ScoreBoard` 两个节点并回填引用，缺 EventSystem/GraphicRaycaster 时告警。同名节点替换，其余对象不动；不批量重写场景 YAML，也不改现有 `FishingSessionHUD`。
+- [源码实现完成／Runtime 与 Editor 工程 MSBuild 通过 0 错误／场景未接线／Play Mode 未验证] 版面按 pixelScale=10、topMargin=40 离屏合成核对过：填充矩形正好落在木框米色内腔，文字框正好落在卷轴米色区，计时条收起构图按 cut x=20/22/24/26 比对后取 24。这些都是静态几何核对，不能替代 Play Mode。
+- 下一步：在 Unity 里对 FishingLoopTest 运行该工具，Play 验证四件事——点击计时条收放、点击记分板收放、加分自动弹出后自动收回、自动弹出期间点击能钉住；再确认 1440x2304 下的大小与留白，决定是否关掉 `FishingSessionHUD.statusText` 里重复的 Score/Time 行；Level 1/2/3 三个场景需分别生成。
+
 ## 2026-09-09 — 暂停美术与全局UI音效
 
 - 用户确认手工按钮音效测试通过，要求全部应用，并指出暂停风格不匹配。FishingPauseMenu复用排行榜羊皮纸Sprite与PressStart2P字体，棕金按钮、居中纵向卡片、安全区布局；保留Resume/Catches/音效/震动/返回菜单。关闭图标扩大透明点击区域，图标单独显示。仅新增三个场景资源引用，未改用户已配置音频素材和音量。

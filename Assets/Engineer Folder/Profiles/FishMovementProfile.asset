@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: FishMovementProfile
   m_EditorClassIdentifier: Assembly-CSharp::FishMovementProfile
   idleSpeedMultiplier: 0.3
-  idleTravelDistance: {x: 0.4, y: 1.2}
   idleRoamRadius: 2
+  idleTravelDistance: {x: 0.4, y: 1.2}
   idlePauseDuration: {x: 0.8, y: 2}
-  turnSpeedDegrees: 180
+  turnSpeedDegrees: 270
   facingToleranceDegrees: 2
   spriteForwardAngle: 180
   obstaclePadding: 0.02
