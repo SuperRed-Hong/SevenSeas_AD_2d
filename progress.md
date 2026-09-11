@@ -1,3 +1,12 @@
+## 2026-09-10 — 手机浏览器 WebGL 体感输入修复
+
+- 按用户追加要求完成自动降级：Web 手机在 Motion 请求拒绝、不支持、超时，或授权后 3 秒仍无姿态样本时启用触屏控制并跳过体感校准/教程。运行时生成左、右、ACTION 三个按钮；ACTION 按玩法状态分别执行按住蓄力松开抛竿、点击提竿、按住加速。`ShoreLaneController` 统一消费语义 `MoveInput`，所以岸上选位和收线横移都能用左右按钮。
+- PC 首次开始不再自动打开移动 Tutorial，Settings 中也隐藏 Tutorial 入口；能够使用体感的移动设备仍保留原教程与校准流程。Unity 6000.3.23f1 编辑器编译与 WebGL Player Build 成功。最终 itch 包为 `D:\Build__Game\SevenSeas_Web_2026-09-10-touchfallback-v2.zip`（19,964,082 bytes），ZIP 根目录直接包含 `index.html`、`Build/`、`TemplateData/`。尚待 itch.io 手机真机验证按钮位置、连续按压与 Motion 允许路径。
+- 用户在 itch.io 手机浏览器实测发现游戏仍走 PC 输入、Gyro 无响应。根因是 `FishingInputRouter`、`FishingSceneEntryGuard` 与 `ShoreLaneController` 直接依赖 `Application.isMobilePlatform`；Unity 官方说明 WebAssembly 浏览器下该值可能因浏览器隐私策略返回 true 或 false，不能作为 Web 手机的唯一判据。
+- 新增 `RuntimeInputPlatform`：原生 Android/iOS 保留 Unity 判据；WebGL Player 通过浏览器 `userAgentData.mobile`、移动 UA 与 iPad 桌面 UA 特征识别，结果按本次运行缓存。三个输入/入口调用点统一使用该判据，避免路由选 Mobile、入口却跳过校准的分裂状态。
+- 新增 WebGL `.jslib` 与 `WebMotionPermission`：Start、菜单校准、Gyro/Attitude 测试按钮的用户点击中请求 `DeviceMotionEvent` / `DeviceOrientationEvent` 权限；无需显式授权的浏览器直接继续。传感器 Reader 原有每秒重连会在授权后取得 Input System 设备。校准面板区分等待授权、拒绝和浏览器不支持。
+- 验证：包含新增源码的 Assembly-CSharp MSBuild 0 errors，只有项目既有 3 组 MSB3277 依赖警告；`.jslib` 语法检查通过，浏览器桥接 8/8 检查覆盖 Chrome mobile、Android UA、iPad desktop UA、桌面、隐式授权、显式允许/拒绝和不支持；另补 Android 平板 `userAgentData.mobile=false` 与 Windows 触屏边界 2/2。Unity 6000.3.23f1 WebGL Player Build 两次成功，最终 v2 确认 IL2CPP/WebAssembly 与 `.jslib` 实际链接通过；尚未重新上传 itch.io 或完成 Android/iOS 手机浏览器传感器验收。
+
 ## 2026-09-10 — 像素计时条与可拉出记分板
 
 - 用户指定 `Fishing-UI_0011_Timer`、`Fishing-UI_0018_Score-Board-Default`、`Fishing-UI_0016_Score-Board-Pull-Out` 三张 UI Parts 做成一个 Timer bar 和一个 Score Board。逐像素读图确认：计时条 39x29，左边缘平切贴屏幕左缘，米色内腔 x[0,24) y[14,23)，右端金色怀表内圈 x[27,35) y[14,24)；记分板拉出图 61x22，右边缘平切贴屏幕右缘，米色文字区 x[20,59) y[3,21)；收起图 15x22 只剩鱼尾标签。三图 filterMode 已是 Point，spriteMode Multiple 各含一个 `_0` 子 Sprite。

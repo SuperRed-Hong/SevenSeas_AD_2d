@@ -21,6 +21,8 @@ public sealed class FishingSceneEntryGuard : MonoBehaviour
     private bool isWaitingForCalibration;
     private bool isStarting;
     private bool transitionStarted;
+    private bool isResolvingWebMotion;
+    private bool webMotionResolved;
     public bool IsStartingGame => isStarting && enabled;
 
     private void Awake()
@@ -76,8 +78,40 @@ public sealed class FishingSceneEntryGuard : MonoBehaviour
     public void StartGame()
     {
         if (!isActiveAndEnabled || isStarting) return;
+        WebMotionPermission.RequestIfNeeded();
         isStarting = true;
-        if (!LocalPlayerProgress.TutorialCompleted)
+
+        if (RuntimeInputPlatform.IsWebMobilePlayer)
+        {
+            if (webMotionResolved)
+            {
+                ContinueWithTutorial();
+                return;
+            }
+
+            if (AppRoot.Instance == null ||
+                AppRoot.Instance.AttitudeCalibration == null)
+            {
+                Debug.LogError(
+                    "The fishing scene requires motion services from Bootstrap.",
+                    this);
+                isStarting = false;
+                return;
+            }
+
+            calibrationService = AppRoot.Instance.AttitudeCalibration;
+            StartCoroutine(ResolveWebMotionInput());
+            return;
+        }
+
+        ContinueWithTutorial();
+    }
+
+    private void ContinueWithTutorial()
+    {
+        if (RuntimeInputPlatform.UsesMobileControls &&
+            !WebMotionPermission.TouchFallbackActive &&
+            !LocalPlayerProgress.TutorialCompleted)
         {
             if (tutorial == null || !tutorial.OpenForFirstGame(ContinueStart, CancelStart))
             {
@@ -95,7 +129,7 @@ public sealed class FishingSceneEntryGuard : MonoBehaviour
     {
         // Desktop and Editor use non-motion controls,
         // so attitude calibration is not required.
-        if (!Application.isMobilePlatform)
+        if (!RuntimeInputPlatform.UsesMobileControls)
         {
             BeginGameplay();
             return;
@@ -124,6 +158,12 @@ public sealed class FishingSceneEntryGuard : MonoBehaviour
             return;
         }
 
+        if (WebMotionPermission.TouchFallbackActive)
+        {
+            BeginGameplay();
+            return;
+        }
+
         if (calibrationService.IsCalibrated)
         {
             BeginGameplay();
@@ -145,6 +185,44 @@ public sealed class FishingSceneEntryGuard : MonoBehaviour
         isWaitingForCalibration = true;
         if (menuCalibrationPanel == null) sceneUI.ShowGameplayCalibration();
         entryPanel.OpenPanel();
+    }
+
+    private IEnumerator ResolveWebMotionInput()
+    {
+        if (isResolvingWebMotion || webMotionResolved)
+        {
+            yield break;
+        }
+
+        isResolvingWebMotion = true;
+        float deadline = Time.unscaledTime + 3f;
+
+        while (WebMotionPermission.State == WebMotionPermissionState.Requesting &&
+               Time.unscaledTime < deadline)
+        {
+            yield return null;
+        }
+
+        if (WebMotionPermission.State == WebMotionPermissionState.Granted)
+        {
+            deadline = Time.unscaledTime + 3f;
+            while (!calibrationService.IsSensorReady &&
+                   Time.unscaledTime < deadline)
+            {
+                yield return null;
+            }
+        }
+
+        isResolvingWebMotion = false;
+
+        if (WebMotionPermission.State != WebMotionPermissionState.Granted ||
+            !calibrationService.IsSensorReady)
+        {
+            WebMotionPermission.ActivateTouchFallback();
+        }
+
+        webMotionResolved = true;
+        ContinueWithTutorial();
     }
 
     public void OpenSettings()

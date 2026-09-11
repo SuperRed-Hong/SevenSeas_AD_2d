@@ -7,6 +7,8 @@ public sealed class FishingSceneUIController : MonoBehaviour
     [SerializeField] private GameObject menuCanvas;
     [SerializeField] private GameObject gameplayCanvas;
     [SerializeField] private MenuCanvasFader menuFader;
+    [SerializeField] private GameObject menuTitle;
+    [SerializeField] private GameObject menuButtonList;
     [SerializeField] private GameObject[] menuOverlays;
     [SerializeField] private GameObject gameOverPanel;
     [SerializeField] private AttitudeCalibrationPanel menuCalibrationPanel;
@@ -27,6 +29,8 @@ public sealed class FishingSceneUIController : MonoBehaviour
         CloseOverlays();
         SetVisible(gameOverPanel, false);
         SetVisible(menuCanvas, true);
+        SetVisible(menuTitle, true);
+        SetVisible(menuButtonList, true);
     }
 
     public IEnumerator FadeMenuForGameplay()

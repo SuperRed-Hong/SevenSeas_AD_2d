@@ -41,6 +41,7 @@ public sealed class MenuSettingsPanel : MonoBehaviour
     private void ApplyAppearance()
     {
         if (this == null || settingsPanel == null) return;
+        ApplyPlatformAvailability();
         SetColor(settingsPanel.GetComponent<Image>(), backgroundColor);
         foreach (Button button in settingsPanel.GetComponentsInChildren<Button>(true))
             SetColor(button.targetGraphic, buttonColor);
@@ -76,7 +77,27 @@ public sealed class MenuSettingsPanel : MonoBehaviour
 
     public void OpenTutorial()
     {
-        tutorial.Open();
+        if (RuntimeInputPlatform.UsesMobileControls)
+        {
+            tutorial?.Open();
+        }
+    }
+
+    private void ApplyPlatformAvailability()
+    {
+        if (!Application.isPlaying)
+        {
+            return;
+        }
+
+        foreach (Button button in settingsPanel.GetComponentsInChildren<Button>(true))
+        {
+            if (button.name == "TutorialButton")
+            {
+                button.gameObject.SetActive(RuntimeInputPlatform.UsesMobileControls);
+                break;
+            }
+        }
     }
 
     public void OpenStrikeTuning()
@@ -84,8 +105,17 @@ public sealed class MenuSettingsPanel : MonoBehaviour
         strikeTuning?.Open();
     }
 
-    public void OpenGyroTest() => OpenTest(E_SceneID.GyroscopeTest);
-    public void OpenAttitudeTest() => OpenTest(E_SceneID.AttitudeControlTest);
+    public void OpenGyroTest()
+    {
+        WebMotionPermission.RequestIfNeeded();
+        OpenTest(E_SceneID.GyroscopeTest);
+    }
+
+    public void OpenAttitudeTest()
+    {
+        WebMotionPermission.RequestIfNeeded();
+        OpenTest(E_SceneID.AttitudeControlTest);
+    }
 
     private void OpenTest(E_SceneID scene)
     {
@@ -97,6 +127,7 @@ public sealed class MenuSettingsPanel : MonoBehaviour
     public void OpenCalibration()
     {
         if (calibration == null) return;
+        WebMotionPermission.RequestIfNeeded();
         calibration.transform.SetAsLastSibling();
         calibration.OpenPanel();
     }

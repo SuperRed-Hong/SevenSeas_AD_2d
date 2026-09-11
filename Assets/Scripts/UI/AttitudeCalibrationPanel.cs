@@ -84,7 +84,16 @@ public sealed class AttitudeCalibrationPanel : MonoBehaviour
 
         if (!calibrationService.IsSensorReady)
         {
-            statusText.text = "WAITING FOR YOUR DEVICE\nMotion sensor not detected.";
+            statusText.text = WebMotionPermission.State switch
+            {
+                WebMotionPermissionState.Requesting =>
+                    "ALLOW MOTION ACCESS\nWaiting for browser permission.",
+                WebMotionPermissionState.Denied =>
+                    "MOTION ACCESS BLOCKED\nEnable motion access in browser settings.",
+                WebMotionPermissionState.Unsupported =>
+                    "MOTION CONTROLS UNAVAILABLE\nThis browser did not expose motion sensors.",
+                _ => "WAITING FOR YOUR DEVICE\nMotion sensor not detected."
+            };
             return;
         }
 

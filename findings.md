@@ -1,3 +1,11 @@
+## 2026-09-10 — WebGL 手机身份与体感权限
+
+- Web 手机是否使用体感不能只看权限 Promise：浏览器可能返回允许，但 Unity Input System 仍收不到姿态设备/样本。入口现在先等权限，再独立等待实际 `AttitudeCalibrationService.IsSensorReady`；任一步失败都切换触屏，避免玩家卡在永远无法完成的校准面板。
+- 触屏降级继续走 `FishingInputSource` 的 Move/Cast/Strike/Accelerate 语义门控；单一 ACTION 按钮根据状态切换职责，并在状态退出或按钮隐藏时释放 held 状态，避免提竿后直接继承为收线加速。UI 运行时挂到正式 Gameplay Canvas，不改场景 YAML；按钮的设备布局仍需在 itch iframe 与真机安全区验收。
+- itch.io 的 `Mobile friendly` 只控制页面嵌入/启动方式，不会改变 Unity 的输入平台判定。`Application.isMobilePlatform` 在 WebAssembly 浏览器中允许不准确，项目必须让“是否采用移动控制”成为独立、统一的运行时能力判据。
+- Web 传感器与原生 Android 传感器不是同一授权路径。HTTPS 只是前提；iOS 类浏览器还要求在用户手势调用栈内请求 Motion/Orientation 权限，嵌入页仍可能受 iframe Permissions Policy 限制。当前桥接已覆盖应用内识别与权限请求，itch 真机仍是最终证据。
+- 可复用候选：浏览器设备识别、用户手势权限桥接、异步授权后传感器重连和可解释失败状态。项目耦合为现有 AppRoot Reader、校准面板文案与移动手势规则；需在第二个 WebGL 传感器用例及不同浏览器验证后才能视为独立资产。
+
 ## 2026-09-09 — UI音效完整接入与暂停视觉
 
 - 用户填好的UI clip确实有效，缺失是普通按钮未触发播放。现在UI音源和绑定单独负责：场景加载扫描按钮，懒创建按钮显式RegisterButton；原PlayUi公开方法转发路由。手工持久音效监听存在时跳过自动点击，避免双播；同帧点击/选择排队合并。

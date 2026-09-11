@@ -55,16 +55,16 @@ public class ShoreLaneController : MonoBehaviour
             return;
         }
         
-        //Editor and desktop builds use the configured non-motion input source.
-
-        if (!Application.isMobilePlatform && inputSource != null)
+        // Platform-specific movement is resolved by FishingInputRouter.
+        // This also lets mobile WebGL fall back from tilt to touch buttons.
+        if (inputSource != null)
         {
             IsTiltWithinSupportedRange = true;
             ApplyLaneVelocity(inputSource.MoveInput.x);
             return;
         }
-        
-        //Mobile builds continue using calibrated phone attitude.
+
+        // Legacy fallback for scenes that have no input source assigned.
         if (attitudeReader == null ||
             !attitudeReader.IsEnabled ||
             !attitudeReader.HasSample ||

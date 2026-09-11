@@ -25,7 +25,7 @@ public sealed class FishingInputRouter : FishingInputSource
     private void Awake()
     {
         activeSource =
-            Application.isMobilePlatform
+            RuntimeInputPlatform.UsesMobileControls
                 ? mobileSource
                 : desktopSource;
 

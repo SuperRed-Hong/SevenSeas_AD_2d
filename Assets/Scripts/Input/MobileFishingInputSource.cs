@@ -22,6 +22,10 @@ public sealed class MobileFishingInputSource : FishingInputSource
     [SerializeField, Range(45f, 89f)]
     private float maxSupportedTiltDegrees = 75f;
 
+    [Header("Touch Fallback")]
+    [SerializeField, Min(0.01f)]
+    private float fullChargeDuration = 2f;
+
     private AttitudeReader attitudeReader;
     private AttitudeCalibrationService calibrationService;
 
@@ -33,6 +37,14 @@ public sealed class MobileFishingInputSource : FishingInputSource
     private bool accelerateEnabled;
     private bool accelerateHeld;
     private bool accelerateRequiresRelease;
+    private bool leftHeld;
+    private bool rightHeld;
+    private bool isChargingCast;
+    private float castChargeElapsed;
+
+    public bool UsesTouchFallback => WebMotionPermission.TouchFallbackActive;
+    public bool IsMoveAvailable => moveEnabled;
+    public bool IsActionAvailable => castEnabled || strikeEnabled || accelerateEnabled;
 
     public override Vector2 MoveInput =>
         moveEnabled ? moveInput : Vector2.zero;
@@ -79,11 +91,34 @@ public sealed class MobileFishingInputSource : FishingInputSource
 
         moveInput = Vector2.zero;
         accelerateHeld = false;
+        leftHeld = false;
+        rightHeld = false;
+        isChargingCast = false;
+        castChargeElapsed = 0f;
     }
 
     private void Update()
     {
         moveInput = Vector2.zero;
+
+        if (UsesTouchFallback)
+        {
+            if (moveEnabled)
+            {
+                moveInput = new Vector2(
+                    (rightHeld ? 1f : 0f) - (leftHeld ? 1f : 0f),
+                    0f);
+            }
+
+            if (castEnabled && isChargingCast)
+            {
+                castChargeElapsed = Mathf.Min(
+                    castChargeElapsed + Time.deltaTime,
+                    Mathf.Max(0.01f, fullChargeDuration));
+            }
+
+            return;
+        }
 
         if (!moveEnabled ||
             !TryResolveMotionServices() ||
@@ -145,6 +180,12 @@ public sealed class MobileFishingInputSource : FishingInputSource
     public override void SetCastEnabled(bool value)
     {
         castEnabled = value;
+
+        if (!value)
+        {
+            isChargingCast = false;
+            castChargeElapsed = 0f;
+        }
     }
 
     public override void SetStrikeEnabled(bool value)
@@ -168,15 +209,42 @@ public sealed class MobileFishingInputSource : FishingInputSource
     // Connect this to a UI EventTrigger Pointer Down event.
     public void PressAccelerate()
     {
+        if (UsesTouchFallback && castEnabled)
+        {
+            isChargingCast = true;
+            castChargeElapsed = 0f;
+        }
+
+        if (UsesTouchFallback && strikeEnabled)
+        {
+            RaiseStrikePerformed();
+        }
+
         accelerateHeld = true;
     }
 
     // Connect this to a UI EventTrigger Pointer Up event.
     public void ReleaseAccelerate()
     {
+        bool shouldCast = UsesTouchFallback && castEnabled && isChargingCast;
+        float castPower = Mathf.Clamp01(
+            castChargeElapsed / Mathf.Max(0.01f, fullChargeDuration));
+
+        isChargingCast = false;
+        castChargeElapsed = 0f;
         accelerateHeld = false;
         accelerateRequiresRelease = false;
+
+        if (shouldCast)
+        {
+            RaiseCastPerformed(castPower);
+        }
     }
+
+    public void PressLeft() => leftHeld = true;
+    public void ReleaseLeft() => leftHeld = false;
+    public void PressRight() => rightHeld = true;
+    public void ReleaseRight() => rightHeld = false;
 
     private void HandleCastDetected(float power)
     {

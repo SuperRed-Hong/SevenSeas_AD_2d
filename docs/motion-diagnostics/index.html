@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Motion Diagnostics</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin:0; padding:10px; background:#10181c; color:#e8e2cf;
+         font:13px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+  h1 { font-size:15px; margin:0 0 8px; }
+  h2 { font-size:13px; margin:14px 0 4px; color:#9fd6b6; border-bottom:1px solid #2a3a40; }
+  button { font:inherit; padding:10px 12px; margin:3px 3px 3px 0; border:1px solid #5b7f6b;
+           background:#1d2a30; color:#e8e2cf; border-radius:4px; }
+  button:active { background:#2c4048; }
+  table { width:100%; border-collapse:collapse; }
+  td { padding:2px 4px; vertical-align:top; border-bottom:1px solid #1c272c; word-break:break-all; }
+  td:first-child { color:#8fa7b0; width:44%; }
+  .ok { color:#7ee08a; } .bad { color:#ff8a7a; } .warn { color:#ffd479; }
+  iframe { width:100%; height:240px; border:1px solid #3a5058; border-radius:4px; background:#0a1013; }
+  a { color:#8fd3ff; }
+  #log { white-space:pre-wrap; background:#0a1013; padding:6px; border-radius:4px;
+         max-height:170px; overflow:auto; font-size:11px; }
+</style>
+</head>
+<body>
+<h1 id="title">Motion Diagnostics</h1>
+
+<h2>1. Context</h2>
+<table id="ctx"></table>
+
+<h2>2. Permission API presence</h2>
+<table id="api"></table>
+
+<h2>3. Request permission (must be a real tap)</h2>
+<button id="btnBoth">Request BOTH</button>
+<button id="btnMotion">Motion only</button>
+<button id="btnOrient">Orientation only</button>
+<table id="perm"></table>
+<div id="hint" class="warn"></div>
+
+<h2>4. Live events</h2>
+<button id="btnListen">Start listeners</button>
+<table id="ev"></table>
+
+<h2>5. Nested iframe comparison</h2>
+<div id="framesWrap">
+  <div>A &mdash; itch.io's exact allow list (no magnetometer)</div>
+  <div id="frameA"></div>
+  <div style="margin-top:8px">B &mdash; same list plus magnetometer</div>
+  <div id="frameB"></div>
+</div>
+
+<h2>6. Top-level link</h2>
+<div id="toplink"></div>
+
+<h2>Log</h2>
+<div id="log"></div>
+
+<script>
+(function () {
+  var Q = new URLSearchParams(location.search);
+  var IS_CHILD = Q.get('child') === '1';
+  var TAG = Q.get('tag') || (IS_CHILD ? '?' : 'TOP');
+
+  var ITCH_ALLOW = "autoplay; fullscreen *; geolocation; microphone; camera; midi; " +
+    "monetization; xr-spatial-tracking; gamepad; gyroscope; accelerometer; xr; " +
+    "cross-origin-isolated; web-share";
+  var ITCH_ALLOW_PLUS_MAG = ITCH_ALLOW + "; magnetometer";
+
+  function $(id) { return document.getElementById(id); }
+
+  function report(payload) {
+    if (!IS_CHILD) return;
+    try { parent.postMessage({ __motionDiag: true, tag: TAG, payload: payload }, '*'); } catch (e) {}
+  }
+
+  function log(msg) {
+    var el = $('log');
+    el.textContent += '[' + TAG + ' ' + new Date().toISOString().substr(11, 12) + '] ' + msg + '\n';
+    el.scrollTop = el.scrollHeight;
+    report({ kind: 'log', text: msg });
+  }
+
+  function row(tableId, label, value, cls) {
+    var t = $(tableId), id = tableId + '__' + label.replace(/\W/g, '_');
+    var tr = document.getElementById(id);
+    if (!tr) {
+      tr = document.createElement('tr'); tr.id = id;
+      tr.appendChild(document.createElement('td'));
+      tr.appendChild(document.createElement('td'));
+      tr.children[0].textContent = label;
+      t.appendChild(tr);
+    }
+    tr.children[1].textContent = value;
+    tr.children[1].className = cls || '';
+  }
+
+  // ---------- 1. Context ----------
+  var inIframe = (function () { try { return window.top !== window.self; } catch (e) { return true; } })();
+  row('ctx', 'tag', TAG);
+  row('ctx', 'location.origin', location.origin);
+  row('ctx', 'in iframe', String(inIframe), inIframe ? 'warn' : 'ok');
+  row('ctx', 'isSecureContext', String(window.isSecureContext), window.isSecureContext ? 'ok' : 'bad');
+  row('ctx', 'document.referrer', document.referrer || '(none)');
+  row('ctx', 'userAgent', navigator.userAgent);
+  row('ctx', 'maxTouchPoints', String(navigator.maxTouchPoints));
+  try {
+    row('ctx', 'own iframe allow attr',
+      inIframe && window.frameElement
+        ? (window.frameElement.getAttribute('allow') || '(none)')
+        : '(top-level, or cross-origin parent: unreadable)');
+  } catch (e) {
+    row('ctx', 'own iframe allow attr', '(cross-origin parent: unreadable)');
+  }
+
+  // Permissions-Policy self-check. Chrome/Firefox implement this; Safari does not.
+  var pp = document.featurePolicy || document.permissionsPolicy;
+  ['gyroscope', 'accelerometer', 'magnetometer'].forEach(function (f) {
+    var v;
+    if (pp && typeof pp.allowsFeature === 'function') {
+      try { v = String(pp.allowsFeature(f)); } catch (e) { v = 'error: ' + e; }
+    } else {
+      v = '(document.featurePolicy unsupported - normal on Safari)';
+    }
+    row('ctx', 'policy allows ' + f, v, v === 'true' ? 'ok' : (v === 'false' ? 'bad' : 'warn'));
+  });
+
+  // ---------- 2. API presence ----------
+  var hasDM = typeof DeviceMotionEvent !== 'undefined';
+  var hasDO = typeof DeviceOrientationEvent !== 'undefined';
+  var hasDMReq = hasDM && typeof DeviceMotionEvent.requestPermission === 'function';
+  var hasDOReq = hasDO && typeof DeviceOrientationEvent.requestPermission === 'function';
+  row('api', 'DeviceMotionEvent', String(hasDM), hasDM ? 'ok' : 'bad');
+  row('api', 'DeviceOrientationEvent', String(hasDO), hasDO ? 'ok' : 'bad');
+  row('api', 'DeviceMotionEvent.requestPermission', String(hasDMReq), hasDMReq ? 'ok' : 'warn');
+  row('api', 'DeviceOrientationEvent.requestPermission', String(hasDOReq), hasDOReq ? 'ok' : 'warn');
+  // Unity's Sensor.js uses the generic Sensor API when present and falls back to the legacy events.
+  row('api', 'RelativeOrientationSensor', String(typeof RelativeOrientationSensor !== 'undefined'));
+  row('api', 'Accelerometer', String(typeof Accelerometer !== 'undefined'));
+  row('api', 'Gyroscope', String(typeof Gyroscope !== 'undefined'));
+  row('api', 'GravitySensor', String(typeof GravitySensor !== 'undefined'));
+  report({ kind: 'api', hasDMReq: hasDMReq, hasDOReq: hasDOReq, inIframe: inIframe });
+
+  // ---------- 3. requestPermission ----------
+  function ask(which) {
+    var Ev = which === 'motion' ? (hasDM ? DeviceMotionEvent : null)
+                                : (hasDO ? DeviceOrientationEvent : null);
+    if (!Ev || typeof Ev.requestPermission !== 'function') {
+      row('perm', which, 'requestPermission absent (non-iOS path)', 'warn');
+      report({ kind: 'perm', which: which, result: 'absent' });
+      return Promise.resolve('absent');
+    }
+    var t0 = performance.now();
+    return Ev.requestPermission().then(function (state) {
+      var ms = Math.round(performance.now() - t0);
+      var note = (state === 'denied' && ms < 60)
+        ? '  <- instant denial, no prompt = blocked by Permissions-Policy or Safari setting'
+        : '';
+      row('perm', which, state + ' (' + ms + 'ms)' + note, state === 'granted' ? 'ok' : 'bad');
+      log(which + ' -> ' + state + ' in ' + ms + 'ms');
+      report({ kind: 'perm', which: which, result: state, ms: ms });
+      return state;
+    }).catch(function (err) {
+      var ms = Math.round(performance.now() - t0);
+      row('perm', which, 'REJECTED: ' + err + ' (' + ms + 'ms)', 'bad');
+      log(which + ' -> rejected: ' + err);
+      report({ kind: 'perm', which: which, result: 'rejected', error: String(err), ms: ms });
+      return 'rejected';
+    });
+  }
+
+  // ---------- 4. Live events ----------
+  var counts = { devicemotion: 0, deviceorientation: 0 };
+  var listening = false;
+
+  function fmt(n) { return (n === null || n === undefined) ? 'null' : (+n).toFixed(2); }
+
+  function onMotion(e) {
+    counts.devicemotion++;
+    var ag = e.accelerationIncludingGravity || {};
+    var rr = e.rotationRate || {};
+    row('ev', 'devicemotion count', String(counts.devicemotion), 'ok');
+    row('ev', 'accelerationIncludingGravity',
+        fmt(ag.x) + ', ' + fmt(ag.y) + ', ' + fmt(ag.z),
+        (ag.x === null || ag.x === undefined) ? 'bad' : 'ok');
+    row('ev', 'rotationRate a,b,g',
+        fmt(rr.alpha) + ', ' + fmt(rr.beta) + ', ' + fmt(rr.gamma),
+        (rr.alpha === null || rr.alpha === undefined) ? 'bad' : 'ok');
+    row('ev', 'interval', String(e.interval));
+    if (counts.devicemotion === 1) {
+      log('first devicemotion received');
+      report({ kind: 'event', name: 'devicemotion', first: true });
+    }
+  }
+
+  function onOrient(e) {
+    counts.deviceorientation++;
+    row('ev', 'deviceorientation count', String(counts.deviceorientation), 'ok');
+    row('ev', 'alpha/beta/gamma',
+        fmt(e.alpha) + ', ' + fmt(e.beta) + ', ' + fmt(e.gamma),
+        (e.alpha === null || e.alpha === undefined) ? 'bad' : 'ok');
+    row('ev', 'absolute', String(e.absolute));
+    row('ev', 'webkitCompassHeading', String(e.webkitCompassHeading));
+    if (counts.deviceorientation === 1) {
+      log('first deviceorientation received');
+      report({ kind: 'event', name: 'deviceorientation', first: true });
+    }
+  }
+
+  function listen() {
+    if (listening) return;
+    listening = true;
+    window.addEventListener('devicemotion', onMotion);
+    window.addEventListener('deviceorientation', onOrient);
+    row('ev', 'listeners', 'attached', 'ok');
+    row('ev', 'devicemotion count', '0', 'bad');
+    row('ev', 'deviceorientation count', '0', 'bad');
+    log('listeners attached - move the device');
+    setTimeout(function () {
+      var verdict = 'after 3s: devicemotion=' + counts.devicemotion +
+                    ' deviceorientation=' + counts.deviceorientation;
+      row('ev', '3s verdict', verdict,
+          (counts.devicemotion && counts.deviceorientation) ? 'ok'
+            : (counts.devicemotion ? 'warn' : 'bad'));
+      log(verdict);
+      report({ kind: 'verdict', motion: counts.devicemotion, orientation: counts.deviceorientation });
+    }, 3000);
+  }
+
+  $('btnMotion').onclick = function () { ask('motion').then(listen); };
+  $('btnOrient').onclick = function () { ask('orientation').then(listen); };
+  $('btnBoth').onclick = function () {
+    // Both calls must start inside this same gesture, so fire them together.
+    Promise.all([ask('motion'), ask('orientation')]).then(listen);
+  };
+  $('btnListen').onclick = listen;
+  $('hint').textContent =
+    'Watch whether an iOS permission sheet actually appears. An instant "denied" with no sheet ' +
+    'means the call never reached the user.';
+
+  // ---------- 5 & 6: top-level copy only ----------
+  if (IS_CHILD) {
+    $('framesWrap').parentNode.removeChild($('framesWrap'));
+    $('toplink').parentNode.removeChild($('toplink'));
+    $('title').textContent = 'Child frame: ' + TAG;
+  } else {
+    var base = location.origin + location.pathname;
+
+    function makeFrame(hostId, tag, allow) {
+      var f = document.createElement('iframe');
+      f.setAttribute('allow', allow);
+      f.src = base + '?child=1&tag=' + encodeURIComponent(tag);
+      $(hostId).appendChild(f);
+    }
+    makeFrame('frameA', 'A-no-mag', ITCH_ALLOW);
+    makeFrame('frameB', 'B-with-mag', ITCH_ALLOW_PLUS_MAG);
+
+    window.addEventListener('message', function (e) {
+      var d = e.data;
+      if (!d || !d.__motionDiag) return;
+      log('from ' + d.tag + ': ' + JSON.stringify(d.payload));
+    });
+
+    var a = document.createElement('a');
+    a.href = base;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.textContent = 'Open this page in a new TOP-LEVEL tab';
+    $('toplink').appendChild(a);
+  }
+})();
+</script>
+</body>
+</html>
