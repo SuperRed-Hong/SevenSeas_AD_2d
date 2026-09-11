@@ -629,3 +629,6 @@ fetch 后发现本地 main 与 origin/main 分叉（提交前本地独有2、远
 - [x] Settings 显式 ON/AUTO、Inspector Force Touch Controls，跨平台触屏路由与跳过体感启动检查。
 - [x] Unity 编译与 14 项 Play Mode 针对性检查、场景引用检查通过。
 - [ ] 含手动开关的 WebGL 新构建及真实浏览器/iPhone 显示验收；旧包不含本轮改动。
+
+- [x] 2026-09-11：设置菜单改用 Vertical Layout Group，包含 Leaderboard，保留原按钮事件；场景静态检查通过。
+- [ ] 设置菜单本轮自动布局的 Editor/移动端显示验收。

@@ -666,3 +666,7 @@ fetch 后发现本地 main 与 origin/main 分叉（提交前本地独有2、远
 - 修正 PressAccelerate 的状态顺序，提竿回调同步切换到收线时已知当前按住，要求松手后再次按下才加速。
 - Unity 6000.3.23f1 编译及 Play Mode 14 项针对性检查通过：场景菜单事件与引用、Editor 手动路由、权限跳过、状态门控、移动/松手、取消蓄力、事件不重复、提竿释放门控、三个按钮 active、AUTO 保留自动兜底。日志 D:/UnityProject/Builds/manual-touch-checks.log，脚本 D:/UnityProject/Builds/ManualTouchChecks.cs；临时 Editor 脚本已清理。git diff --check 通过。
 - 本轮未重新构建 WebGL，之前的 ZIP 不含手动开关；浏览器间歇图形缺失及 iPhone 显示仍待验证，不能以 active 状态检查代替渲染验收。
+
+## 2026-09-11 — 设置菜单垂直布局
+- 按用户反馈，将 SettingsPanel 的 9 个按钮移入 SettingsButtonList，使用已启用的 Vertical Layout Group 统一宽高及间距（64 UI 单位）；标题独立保留。Tutorial 隐藏时不占布局位置，Leaderboard 纳入统一顺序。
+- 仅局部修改场景父子关系和按钮 RectTransform，新增一个容器及布局组件；静态检查确认所有原有按钮组件、标签、事件和引用保持原样，无重复 fileID，git diff --check 通过。未运行本轮 Play Mode/浏览器显示验收；用户当前 Unity 已打开，本轮未操作其运行状态。
