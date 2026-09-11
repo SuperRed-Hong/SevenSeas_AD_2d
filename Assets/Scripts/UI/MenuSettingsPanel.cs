@@ -11,6 +11,23 @@ public sealed class MenuSettingsPanel : MonoBehaviour
     [SerializeField] private FishingSceneEntryGuard entryGuard;
     [SerializeField] private StrikeTuningPanel strikeTuning;
     [SerializeField] private DeveloperPanel developerPanel;
+    [SerializeField] private FishingInputRouter inputRouter;
+    [SerializeField] private TMP_Text touchControlsLabel;
+
+    public void ToggleTouchControls()
+    {
+        if (entryGuard != null && entryGuard.IsStartingGame) return;
+        if (inputRouter == null) return;
+        inputRouter.SetForceTouchControls(!inputRouter.ForceTouchControls);
+        RefreshTouchControlsLabel();
+    }
+
+    private void RefreshTouchControlsLabel()
+    {
+        if (touchControlsLabel != null)
+            touchControlsLabel.text = inputRouter != null && inputRouter.ForceTouchControls
+                ? "TOUCH CONTROLS: ON" : "TOUCH CONTROLS: AUTO";
+    }
 
     [Header("Settings Colors")]
     [SerializeField] private Color backgroundColor = new(0.035f, 0.075f, 0.14f, 1f);
@@ -42,6 +59,7 @@ public sealed class MenuSettingsPanel : MonoBehaviour
     {
         if (this == null || settingsPanel == null) return;
         ApplyPlatformAvailability();
+        RefreshTouchControlsLabel();
         SetColor(settingsPanel.GetComponent<Image>(), backgroundColor);
         foreach (Button button in settingsPanel.GetComponentsInChildren<Button>(true))
             SetColor(button.targetGraphic, buttonColor);

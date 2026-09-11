@@ -209,6 +209,8 @@ public sealed class MobileFishingInputSource : FishingInputSource
     // Connect this to a UI EventTrigger Pointer Down event.
     public void PressAccelerate()
     {
+        // Strike can synchronously enable reeling; its release gate must see this press.
+        accelerateHeld = true;
         if (UsesTouchFallback && castEnabled)
         {
             isChargingCast = true;
@@ -220,7 +222,6 @@ public sealed class MobileFishingInputSource : FishingInputSource
             RaiseStrikePerformed();
         }
 
-        accelerateHeld = true;
     }
 
     // Connect this to a UI EventTrigger Pointer Up event.

@@ -608,3 +608,24 @@ fetch 后发现本地 main 与 origin/main 分叉（提交前本地独有2、远
 - [2026-09-10 Settings配色修复] 四个颜色集中到MenuSettingsPanel的Settings Colors；编辑预览与运行打开都应用，恢复当前Scene蓝色快照。
 - [2026-09-10] Leaderboard Main Menu→Developer→Close回Main Menu；Inventory及Play Again保持原路线，完整场景跳转验证中。
 - [已验证 2026-09-10] Leaderboard→Developer→Main Menu：Unity真实导航34项通过，包含直接运行与BootStrap两种入口；设备待复测。
+
+## 2026-09-10 — iOS iframe 体感修复
+
+- [源码完成] 按 `docs/ios-motion-implementation-plan.md` 完成必需项 1–5：权限独立、重力/加速度姿态、样本判定兜底、校准连接文案；保留原接口、触屏控制和方向配置。
+- [编译通过] Unity 6000.3.23f1 当前项目批处理编译通过；JavaScript 权限桥接模拟检查通过。
+- [可选延期] 新标签页接口已预留，WebTopLevelLink 与设置 UI 按钮未添加；不阻塞核心修复，需做体验升级时接入。
+- [待设备验收] WebGL 实际构建/itch.io 上传、iPhone Safari iframe 允许/拒绝/校准及方向、顶层页面、Android Chrome 和 PC 浏览器回归。未发布。
+- [模拟专项通过] 隔离 Unity Play Mode 22 项当前帧状态注入检查通过（读取/滤波/选源/清理）；不代表浏览器真实事件或完整游戏校准验收。证据见 progress.md 本日 iOS 修复记录。
+- [2026-09-10 构建完成] iOS motion 测试 ZIP 已生成，WebGL 构建 0 errors，包结构和 WebAssembly 校验通过；itch.io 上传与 iPhone/Android/PC 浏览器验收仍待进行。路径见 progress.md。
+
+## 2026-09-11 — 触屏兜底与源退避
+
+- [源码/Unity专项通过] 按 touch-fallback-bug.md 完成惰性创建、inactive Canvas 查找、失败重试/单次警告、3次无样本后的5秒退避及源日志降噪；15项UI和25项模拟传感器检查通过。
+- [诊断限制] 本机 Editor 与上一版包的本地移动模拟都未复现按钮永不出现，未将 Awake 时序标为已确诊根因，暂不改布局。
+- [待真机] itch iframe / iPhone Safari 复测触控，再验证体感；独立 motion-diagnostics 仍可由用户先行运行。
+- [2026-09-11 最终状态更正] OnEnable刷新/UI Layer继承已加入；WebGL构建0错误，浏览器实际方向触控与ACTION抛竿通过。但是软件/硬件后端均有按钮间歇缺帧，active/cull/alpha正常，显示问题仍未解决，不能将“文档改动完成”当作“bug彻底修复”。保留最终诊断ZIP与证据，详见progress.md。
+
+## 2026-09-11 — 手动触屏控制
+- [x] Settings 显式 ON/AUTO、Inspector Force Touch Controls，跨平台触屏路由与跳过体感启动检查。
+- [x] Unity 编译与 14 项 Play Mode 针对性检查、场景引用检查通过。
+- [ ] 含手动开关的 WebGL 新构建及真实浏览器/iPhone 显示验收；旧包不含本轮改动。

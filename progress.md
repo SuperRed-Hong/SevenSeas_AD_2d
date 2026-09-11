@@ -634,3 +634,35 @@ fetch 后发现本地 main 与 origin/main 分叉（提交前本地独有2、远
 - [2026-09-10 GameOver直接鱼获] 用户取消过渡画面；OnEnable同步打开Inventory并移除Inventory Delay/倒计时，保留Actions Delay=1。Unity隔离副本编译和18项专项通过，含真实结束入口→HUD同帧打开Inventory、timeScale=0、延后按钮、分页/分数和保存失败提示。证据results-immediate.log与results-ui-checks.txt；未测Android/WebGL。
 - [2026-09-10 Settings配色防回退] 核实当前场景确已恢复旧色，修复为MenuSettingsPanel集中四个可编辑颜色并自动应用；Scene快照同步蓝色。Unity临时副本编译通过，运行测试故意注入旧绿底/米黄字/原色按钮后Open，背景、八按钮及全部标签均恢复指定配色。日志settings-palette-source.log、developer-button-results.txt；未测用户当前Editor会话与真机。
 - [2026-09-10 Leaderboard→Developer] 仅Leaderboard/Main Menu勾选showDeveloperOnMainMenu；SceneLoader一次性携带展示请求，FishingSceneEntryGuard在菜单入口打开已接线Developer。Close回主菜单，Inventory不变。Unity隔离副本编译与34项真实场景导航检查通过，覆盖无AppRoot、BootStrap/AppRoot、实际按钮onClick双击只加载一次、Close、普通菜单无残留请求及Play Again正常进入。证据leaderboard-developer.log/results.txt（结果实际文件名leaderboard-developer-results.txt）；未测Android/WebGL。保留用户新建Assets/Resources未改动，未提交。
+
+## 2026-09-10 — iPhone Safari / itch iframe 体感修复
+
+- 按 `docs/ios-motion-implementation-plan.md` 完成必需项 1–5：JS 独立回传两个权限（含同步异常隔离），C# 分通道状态与旧格式兼容，AttitudeReader 增加重力/加速度姿态源，入口按 motion 权限与样本判定，校准显示连接状态。
+- 保留触屏兜底、Start 按钮同步授权位置、3 秒样本等待、原有公开属性、Editor remote 查找及 Inspector 方向设置。无场景修改；未提交、推送或发布。
+- Unity 6000.3.23f1 当前项目批处理编译通过，最终日志 `C:/Users/73400/AppData/Local/Temp/sevenseas-ios-final-compile.log`；`git diff --check` 通过。
+- Node VM 权限桥接模拟通过：8 种权限组合/异常/缺失情况，以及同步发起授权、iframe 检测和当前 URL 打开检查。
+- 隔离 Unity Play Mode 22 项模拟状态检查通过：混合/旧格式/缺字段权限，PC 旁路，姿态优先、重力合成、低通、零/NaN/Infinity 拒绝、健康源稳定、断流换源、迟到设备、禁用清理。三份受测源码 SHA256 与工作区一致。证据 `C:/Users/73400/AppData/Local/Temp/SevenSeasIosMotionChecks/motion-results.txt`、`snapshot-check.log`、`Assets/Editor/MotionChecks.cs`。
+- 测试范围说明：初版排队事件在批处理 Editor 环境未更新设备，最终通过 InputState.Change 与当前帧标记注入模拟状态并调用 Reader.Update；只验证读取/数学/选源，不证明原生或浏览器事件投递。未跑完整游戏流程或真实校准 UI。
+- 可选项 6：iframe/OpenTopLevel 接口已预留，未新增 WebTopLevelLink 或设置页按钮。后续如做体验升级再接入。
+- 下一步：实际 WebGL 构建后在 iPhone Safari 的 itch iframe 验证 motion=Granted/orientation=Denied、校准与倾斜方向、拒绝后触屏兜底，再检查顶层页面、Android Chrome 和 PC 浏览器。尚无真机或 WebGL 构建通过结论。
+- [2026-09-10 WebGL 测试包] 用户要求打包试玩：Unity 6000.3.23f1 WebGL 正式构建成功，0 errors；沿用启用场景（BootStrap 首场景）和现有 Brotli 配置。产物 `D:/UnityProject/Builds/SevenSeas-iOS-motion-20260910-232253/SevenSeas-iOS-motion-test.zip`，19,507,026 字节。ZIP 根目录 index.html、产物中的分通道权限桥接、Brotli 解压与 WebAssembly.validate 均通过；临时 Editor 构建脚本已移出项目保存在构建目录。未上传 itch.io、未进行浏览器/真机试玩；build.log 同目录可查。
+
+## 2026-09-11 — 触屏兜底修复
+
+- 依照 `docs/touch-fallback-bug.md` 先做原版强制兜底诊断，再修改 ReelingButtonHUD 与 AttitudeReader。未改权限桥接、输入规则、场景和按钮布局。
+- 原版 Editor 菜单期间按钮不存在，ShowGameplay 后正常创建；旧 WebGL 包在本地 Chromium 375×812 Android UA + 双权限 denied 下亦显示三按钮。本机未确证文档的 Awake 时序根因，保留与 itch 报告的差异，不将推测写成事实。
+- UI 改为按需惰性创建，包含 inactive Canvas；失败只警告一次并重试。源读取在3次无样本尝试后退避至5秒，样本/权限变化恢复快速响应；仅成功收到新源样本才记录来源，异常日志同样限流。
+- 当前正式场景 Unity 渲染后15项UI检查通过：可见/命中、左右按住与释放/移出、状态门控、无重复实例、缺Canvas重试、inactive父链；验证日志 `D:/UnityProject/Builds/touch-fallback-after-frames.log`，结果 `touch-fallback-after.txt`。临时强制兜底仅在 Editor 测试脚本通过反射设置，未写入生产代码。
+- 隔离 Unity 25项模拟传感器检查通过，包括退避与静默日志；日志 `D:/UnityProject/Builds/touch-motion-backoff3.log`。测试显式注入当前帧状态，不等于真机事件投递通过。
+- [2026-09-11 最终补充] ReelingButtonHUD 改在 OnEnable 即时刷新，动态按钮及文字继承父 Canvas 的 UI Layer（5）；增加手动 Log Touch Fallback Status / LogTouchFallbackStatus 诊断入口。最终源码的15项Unity UI检查再次通过（touch-fallback-final.txt / .log）。
+- [WebGL 构建通过、显示未验收] 最终目录 `D:/UnityProject/Builds/SevenSeas-touch-fallback-final-20260911`，build.log 报 Succeeded、0 errors；ZIP 为 `SevenSeas-touch-fallback-test.zip`，19,499,112字节。最终产物有源码hash记录，临时Editor脚本已清理。
+- [浏览器功能通过] Chrome 375×812 Android UA，两个权限强制denied，使用默认 RTX4080/D3D11 后端；实际触摸右移、释放、ACTION 蓄力抛投成功（power=0.56，进入Casting，后因障碍落点正常扣钩回ReadyToCast）；没有无样本 Attitude source 日志。检测脚本及日志位于 `D:/UnityProject/Builds/TouchFallbackBrowserChecks`，final-results.txt、browser-final.log、final-right.png、final-release.png 可查。
+- [未解决/不能标记显示修复完成] 在强制SwiftShader和默认硬件后端均捕获到按钮图形间歇缺失；原生状态同时是 HUD/input enabled、created/fallback/move/action=true，三按钮 active=true、layer=5、culled=false、alpha=1，且实际触摸仍可操作。直接Canvas读回也出现间歇缺失；测试页面禁用UI深度测试和保留绘图缓冲并未消除，不能把它归因于单纯截图时机或已确诊的Awake时序。未把这些JS诊断覆盖写进交付index.html。
+- [剩余] 继续定位实际渲染/Canvas批次问题，并在itch iframe与真实iPhone复测显示；当前仅是诊断测试包，尚未通过显示验收。未上传itch、未提交或推送。
+
+## 2026-09-11 — 显式开启触屏控制
+- 设置菜单新增已序列化的 TouchControlsButton，ON 强制触屏、AUTO 恢复平台判断和既有自动兜底；FishingInputRouter Inspector 暴露 Force Touch Controls，可在 Editor/运行时开启。选择保留在当前应用会话，不写 PlayerPrefs。
+- 手动开启直接选中 MobileFishingInputSource，并跳过启动时权限等待、体感教学与校准；按游戏阶段显示可用触屏按钮。路由切换保留输入门控，取消旧的按住/蓄力状态，避免误抛竿或重复订阅。
+- 修正 PressAccelerate 的状态顺序，提竿回调同步切换到收线时已知当前按住，要求松手后再次按下才加速。
+- Unity 6000.3.23f1 编译及 Play Mode 14 项针对性检查通过：场景菜单事件与引用、Editor 手动路由、权限跳过、状态门控、移动/松手、取消蓄力、事件不重复、提竿释放门控、三个按钮 active、AUTO 保留自动兜底。日志 D:/UnityProject/Builds/manual-touch-checks.log，脚本 D:/UnityProject/Builds/ManualTouchChecks.cs；临时 Editor 脚本已清理。git diff --check 通过。
+- 本轮未重新构建 WebGL，之前的 ZIP 不含手动开关；浏览器间歇图形缺失及 iPhone 显示仍待验证，不能以 active 状态检查代替渲染验收。

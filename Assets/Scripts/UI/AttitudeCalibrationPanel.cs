@@ -84,6 +84,11 @@ public sealed class AttitudeCalibrationPanel : MonoBehaviour
 
         if (!calibrationService.IsSensorReady)
         {
+            if (WebMotionPermission.MotionState == WebMotionPermissionState.Granted)
+            {
+                statusText.text = "CONNECTING MOTION SENSORS\nWaiting for your device's first sample.";
+                return;
+            }
             statusText.text = WebMotionPermission.State switch
             {
                 WebMotionPermissionState.Requesting =>

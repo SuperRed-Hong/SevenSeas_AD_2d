@@ -81,6 +81,12 @@ public sealed class FishingSceneEntryGuard : MonoBehaviour
         WebMotionPermission.RequestIfNeeded();
         isStarting = true;
 
+        if (WebMotionPermission.TouchFallbackActive)
+        {
+            ContinueWithTutorial();
+            return;
+        }
+
         if (RuntimeInputPlatform.IsWebMobilePlayer)
         {
             if (webMotionResolved)
@@ -129,7 +135,7 @@ public sealed class FishingSceneEntryGuard : MonoBehaviour
     {
         // Desktop and Editor use non-motion controls,
         // so attitude calibration is not required.
-        if (!RuntimeInputPlatform.UsesMobileControls)
+        if (!RuntimeInputPlatform.UsesMobileControls || WebMotionPermission.TouchFallbackActive)
         {
             BeginGameplay();
             return;
@@ -203,7 +209,11 @@ public sealed class FishingSceneEntryGuard : MonoBehaviour
             yield return null;
         }
 
-        if (WebMotionPermission.State == WebMotionPermissionState.Granted)
+        bool motionUsable =
+            WebMotionPermission.MotionState == WebMotionPermissionState.Granted ||
+            WebMotionPermission.MotionState == WebMotionPermissionState.NotRequired;
+
+        if (motionUsable)
         {
             deadline = Time.unscaledTime + 3f;
             while (!calibrationService.IsSensorReady &&
@@ -215,8 +225,7 @@ public sealed class FishingSceneEntryGuard : MonoBehaviour
 
         isResolvingWebMotion = false;
 
-        if (WebMotionPermission.State != WebMotionPermissionState.Granted ||
-            !calibrationService.IsSensorReady)
+        if (!motionUsable || !calibrationService.IsSensorReady)
         {
             WebMotionPermission.ActivateTouchFallback();
         }

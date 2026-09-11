@@ -1,79 +1,196 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+public enum AttitudeSource
+{
+    None,
+    Attitude,
+    Gravity,
+    Accelerometer
+}
+
 public sealed class AttitudeReader : MonoBehaviour
 {
     [SerializeField, Min(1f)]
     private float requestedSamplingFrequency = 60f;
 
-    private AttitudeSensor attitudeSensor;
-    private float nextConnectionAttemptTime;
+    [SerializeField, Range(0.01f, 1f)]
+    private float gravityFilterAlpha = 0.12f;
 
-    public bool IsAvailable => attitudeSensor != null;
-    public bool IsEnabled => attitudeSensor != null && attitudeSensor.enabled;
+    private Sensor activeSensor;
+    private Vector3 smoothedGravity;
+    private float lastSampleTime;
+    private float nextConnectionAttemptTime;
+    private int attemptsWithoutSample;
+    private AttitudeSource lastReportedSource = AttitudeSource.None;
+    private bool connectionWarningLogged;
+    private WebMotionPermissionState lastMotionPermission;
+    private WebMotionPermissionState lastOrientationPermission;
+
+    public AttitudeSource ActiveSource { get; private set; } = AttitudeSource.None;
+    public bool IsAvailable => activeSensor != null && activeSensor.added;
+    public bool IsEnabled => IsAvailable && activeSensor.enabled;
     public bool HasSample { get; private set; }
-    public float SamplingFrequency => attitudeSensor != null ? attitudeSensor.samplingFrequency : 0f;
+    public float SamplingFrequency => IsAvailable ? activeSensor.samplingFrequency : 0f;
     public Quaternion Attitude { get; private set; } = Quaternion.identity;
 
     private void OnEnable()
     {
+        attemptsWithoutSample = 0;
+        lastMotionPermission = WebMotionPermission.MotionState;
+        lastOrientationPermission = WebMotionPermission.OrientationState;
         TryConnect();
     }
 
     private void Update()
     {
-        if (attitudeSensor == null)
+        // An asynchronous permission result should not wait for the slow retry.
+        if (lastMotionPermission != WebMotionPermission.MotionState ||
+            lastOrientationPermission != WebMotionPermission.OrientationState)
+        {
+            lastMotionPermission = WebMotionPermission.MotionState;
+            lastOrientationPermission = WebMotionPermission.OrientationState;
+            attemptsWithoutSample = 0;
+            nextConnectionAttemptTime = Time.unscaledTime;
+        }
+        bool orientationBlocked = ActiveSource == AttitudeSource.Attitude && !CanUseAttitude();
+        if (orientationBlocked || !IsEnabled || Time.unscaledTime - lastSampleTime >= 1f)
         {
             HasSample = false;
-
             if (Time.unscaledTime >= nextConnectionAttemptTime)
             {
-                TryConnect();
+                // Skip a silent source for this attempt, otherwise an enabled but
+                // non-reporting attitude device would starve the gravity fallback.
+                TryConnect(IsEnabled ? activeSensor : null);
             }
-
-            return;
         }
 
-        if (!attitudeSensor.wasUpdatedThisFrame)
+        if (!IsEnabled || (ActiveSource == AttitudeSource.Attitude && !CanUseAttitude()) ||
+            !activeSensor.wasUpdatedThisFrame)
         {
             return;
         }
 
-        Quaternion sample = attitudeSensor.attitude.ReadValue();
-
-        if (Quaternion.Dot(sample, sample) < 0.0001f)
+        switch (ActiveSource)
         {
-            return;
+            case AttitudeSource.Attitude:
+                Quaternion sample = ((AttitudeSensor)activeSensor).attitude.ReadValue();
+                float magnitude = Quaternion.Dot(sample, sample);
+                if (!IsFinite(magnitude) || magnitude < 0.0001f) return;
+                Attitude = Quaternion.Normalize(sample);
+                break;
+            case AttitudeSource.Gravity:
+                Vector3 gravity = ((GravitySensor)activeSensor).gravity.ReadValue();
+                if (!IsUsableVector(gravity)) return;
+                ApplyGravity(gravity);
+                break;
+            case AttitudeSource.Accelerometer:
+                Vector3 acceleration = ((Accelerometer)activeSensor).acceleration.ReadValue();
+                if (!IsUsableVector(acceleration)) return;
+                smoothedGravity = smoothedGravity == Vector3.zero
+                    ? acceleration
+                    : Vector3.Lerp(smoothedGravity, acceleration, gravityFilterAlpha);
+                if (!IsUsableVector(smoothedGravity)) return;
+                ApplyGravity(smoothedGravity);
+                break;
+            default:
+                return;
         }
 
-        Attitude = Quaternion.Normalize(sample);
         HasSample = true;
+        lastSampleTime = Time.unscaledTime;
+        attemptsWithoutSample = 0;
+        nextConnectionAttemptTime = Time.unscaledTime + 1f;
+        if (lastReportedSource != ActiveSource)
+        {
+            Debug.Log($"Attitude source: {ActiveSource} (sample received)", this);
+            lastReportedSource = ActiveSource;
+        }
     }
 
     private void OnDisable()
     {
-        if (attitudeSensor != null)
+        if (IsEnabled)
         {
-            InputSystem.DisableDevice(attitudeSensor);
+            InputSystem.DisableDevice(activeSensor);
         }
 
-        attitudeSensor = null;
+        activeSensor = null;
+        ActiveSource = AttitudeSource.None;
+        smoothedGravity = Vector3.zero;
         Attitude = Quaternion.identity;
         HasSample = false;
+        attemptsWithoutSample = 0;
+        lastReportedSource = AttitudeSource.None;
+        connectionWarningLogged = false;
     }
 
-    private void TryConnect()
+    private void TryConnect(Sensor silentSensor = null)
     {
-        nextConnectionAttemptTime = Time.unscaledTime + 1f;
-        attitudeSensor = FindAttitudeSensor();
+        attemptsWithoutSample++;
+        // Try all three sources promptly, then leave time for a late sample.
+        // Keep a bounded retry so sensors can recover after focus/permission changes.
+        nextConnectionAttemptTime = Time.unscaledTime + (attemptsWithoutSample >= 3 ? 5f : 1f);
+        // Give the last fallback a chance before retrying a silent attitude
+        // source, otherwise silent attitude/gravity devices could alternate forever.
+        if (silentSensor is GravitySensor &&
+            TryUse(Accelerometer.current, AttitudeSource.Accelerometer, silentSensor)) return;
+        if (CanUseAttitude() && TryUse(FindAttitudeSensor(), AttitudeSource.Attitude, silentSensor)) return;
+        if (TryUse(GravitySensor.current, AttitudeSource.Gravity, silentSensor)) return;
+        if (TryUse(Accelerometer.current, AttitudeSource.Accelerometer, silentSensor)) return;
+        // Keep retrying when permission is still pending or hardware appears later.
+    }
 
-        if (attitudeSensor == null)
+    private bool TryUse(Sensor sensor, AttitudeSource source, Sensor silentSensor)
+    {
+        if (sensor == null || !sensor.added || sensor == silentSensor) return false;
+        try
         {
-            return;
+            InputSystem.EnableDevice(sensor);
+            if (!sensor.enabled) return false;
+            sensor.samplingFrequency = requestedSamplingFrequency;
+        }
+        catch (System.Exception exception)
+        {
+            if (!connectionWarningLogged)
+            {
+                Debug.LogWarning($"Cannot enable {source} motion source: {exception.Message}", this);
+                connectionWarningLogged = true;
+            }
+            return false;
         }
 
-        InputSystem.EnableDevice(attitudeSensor);
-        attitudeSensor.samplingFrequency = requestedSamplingFrequency;
+        if (activeSensor != sensor && IsEnabled) InputSystem.DisableDevice(activeSensor);
+        activeSensor = sensor;
+        ActiveSource = source;
+        smoothedGravity = Vector3.zero;
+        HasSample = false;
+        lastSampleTime = Time.unscaledTime;
+        return true;
+    }
+
+    private static bool CanUseAttitude()
+    {
+#if UNITY_WEBGL && !UNITY_EDITOR
+        return WebMotionPermission.OrientationState != WebMotionPermissionState.Denied &&
+            WebMotionPermission.OrientationState != WebMotionPermissionState.Unsupported;
+#else
+        return true;
+#endif
+    }
+
+    private static bool IsFinite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
+
+    private static bool IsUsableVector(Vector3 value) =>
+        IsFinite(value.x) && IsFinite(value.y) && IsFinite(value.z) &&
+        IsFinite(value.sqrMagnitude) && value.sqrMagnitude > 0.01f;
+
+    private void ApplyGravity(Vector3 gravity)
+    {
+        // Gravity gives tilt, not a unique yaw. GyroscopeAxis.Z (Euler roll) in
+        // AttitudeCircleController is unreliable with this source; keep the
+        // default horizontal=Y / vertical=X mapping. Verify inversion on device.
+        Attitude = Quaternion.FromToRotation(gravity.normalized, Vector3.down);
     }
 
     private static AttitudeSensor FindAttitudeSensor()

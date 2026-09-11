@@ -8,6 +8,12 @@ public sealed class FishingInputRouter : FishingInputSource
     [SerializeField]
     private FishingInputSource mobileSource;
 
+    [Header("Touch Controls")]
+    [Tooltip("Force on-screen controls in Editor and on any device. Off restores automatic platform selection.")]
+    [SerializeField] private bool forceTouchControls;
+    private bool moveEnabled, castEnabled, strikeEnabled, accelerateEnabled;
+    public bool ForceTouchControls => forceTouchControls;
+
     private FishingInputSource activeSource;
 
     public FishingInputSource ActiveSource =>
@@ -24,8 +30,10 @@ public sealed class FishingInputRouter : FishingInputSource
 
     private void Awake()
     {
+        forceTouchControls |= WebMotionPermission.ForceTouchControls;
+        WebMotionPermission.SetForceTouchControls(forceTouchControls);
         activeSource =
-            RuntimeInputPlatform.UsesMobileControls
+            (forceTouchControls || RuntimeInputPlatform.UsesMobileControls)
                 ? mobileSource
                 : desktopSource;
 
@@ -87,22 +95,54 @@ public sealed class FishingInputRouter : FishingInputSource
 
     public override void SetMoveEnabled(bool value)
     {
+        moveEnabled = value;
         activeSource?.SetMoveEnabled(value);
     }
 
     public override void SetCastEnabled(bool value)
     {
+        castEnabled = value;
         activeSource?.SetCastEnabled(value);
     }
 
     public override void SetStrikeEnabled(bool value)
     {
+        strikeEnabled = value;
         activeSource?.SetStrikeEnabled(value);
     }
 
     public override void SetAccelerateEnabled(bool value)
     {
+        accelerateEnabled = value;
         activeSource?.SetAccelerateEnabled(value);
+    }
+
+    private void Update()
+    {
+        // Also apply Inspector changes during Play Mode.
+        if (forceTouchControls != WebMotionPermission.ForceTouchControls)
+            SetForceTouchControls(forceTouchControls);
+    }
+
+    public void SetForceTouchControls(bool value)
+    {
+        FishingInputSource next = value || RuntimeInputPlatform.UsesMobileControls
+            ? mobileSource : desktopSource;
+        if (next == null) return;
+        bool wasEnabled = isActiveAndEnabled;
+        if (wasEnabled) OnDisable();
+        // Cancel held input before changing modes, including mobile-to-mobile changes.
+        if (activeSource != null) activeSource.enabled = false;
+        forceTouchControls = value;
+        WebMotionPermission.SetForceTouchControls(value);
+        activeSource = next;
+        if (desktopSource != null) desktopSource.enabled = desktopSource == next;
+        if (mobileSource != null) mobileSource.enabled = mobileSource == next;
+        activeSource.SetMoveEnabled(moveEnabled);
+        activeSource.SetCastEnabled(castEnabled);
+        activeSource.SetStrikeEnabled(strikeEnabled);
+        activeSource.SetAccelerateEnabled(accelerateEnabled);
+        if (wasEnabled) OnEnable();
     }
 
     private void HandleCastPerformed(float power)

@@ -13,41 +13,42 @@ mergeInto(LibraryManager.library, {
 
   SevenSeasRequestMotionPermission: function (receiverNamePointer) {
     var receiverName = UTF8ToString(receiverNamePointer);
-    var finish = function (result) {
-      SendMessage(receiverName, "ReceivePermissionResult", result);
+    var state = { motion: "unsupported", orientation: "unsupported" };
+    var finish = function () {
+      SendMessage(receiverName, "ReceivePermissionResult",
+        "motion=" + state.motion + ";orientation=" + state.orientation);
     };
-
-    try {
-      var requests = [];
-      if (typeof DeviceMotionEvent !== "undefined" &&
-          typeof DeviceMotionEvent.requestPermission === "function") {
-        requests.push(DeviceMotionEvent.requestPermission());
+    var ask = function (eventType, key) {
+      if (typeof eventType === "undefined") return Promise.resolve();
+      if (typeof eventType.requestPermission !== "function") {
+        state[key] = "granted";
+        return Promise.resolve();
       }
-      if (typeof DeviceOrientationEvent !== "undefined" &&
-          typeof DeviceOrientationEvent.requestPermission === "function") {
-        requests.push(DeviceOrientationEvent.requestPermission());
-      }
-
-      if (requests.length === 0) {
-        if (typeof DeviceMotionEvent === "undefined" &&
-            typeof DeviceOrientationEvent === "undefined") {
-          finish("unsupported");
-        } else {
-          finish("granted");
-        }
-        return;
-      }
-
-      Promise.all(requests).then(function (results) {
-        var granted = results.every(function (value) {
-          return value === "granted";
+      // Invoke synchronously in the button gesture, including both requests.
+      // Catch per channel so a synchronous orientation failure cannot hide motion.
+      try {
+        return Promise.resolve(eventType.requestPermission()).then(function (result) {
+          state[key] = result === "granted" ? "granted" : "denied";
+        }).catch(function () {
+          state[key] = "denied";
         });
-        finish(granted ? "granted" : "denied");
-      }).catch(function () {
-        finish("denied");
-      });
-    } catch (error) {
-      finish("unsupported");
-    }
+      } catch (error) {
+        state[key] = "denied";
+        return Promise.resolve();
+      }
+    };
+    Promise.all([
+      ask(typeof DeviceMotionEvent !== "undefined" ? DeviceMotionEvent : undefined, "motion"),
+      ask(typeof DeviceOrientationEvent !== "undefined" ? DeviceOrientationEvent : undefined, "orientation")
+    ]).then(finish);
+  },
+
+  SevenSeasIsInIframe: function () {
+    try { return window.top !== window.self ? 1 : 0; } catch (error) { return 1; }
+  },
+
+  SevenSeasOpenSelfTopLevel: function () {
+    // Must stay in the button gesture; the CDN build URL changes on each upload.
+    try { window.open(window.location.href, "_blank", "noopener"); } catch (error) {}
   }
 });

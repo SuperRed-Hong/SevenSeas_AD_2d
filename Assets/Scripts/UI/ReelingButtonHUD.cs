@@ -13,12 +13,27 @@ public class ReelingButtonHUD : MonoBehaviour
     private GameObject rightButton;
     private GameObject actionButton;
 
-    private void Awake()
+    private bool buttonsCreated;
+    private bool creationWarningLogged;
+
+    [ContextMenu("Log Touch Fallback Status")]
+    [UnityEngine.Scripting.Preserve]
+    public void LogTouchFallbackStatus()
     {
-        CreateTouchFallbackButtons();
+        Debug.Log($"Touch fallback HUD: enabled={isActiveAndEnabled}, created={buttonsCreated}, " +
+            $"fallback={fishingInputSource?.UsesTouchFallback}, inputEnabled={fishingInputSource?.isActiveAndEnabled}, " +
+            $"move={fishingInputSource?.IsMoveAvailable}, action={fishingInputSource?.IsActionAvailable}", this);
+        foreach (GameObject target in new[] { leftButton, rightButton, actionButton })
+        {
+            if (target == null) continue;
+            CanvasRenderer renderer = target.GetComponent<CanvasRenderer>();
+            Debug.Log($"{target.name}: active={target.activeInHierarchy}, layer={target.layer}, " +
+                $"culled={renderer.cull}, alpha={renderer.GetAlpha()}, depth={renderer.absoluteDepth}, " +
+                $"position={target.transform.position}", target);
+        }
     }
 
-    private void Start()
+    private void OnEnable()
     {
         RefreshVisibility();
     }
@@ -31,6 +46,7 @@ public class ReelingButtonHUD : MonoBehaviour
 
     private void RefreshVisibility()
     {
+        RefreshTouchFallbackVisibility();
         if (reelingController == null ||
             accelerateButton == null ||
             fishingInputSource == null)
@@ -44,7 +60,6 @@ public class ReelingButtonHUD : MonoBehaviour
 
         if (accelerateButton.activeSelf == shouldShow)
         {
-            RefreshTouchFallbackVisibility();
             return;
         }
 
@@ -56,14 +71,18 @@ public class ReelingButtonHUD : MonoBehaviour
         }
         
         accelerateButton.SetActive(shouldShow);
-        RefreshTouchFallbackVisibility();
     }
 
     private void CreateTouchFallbackButtons()
     {
-        Canvas canvas = GetComponentInParent<Canvas>();
+        Canvas canvas = GetComponentInParent<Canvas>(true);
         if (canvas == null || fishingInputSource == null)
         {
+            if (!creationWarningLogged)
+            {
+                Debug.LogWarning($"Touch fallback buttons not created: canvas={canvas}, inputSource={fishingInputSource}. Will retry when available.", this);
+                creationWarningLogged = true;
+            }
             return;
         }
 
@@ -85,6 +104,7 @@ public class ReelingButtonHUD : MonoBehaviour
             "TouchActionButton", "ACTION", canvas.transform,
             new Vector2(-150f, 170f), true, buttonSprite,
             fishingInputSource.PressAccelerate, fishingInputSource.ReleaseAccelerate);
+        buttonsCreated = true;
     }
 
     private void RefreshTouchFallbackVisibility()
@@ -92,6 +112,14 @@ public class ReelingButtonHUD : MonoBehaviour
         bool fallbackActive = fishingInputSource != null &&
                               fishingInputSource.isActiveAndEnabled &&
                               fishingInputSource.UsesTouchFallback;
+
+        // Canvas visibility is controlled by another component during startup.
+        // Create only when needed, and retry if its hierarchy is not ready yet.
+        if (!buttonsCreated && (fallbackActive ||
+            (WebMotionPermission.TouchFallbackActive && fishingInputSource == null)))
+        {
+            CreateTouchFallbackButtons();
+        }
 
         SetActive(leftButton, fallbackActive && fishingInputSource.IsMoveAvailable);
         SetActive(rightButton, fallbackActive && fishingInputSource.IsMoveAvailable);
@@ -126,6 +154,7 @@ public class ReelingButtonHUD : MonoBehaviour
             typeof(Image),
             typeof(Button),
             typeof(EventTrigger));
+        root.layer = parent.gameObject.layer;
 
         RectTransform rect = root.GetComponent<RectTransform>();
         rect.SetParent(parent, false);
@@ -152,6 +181,7 @@ public class ReelingButtonHUD : MonoBehaviour
             typeof(RectTransform),
             typeof(CanvasRenderer),
             typeof(TextMeshProUGUI));
+        labelObject.layer = root.layer;
         RectTransform labelRect = labelObject.GetComponent<RectTransform>();
         labelRect.SetParent(rect, false);
         labelRect.anchorMin = Vector2.zero;

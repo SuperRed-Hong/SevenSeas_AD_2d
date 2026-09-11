@@ -492,3 +492,25 @@
 - [2026-09-10 结束流程最新修订] 用户取消GameOver过渡页。GameOverPresentation.OnEnable同步OpenResults，删除Inventory Delay和倒计时逻辑，避免依靠下一帧或零秒延时切换；Actions Delay保留1秒。Inventory仍接收保存状态，结束音由原音频组件负责。
 - [2026-09-10 Settings旧色复现] 当前磁盘Scene的Settings颜色重新变成绿底/米黄字和白色按钮Tint，确实与用户截图一致；不能断言具体是谁回写，可能是已打开的旧场景后来保存。新增MenuSettingsPanel Settings Colors作为颜色维护入口，编辑态延迟OnValidate/OnEnable与每次Open应用，旧Graphic颜色不再决定外观。
 - [2026-09-10 Leaderboard返回入口] 用户澄清：只改Leaderboard的Main Menu按钮。新增一次性Developer菜单请求，SceneLoader仍加载MainMenu/FishingLoopTest并在入口Start打开Developer，Close自然露出菜单；不是修改Inventory导航。请求只在有效MainMenu加载时设置、消费后清空，普通导航重置；含无AppRoot直跑路径。
+
+## 2026-09-10 — iOS WebGL 体感权限与姿态源修复
+
+- 依据 `docs/ios-motion-implementation-plan.md` 实施必需项 1–5；调查背景见 `docs/ios-motion-itch-findings.md`。motion/orientation 独立解析，兼容旧结果；orientation 拒绝不再覆盖 motion 成功。
+- `AttitudeReader` 保留公开接口和 Editor remote 查找，加入 Gravity/Accelerometer、0.12 低通、非有限/零向量过滤、1 秒无有效样本重选。Gravity 断流先尝试 Accelerometer，避免两个静默设备交替阻塞最后的兜底；健康源不切换。姿态仍用 FromToRotation(gravity, down)，未猜测或改动 Inspector 方向。
+- 入口依据 MotionState 与实际样本决定触屏兜底；保留 Start 同步授权调用及 3 秒样本等待。校准面板在 motion granted 时显示正在连接。
+- 可选项 6 仅预留 iframe 检测和 OpenTopLevel 桥接接口；本轮未新增 WebTopLevelLink 或设置按钮，未改场景。
+- 可复用资产候选（未独立验收）：浏览器权限分通道追踪 + 有效样本驱动的选源。原问题为 iframe 限制一个 API 导致可用通道被误判；可迁移部分为权限解析、数值守卫和重试。项目耦合为 Unity Input System、静态 WebMotionPermission 与校准流程；边界为只合成倾斜，不保证 yaw/GyroscopeAxis.Z。验证欠账为 iOS/Android 真机、浏览器挂起恢复及第二项目接入；后续练习为解释权限与样本就绪的区别并在最小项目重建拒绝/断流恢复。
+
+## 2026-09-11 — 触屏兜底惰性创建与传感器退避
+
+- 依据 `docs/touch-fallback-bug.md`，先在未修复 UI 上加早退错误日志并强制 Editor TouchFallbackActive。实际 FishingLoopTest 菜单阶段三个按钮未创建，ShowGameplay 后三者均已创建/active，未触发早退错误。因此本机未确证文档的 Awake 时序根因，不能宣称复现了“永远不创建”；证据 `D:/UnityProject/Builds/touch-fallback-before.txt` / `.log`。
+- 同时用上一版实际 WebGL 测试包、本地 Chromium、375×812 Android UA、强制两个权限 denied 对照。Start 后三按钮可见（`D:/UnityProject/Builds/TouchFallbackBrowserChecks/before-game.png`）。此结果不否定文档记录的 itch 环境问题，也不证明 iPhone 行为。
+- 按方案消除脆弱点：ReelingButtonHUD 在兜底需要时才创建，搜索 inactive Canvas；创建失败只警告一次，保留下一帧重试；兜底刷新独立于普通加速按钮引用的早退。未修改位置、尺寸或场景，因为未获得布局异常证据。
+- AttitudeReader 连续三次无样本连接尝试后改为5秒重试；有效样本重置计数和正常等待，权限结果变化立即重新评估；只在成功读到新源样本时记录源日志，连接异常只警告一次。不会因为 orientation 被拒而绕过退避每帧重选。
+- Unity渲染后的15项UI专项通过：三按钮可见/命中、不重复创建、左右按住/松开/移出、状态门控、缺Canvas重试及inactive父链。最初同帧命中测试失败，等待渲染帧后通过，未据此误改布局。
+- 隔离Unity 25项模拟传感器专项通过（包含三次失败退避、等待期间不重选、静默连接不记录成功源）；模拟断流显式清理旧的当前帧标记，避免把测试中残留样本当新样本。此类模拟不代表设备事件投递通过。
+- 最终浏览器补充：惰性创建不是充分修复。默认D3D11与SwiftShader均见间歇缺帧，三按钮保持active=true、layer=5、culled=false、alpha=1，触摸功能正常；禁用测试页面UI深度测试、保留绘图缓冲均未解决。仍需渲染批次定位/真机对照；不升级为已验证资产或全平台修复。OnEnable即时刷新和UI层继承已补上，生产权限请求逻辑未新增强制开关。
+
+## 2026-09-11 — 手动触屏入口
+- 用户要求明确的开启方式，新增 Settings 的 TOUCH CONTROLS: ON/AUTO 和 Router 的 Force Touch Controls。强制选择与自动兜底分开存储；AUTO 不撤销已判定的设备兜底，避免传感器不可用时失去输入。Editor 也能选择移动触屏输入，便于直接验证。
+- 提竿回调可同步打开收线输入，必须先记录 accelerateHeld 再发提竿事件，否则释放门控会漏掉同一次按下。此为输入时序排错候选：可迁移的是同步事件前提交按住状态，耦合于项目 Strike/Reeling 门控；已有 Play Mode 针对性证据，尚未独立抽取/第二用例验证；后续练习为重建最小按钮事件与释放门控用例。

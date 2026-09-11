@@ -16,39 +16,65 @@ public sealed class WebMotionPermission : MonoBehaviour
     private const string ReceiverName = "SevenSeasWebMotionPermission";
     private static WebMotionPermission instance;
 
-    public static WebMotionPermissionState State { get; private set; } =
-        WebMotionPermissionState.NotRequested;
+    public static WebMotionPermissionState MotionState { get; private set; } = WebMotionPermissionState.NotRequested;
+    public static WebMotionPermissionState OrientationState { get; private set; } = WebMotionPermissionState.NotRequested;
+    public static bool IsInIframe { get; private set; }
 
-    public static bool TouchFallbackActive { get; private set; }
+    public static WebMotionPermissionState State
+    {
+        get
+        {
+            if (MotionState == WebMotionPermissionState.Requesting ||
+                OrientationState == WebMotionPermissionState.Requesting)
+                return WebMotionPermissionState.Requesting;
+            if (MotionState == WebMotionPermissionState.Granted ||
+                OrientationState == WebMotionPermissionState.Granted)
+                return WebMotionPermissionState.Granted;
+            if (MotionState == WebMotionPermissionState.Denied ||
+                OrientationState == WebMotionPermissionState.Denied)
+                return WebMotionPermissionState.Denied;
+            return MotionState;
+        }
+    }
+
+    private static bool automaticTouchFallback;
+    public static bool ForceTouchControls { get; private set; }
+    public static bool TouchFallbackActive => ForceTouchControls || automaticTouchFallback;
+
+    public static void SetForceTouchControls(bool value) => ForceTouchControls = value;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetState()
     {
         instance = null;
-        State = WebMotionPermissionState.NotRequested;
-        TouchFallbackActive = false;
+        MotionState = OrientationState = WebMotionPermissionState.NotRequested;
+        IsInIframe = false;
+        automaticTouchFallback = false;
+        ForceTouchControls = false;
     }
 
     public static void RequestIfNeeded()
     {
+        if (ForceTouchControls) return;
         if (!RuntimeInputPlatform.UsesMobileControls)
         {
-            State = WebMotionPermissionState.NotRequired;
+            MotionState = OrientationState = WebMotionPermissionState.NotRequired;
             return;
         }
 
 #if UNITY_WEBGL && !UNITY_EDITOR
         EnsureReceiver();
+        IsInIframe = SevenSeasIsInIframe() != 0;
         if (State == WebMotionPermissionState.Requesting ||
-            State == WebMotionPermissionState.Granted)
+            MotionState == WebMotionPermissionState.Granted)
         {
             return;
         }
 
-        State = WebMotionPermissionState.Requesting;
+        MotionState = OrientationState = WebMotionPermissionState.Requesting;
         SevenSeasRequestMotionPermission(ReceiverName);
 #else
-        State = WebMotionPermissionState.Granted;
+        MotionState = OrientationState = WebMotionPermissionState.Granted;
 #endif
     }
 
@@ -59,7 +85,7 @@ public sealed class WebMotionPermission : MonoBehaviour
             return;
         }
 
-        TouchFallbackActive = true;
+        automaticTouchFallback = true;
         Debug.Log("Web motion input is unavailable. Touch controls are now active.");
     }
 
@@ -77,7 +103,33 @@ public sealed class WebMotionPermission : MonoBehaviour
 
     public void ReceivePermissionResult(string result)
     {
-        State = result switch
+        // Default missing/malformed fields so neither channel remains Requesting.
+        MotionState = OrientationState = WebMotionPermissionState.Unsupported;
+        if (!string.IsNullOrEmpty(result))
+        {
+            if (!result.Contains("="))
+            {
+                MotionState = OrientationState = ParseState(result);
+            }
+            else
+            {
+                foreach (string part in result.Split(';'))
+                {
+                    int separator = part.IndexOf('=');
+                    if (separator <= 0) continue;
+                    string key = part.Substring(0, separator).Trim();
+                    WebMotionPermissionState value = ParseState(part.Substring(separator + 1).Trim());
+                    if (key == "motion") MotionState = value;
+                    else if (key == "orientation") OrientationState = value;
+                }
+            }
+        }
+        Debug.Log($"Web motion permission: motion={MotionState}, orientation={OrientationState}");
+    }
+
+    private static WebMotionPermissionState ParseState(string value)
+    {
+        return value switch
         {
             "granted" => WebMotionPermissionState.Granted,
             "denied" => WebMotionPermissionState.Denied,
@@ -85,8 +137,19 @@ public sealed class WebMotionPermission : MonoBehaviour
         };
     }
 
+    public static void OpenTopLevel()
+    {
+#if UNITY_WEBGL && !UNITY_EDITOR
+        SevenSeasOpenSelfTopLevel();
+#endif
+    }
+
 #if UNITY_WEBGL && !UNITY_EDITOR
     [DllImport("__Internal")]
     private static extern void SevenSeasRequestMotionPermission(string receiverName);
+    [DllImport("__Internal")]
+    private static extern int SevenSeasIsInIframe();
+    [DllImport("__Internal")]
+    private static extern void SevenSeasOpenSelfTopLevel();
 #endif
 }
