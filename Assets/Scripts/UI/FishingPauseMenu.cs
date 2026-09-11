@@ -8,6 +8,10 @@ public sealed class FishingPauseMenu : MonoBehaviour
     [SerializeField] private CatchInventoryView inventoryView;
     [SerializeField] private FishingHaptics haptics;
     [SerializeField] private FishingAudioFeedback audioFeedback;
+    [SerializeField, Tooltip("暂停时可随时重新校准体感中性点。留空则不显示该按钮。")]
+    private AttitudeCalibrationPanel calibrationPanel;
+    [SerializeField, Tooltip("暂停时可重看操作教程。留空则不显示该按钮。")]
+    private TutorialPanelController tutorial;
     [Header("Menu Artwork")]
     [SerializeField] private Sprite panelSprite;
     [SerializeField] private Sprite closeSprite;
@@ -16,12 +20,55 @@ public sealed class FishingPauseMenu : MonoBehaviour
 
     private static readonly Color Ink = new(0.23f, 0.16f, 0.10f);
     private static readonly Color Cream = new(0.94f, 0.86f, 0.66f);
+    private const float ActionHeight = 0.082f;
+    private const float SettingHeight = 0.072f;
     private GameObject panel;
     private RectTransform safeArea;
     private Rect lastSafeArea;
     private TMP_Text vibrationLabel;
     private TMP_Text soundLabel;
+    private Button calibrateButton;
+    private GameObject hint;
     private bool isOpen;
+    private bool waitingForSubPanel;
+    private float cursor;
+
+    private readonly System.Collections.Generic.List<(RectTransform rect, float height, float gap, float inset)>
+        rows = new();
+    private float lastHeight, lastGap, lastInset;
+
+    // Normalised rows laid out downwards from the last one placed.
+    private Rect StackRow(float height, float gap = 0.016f, float inset = 0.16f)
+    {
+        lastHeight = height;
+        lastGap = gap;
+        lastInset = inset;
+        float bottom = cursor - height;
+        cursor = bottom - gap;
+        return new Rect(inset, bottom, 1f - 2f * inset, height);
+    }
+
+    // Remember the row so a hidden button can be closed up instead of leaving a hole.
+    private T Track<T>(T made) where T : Component
+    {
+        rows.Add((made.GetComponent<RectTransform>(), lastHeight, lastGap, lastInset));
+        return made;
+    }
+
+    private void LayoutRows()
+    {
+        float y = 0.94f;
+        foreach (var row in rows)
+        {
+            if (row.rect == null || !row.rect.gameObject.activeSelf) continue;
+            float bottom = y - row.height;
+            row.rect.anchorMin = new Vector2(row.inset, bottom);
+            row.rect.anchorMax = new Vector2(1f - row.inset, y);
+            row.rect.offsetMin = Vector2.zero;
+            row.rect.offsetMax = Vector2.zero;
+            y = bottom - row.gap;
+        }
+    }
 
     private void Start()
     {
@@ -49,39 +96,49 @@ public sealed class FishingPauseMenu : MonoBehaviour
         fitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
         fitter.aspectRatio = 0.65f;
 
-        MakeText("PAUSED", board, new Vector2(0.12f, 0.84f), new Vector2(0.88f, 0.92f), 68f);
-        MakeText("SEVEN SEAS", board, new Vector2(0.18f, 0.795f), new Vector2(0.82f, 0.835f), 25f);
-        MakeButton("RESUME", board, new Vector2(0.16f, 0.66f), new Vector2(0.84f, 0.755f), Resume, true);
+        // Rows are stacked from a cursor because the optional buttons make the
+        // count vary; fixed anchors would leave holes or overlap.
+        cursor = 0.94f;
+        Track(MakeText("PAUSED", board, StackRow(0.075f, 0.012f, 0.12f), 68f));
+        Track(MakeText("SEVEN SEAS", board, StackRow(0.035f, 0.026f, 0.18f), 25f));
+        Track(MakeButton("RESUME", board, StackRow(ActionHeight), Resume, true));
         if (inventoryView != null)
-            MakeButton("CATCHES", board, new Vector2(0.16f, 0.535f), new Vector2(0.84f, 0.63f), OpenInventory);
-        RectTransform divider = MakeRect("Divider", board, new Vector2(0.18f, 0.493f), new Vector2(0.82f, 0.496f));
+            Track(MakeButton("CATCHES", board, StackRow(ActionHeight), OpenInventory));
+        if (calibrationPanel != null)
+        {
+            calibrateButton = Track(MakeButton("RECALIBRATE", board, StackRow(ActionHeight), OpenCalibration));
+            // Availability is only known once entry has resolved motion input.
+            calibrateButton.gameObject.SetActive(false);
+        }
+        if (tutorial != null)
+            Track(MakeButton("HOW TO PLAY", board, StackRow(ActionHeight), OpenTutorial));
+        RectTransform divider = Track(MakeRect("Divider", board, StackRow(0.003f, 0.02f, 0.18f)));
         Image rule = divider.gameObject.AddComponent<Image>();
         rule.color = new Color(Ink.r, Ink.g, Ink.b, 0.45f);
         rule.raycastTarget = false;
         if (haptics != null)
         {
-            Button vibrationButton = MakeButton("VIBRATION: ON", board,
-                new Vector2(0.16f, 0.385f), new Vector2(0.84f, 0.46f), () =>
+            Button vibrationButton = Track(MakeButton("VIBRATION: ON", board, StackRow(SettingHeight), () =>
                 {
                     haptics.VibrationEnabled = !haptics.VibrationEnabled;
                     RefreshSettings();
-                });
+                }));
             vibrationLabel = vibrationButton.GetComponentInChildren<TMP_Text>();
         }
         if (audioFeedback != null)
         {
-            Button soundButton = MakeButton("SOUND: ON", board,
-                new Vector2(0.16f, 0.285f), new Vector2(0.84f, 0.36f), () =>
+            Button soundButton = Track(MakeButton("SOUND: ON", board, StackRow(SettingHeight), () =>
                 {
                     audioFeedback.SoundEnabled = !audioFeedback.SoundEnabled;
                     RefreshSettings();
-                });
+                }));
             soundLabel = soundButton.GetComponentInChildren<TMP_Text>();
         }
-        MakeButton("MAIN MENU", board, new Vector2(0.16f, 0.145f), new Vector2(0.84f, 0.235f),
+        // Pinned to the bottom rather than stacked, so a short list cannot float it.
+        MakeButton("MAIN MENU", board, new Rect(0.16f, 0.100f, 0.68f, 0.082f),
             ReturnToMenu, false, UiButtonSound.Back);
         MakeText("RETURNING TO MENU\nENDS THIS RUN", board,
-            new Vector2(0.14f, 0.065f), new Vector2(0.86f, 0.12f), 23f);
+            new Vector2(0.14f, 0.030f), new Vector2(0.86f, 0.088f), 23f);
         if (closeSprite != null)
         {
             RectTransform rect = MakeRect("Close", board, new Vector2(0.80f, 0.88f), new Vector2(0.96f, 0.99f));
@@ -99,11 +156,85 @@ public sealed class FishingPauseMenu : MonoBehaviour
         }
         RefreshSettings();
         panel.SetActive(false);
+        BuildHint();
+    }
+
+    // A drifting neutral pose is invisible to the player: the boat simply will
+    // not hold still. Surface it where they are looking, not only in the menu.
+    private void BuildHint()
+    {
+        if (calibrationPanel == null) return;
+        hint = new GameObject("RecalibrateHintCanvas", typeof(RectTransform), typeof(Canvas),
+            typeof(CanvasScaler), typeof(GraphicRaycaster));
+        hint.transform.SetParent(transform, false);
+        Canvas canvas = hint.GetComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.sortingOrder = 1050;
+        CanvasScaler scaler = hint.GetComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1440f, 2304f);
+        scaler.matchWidthOrHeight = 0.5f;
+        RectTransform banner = MakeRect("Banner", hint.transform,
+            new Vector2(0.08f, 0.795f), new Vector2(0.92f, 0.875f));
+        Image background = banner.gameObject.AddComponent<Image>();
+        background.sprite = buttonSprite;
+        background.color = new Color(0.94f, 0.86f, 0.66f, 0.96f);
+        Button accept = banner.gameObject.AddComponent<Button>();
+        accept.targetGraphic = background;
+        accept.onClick.AddListener(AcceptHint);
+        UiAudioRouter.RegisterButton(accept, UiButtonSound.Confirm);
+        TMP_Text label = MakeText("TILT DRIFTING?\nTAP TO RECALIBRATE", banner,
+            new Vector2(0.04f, 0.08f), new Vector2(0.96f, 0.92f), 30f);
+        label.color = Ink;
+        hint.SetActive(false);
+    }
+
+    private void AcceptHint()
+    {
+        AppRoot.Instance?.PostureWatcher?.Acknowledge();
+        if (hint != null) hint.SetActive(false);
+        Open();
+        OpenCalibration();
+    }
+
+    private void RefreshHint()
+    {
+        if (hint == null) return;
+        AttitudePostureWatcher watcher = AppRoot.Instance != null ? AppRoot.Instance.PostureWatcher : null;
+        // Never over the pause board; the menu has its own button for this.
+        bool show = !isOpen && watcher != null && watcher.NeedsRecalibration;
+        if (hint.activeSelf != show) hint.SetActive(show);
     }
 
     private void LateUpdate()
     {
-        if (isOpen) UpdateSafeArea();
+        RefreshHint();
+        if (!isOpen) return;
+        UpdateSafeArea();
+        // Neither sub-panel reports its own close, so bring the board back once
+        // whichever one we opened has gone away.
+        if (!waitingForSubPanel) return;
+        bool stillOpen = (calibrationPanel != null && calibrationPanel.gameObject.activeInHierarchy) ||
+                         (tutorial != null && tutorial.IsOpen);
+        if (stillOpen) return;
+        waitingForSubPanel = false;
+        if (panel != null) panel.SetActive(true);
+    }
+
+    private void OpenCalibration()
+    {
+        if (!isOpen || calibrationPanel == null) return;
+        panel.SetActive(false);
+        waitingForSubPanel = true;
+        calibrationPanel.OpenPanel();
+    }
+
+    private void OpenTutorial()
+    {
+        if (!isOpen || tutorial == null) return;
+        panel.SetActive(false);
+        waitingForSubPanel = true;
+        tutorial.Open();
     }
 
     private void UpdateSafeArea()
@@ -119,6 +250,12 @@ public sealed class FishingPauseMenu : MonoBehaviour
     {
         if (vibrationLabel != null) vibrationLabel.text = haptics.VibrationEnabled ? "VIBRATION: ON" : "VIBRATION: OFF";
         if (soundLabel != null) soundLabel.text = audioFeedback.SoundEnabled ? "SOUND: ON" : "SOUND: OFF";
+        // Recalibrating means nothing on a keyboard or in the touch fallback.
+        if (calibrateButton != null)
+            calibrateButton.gameObject.SetActive(RuntimeInputPlatform.UsesMobileControls &&
+                                                 !WebMotionPermission.TouchFallbackActive);
+        // Close the gap a hidden row would otherwise leave.
+        LayoutRows();
     }
 
     private void OpenInventory()
@@ -157,6 +294,18 @@ public sealed class FishingPauseMenu : MonoBehaviour
     }
 
     private void OnDisable() => Resume();
+
+    private static RectTransform MakeRect(string name, Transform parent, Rect area) =>
+        MakeRect(name, parent, new Vector2(area.xMin, area.yMin), new Vector2(area.xMax, area.yMax));
+
+    private TMP_Text MakeText(string text, Transform parent, Rect area, float size) =>
+        MakeText(text, parent, new Vector2(area.xMin, area.yMin), new Vector2(area.xMax, area.yMax), size);
+
+    private Button MakeButton(string text, Transform parent, Rect area,
+        UnityEngine.Events.UnityAction action, bool primary = false,
+        UiButtonSound sound = UiButtonSound.Confirm) =>
+        MakeButton(text, parent, new Vector2(area.xMin, area.yMin), new Vector2(area.xMax, area.yMax),
+            action, primary, sound);
 
     private static RectTransform MakeRect(string name, Transform parent, Vector2 minimum, Vector2 maximum)
     {

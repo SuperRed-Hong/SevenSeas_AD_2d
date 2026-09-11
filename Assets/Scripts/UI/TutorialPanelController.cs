@@ -14,6 +14,9 @@ public class TutorialPanelController : MonoBehaviour
     private int currentPage;
     private bool hasReachedLastPage;
 
+    // Lets a caller that hid itself to show the tutorial know when to come back.
+    public bool IsOpen => tutorialRoot != null && tutorialRoot.activeInHierarchy;
+
     public void Open()
     {
         onCompleted = null;

@@ -133,6 +133,7 @@ GameObject:
   - component: {fileID: 210781010}
   - component: {fileID: 210781009}
   - component: {fileID: 210781011}
+  - component: {fileID: 210781012}
   m_Layer: 0
   m_Name: AppRoot
   m_TagString: Untagged
@@ -208,6 +209,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AttitudeReader
   requestedSamplingFrequency: 60
+  gravityFilterAlpha: 0.12
 --- !u!114 &210781011
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -221,6 +223,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GyroscopeReader
   requestedSamplingFrequency: 60
+--- !u!114 &210781012
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 210781004}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e0b2aed192e8b94fb837f988746616a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AttitudePostureWatcher
+  stillThresholdDegreesPerSecond: 6
+  driftThresholdDegrees: 6
+  holdSeconds: 3
+  autoRecenter: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

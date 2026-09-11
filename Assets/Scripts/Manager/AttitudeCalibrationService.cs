@@ -41,6 +41,20 @@ public sealed class AttitudeCalibrationService : MonoBehaviour
     {
         attitudeReader = GetComponent<AttitudeReader>();
     }
+    // Immediate re-centre, with no hold-still window. Used when the player has
+    // demonstrably stopped moving the device, so averaging would add nothing.
+    public bool AdoptCurrentAsNeutral()
+    {
+        if (!IsSensorReady) return false;
+        samples.Clear();
+        NeutralAttitude = attitudeReader.Attitude;
+        stableElapsedSeconds = 0f;
+        Progress01 = 1f;
+        State = AttitudeCalibrationState.Calibrated;
+        Completed?.Invoke();
+        return true;
+    }
+
     public bool BeginCalibration()
     {
         if (!IsSensorReady)
