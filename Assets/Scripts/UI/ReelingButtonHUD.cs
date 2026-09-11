@@ -11,6 +11,8 @@ public class ReelingButtonHUD : MonoBehaviour
     [SerializeField] private GameObject rightButton;
     [SerializeField] private GameObject actionButton;
 
+    private bool wasFallbackActive;
+
     [ContextMenu("Log Touch Fallback Status")]
     [UnityEngine.Scripting.Preserve]
     public void LogTouchFallbackStatus()
@@ -78,16 +80,32 @@ public class ReelingButtonHUD : MonoBehaviour
         SetActive(rightButton, fallbackActive && fishingInputSource.IsMoveAvailable);
         SetActive(actionButton, fallbackActive && fishingInputSource.IsActionAvailable);
 
-        if (!fallbackActive || !fishingInputSource.IsMoveAvailable)
+        // Only these buttons feed the held state, so release it only while they
+        // are the ones driving input. Releasing outside fallback mode would clear
+        // the motion-mode accelerate button every LateUpdate, one frame after the
+        // pointer set it, which makes holding that button do nothing.
+        if (fallbackActive)
         {
-            fishingInputSource?.ReleaseLeft();
-            fishingInputSource?.ReleaseRight();
+            if (!fishingInputSource.IsMoveAvailable)
+            {
+                fishingInputSource.ReleaseLeft();
+                fishingInputSource.ReleaseRight();
+            }
+
+            if (!fishingInputSource.IsActionAvailable)
+            {
+                fishingInputSource.ReleaseAccelerate();
+            }
+        }
+        else if (wasFallbackActive && fishingInputSource != null)
+        {
+            // Leaving fallback mode hides the buttons, so drop whatever they held.
+            fishingInputSource.ReleaseLeft();
+            fishingInputSource.ReleaseRight();
+            fishingInputSource.ReleaseAccelerate();
         }
 
-        if (!fallbackActive || !fishingInputSource.IsActionAvailable)
-        {
-            fishingInputSource?.ReleaseAccelerate();
-        }
+        wasFallbackActive = fallbackActive;
     }
 
     private static void SetActive(GameObject target, bool value)
