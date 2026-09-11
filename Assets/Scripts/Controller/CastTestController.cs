@@ -11,6 +11,7 @@ public sealed class CastTestController : MonoBehaviour
     public float FinalDistance { get; private set; }
     private void Awake()
     {
+        reader = MotionTestServices.Resolve(reader);
         detector.ConfigureReader(reader);
     }
     private void OnEnable()

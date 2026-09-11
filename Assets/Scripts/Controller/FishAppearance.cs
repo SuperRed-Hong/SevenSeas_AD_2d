@@ -15,6 +15,11 @@ public sealed class FishAppearance : MonoBehaviour
     private Sprite hiddenSprite;
     private Color hiddenColor;
     private bool isRevealed;
+    private Animator silhouetteAnimator;
+    private bool restoreSilhouetteAnimation;
+
+    public FishAppearanceCategory Category => category;
+    public Sprite RevealedSprite => revealedSprite;
 
     private void Awake()
     {
@@ -25,6 +30,7 @@ public sealed class FishAppearance : MonoBehaviour
 
         if (fishRenderer != null)
         {
+            silhouetteAnimator = fishRenderer.GetComponent<Animator>();
             // Capture the final variant appearance without changing its transform or collider.
             hiddenSprite = fishRenderer.sprite;
             hiddenColor = fishRenderer.color;
@@ -49,6 +55,9 @@ public sealed class FishAppearance : MonoBehaviour
             return;
         }
 
+        // The silhouette clip also writes m_Sprite; suspend only this renderer's animator.
+        restoreSilhouetteAnimation = silhouetteAnimator != null && silhouetteAnimator.enabled;
+        if (restoreSilhouetteAnimation) silhouetteAnimator.enabled = false;
         fishRenderer.sprite = revealedSprite;
         fishRenderer.color = Color.white;
         isRevealed = true;
@@ -68,6 +77,8 @@ public sealed class FishAppearance : MonoBehaviour
         }
 
         isRevealed = false;
+        if (restoreSilhouetteAnimation && silhouetteAnimator != null) silhouetteAnimator.enabled = true;
+        restoreSilhouetteAnimation = false;
     }
 
     private void OnDisable()

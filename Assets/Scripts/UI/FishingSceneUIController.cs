@@ -11,6 +11,7 @@ public sealed class FishingSceneUIController : MonoBehaviour
     [SerializeField] private GameObject gameOverPanel;
     [SerializeField] private AttitudeCalibrationPanel menuCalibrationPanel;
     [SerializeField] private AttitudeCalibrationPanel gameplayCalibrationPanel;
+    [SerializeField] private DeveloperPanel developerPanel;
 
     private bool initialized;
     public bool HasMenu => menuCanvas != null;
@@ -48,6 +49,12 @@ public sealed class FishingSceneUIController : MonoBehaviour
     {
         // Support older prototype scenes whose calibration lives in the HUD.
         SetVisible(gameplayCanvas, true);
+    }
+
+    public void OpenDeveloper()
+    {
+        if (developerPanel != null) developerPanel.Open();
+        else Debug.LogError("Developer menu entry requires a DeveloperPanel reference.", this);
     }
 
     private void CloseOverlays()

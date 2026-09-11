@@ -4,6 +4,17 @@ using UnityEngine;
 public static class LocalLeaderboard
 {
     private const string StorageKey = "SevenSeas.LocalLeaderboard.v1";
+    public static string LastSessionId { get; private set; }
+    public static int LastScore { get; private set; }
+    public static bool LastSaveSucceeded { get; private set; }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetPresentation()
+    {
+        LastSessionId = null;
+        LastScore = 0;
+        LastSaveSucceeded = false;
+    }
 
     public static bool TryLoad(out LeaderboardData data)
     {
@@ -27,6 +38,9 @@ public static class LocalLeaderboard
 
     public static bool TryRecord(string sessionId, int score)
     {
+        LastSessionId = sessionId;
+        LastScore = score;
+        LastSaveSucceeded = false;
         // Preserve unreadable data instead of silently replacing the player's history.
         if (!TryLoad(out LeaderboardData data)) return false;
         data.Add(sessionId, score, DateTime.UtcNow);
@@ -34,6 +48,7 @@ public static class LocalLeaderboard
         {
             PlayerPrefs.SetString(StorageKey, JsonUtility.ToJson(data));
             PlayerPrefs.Save();
+            LastSaveSucceeded = true;
             return true;
         }
         catch (Exception exception)

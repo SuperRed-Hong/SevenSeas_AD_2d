@@ -1,4 +1,115 @@
+## 2026-09-09 — UI音效完整接入与暂停视觉
+
+- 用户填好的UI clip确实有效，缺失是普通按钮未触发播放。现在UI音源和绑定单独负责：场景加载扫描按钮，懒创建按钮显式RegisterButton；原PlayUi公开方法转发路由。手工持久音效监听存在时跳过自动点击，避免双播；同帧点击/选择排队合并。
+- UI源持久是为了按钮触发换场景后尾音不被OnDisable切断；不把BGM/环境也改成持久。音源ignoreListenerPause，SoundEnabled仍统一静音，主场景每帧同步Inspector音量。冷启动无音效配置的独立Leaderboard仍静音，正常启动流从GameFeedback继承。
+- 暂停之前完全由脚本生成默认蓝底按钮且未指定项目字体。改复用现有排行榜纸张GUID99c7c95e5fd647942a31e8dd2904364e、PressStart2P GUIDdd8d574598480c14eb2d72e7b14b3d9f、关闭Sprite；生成式布局保持，未重建主场景或增加新美术。
+- 可复用候选：语义UI音效绑定、同帧优先级、跨场景短音尾巴及动态控件注册。项目耦合为FishingAudioFeedback配置和按钮返回命名约定；真实听感/输入设备与第二用例待验证。手动运行时AddListener音效无法由Unity持久监听API识别，因此项目内显式旧调用已移除，未来新增按钮应统一注册。
+
+## 2026-09-09 — 震动触发范围变更
+
+- 用户明确新增Striking进入反馈，取代原“仅失败”约束。状态进入与失败各自按attempt去重，互不吞掉同竿的另一个提示；关闭震动/暂停/失焦时也记录已处理，避免恢复补震。复用Android原生Handheld.Vibrate，不新增第三方包或WebGL桥接，时长/强度仍由现有设备API决定。
+
+## 2026-09-09 — 胶囊导航与生态规则接入
+
+- 用户已将正式BasicFish及其Variants改为横向CapsuleCollider2D；保留其尺寸和资产。旧独立SmallFish/MediumFish/LargeFish/SpecialFish仍有圆，但正式生成器引用Variants。原生成和移动取Sprite/Collider世界AABB会消除胶囊优势，现在统一FishNavigationGeometry；Sprite仅用于嘴部位置，旧非胶囊/圆Collider仍保守Bounds回退。
+- 局部绕行使用阻挡体Bounds产生左右候选路点，再以实际鱼体验证每段转动和扫掠；最多两个路点，卡转向尝试最多两段当前朝向退出。路线保持、失败重试0.5秒，不每帧左右切换。不是全局寻路，不保证复杂多障碍/原活动区域外目标可达。
+- 逃离/捕食规则由用户本轮直接批准，不宣称Claude已审查。行为控制器只申请外部导航与替换，FishingLoopController独占HookedFish写入口，验证当前猎物、类别、朝向、真实嘴接触、阻挡、计时/暂停/收线/每竿一次门控；不重启收线、不发中间CatchCompleted。最终鱼自动决定原结算快照、张力倍率、鱼线和表现。
+- 生态按CurrentAttemptId保留每条捕食者一次概率，暂停或组件禁用后重启不重掷。Small逃离3/4米滞回；捕食概率0.3、检测5米、追赶倍率1.5和接触容差0.1放独立Profile。Special参与是用户明确决定，非随机Sprite推断品种。
+- 原生Unity测试发现6000.3的OverlapCapsule在全局queriesHitTriggers=false时可忽略filter.useTriggers=true。几何与ReelingObstacle入口均在同步查询内暂开并finally/Dispose恢复全局值，不永久修改项目设置。当前项目该开关本来为true，不能把此发现称为之前卡鱼的原因。
+- 资产候选：形状一致的生成/移动查询与只读路线诊断，可迁移胶囊扫掠、旋转保守包络和路径保持；项目耦合为ReelingObstacle标记、每鱼spawnArea活动边界和嘴部规则。仅本项目/独立原生fixture验证，尚非通用导航系统；后续练习在第二个胶囊角色用例验证复杂障碍与非等比缩放边界。
+
+## 2026-09-09 — 运行时证据缺口
+
+- 静态发现圆/方框几何问题不代表所有不咬钩反馈由它导致。最新运行仍出现9候选无赢家；需要实际鱼状态、角差、头距及哪个检查阻挡。新增只读Editor快照工具而非进一步放宽规则。
+- 当前用户场景含BigFishSpawner，生成区高6.37、横向偏移-4.35，与原生成器30.1高区域不同。现代码将每个生成区域同时用作运动边界，可能限制来自小区的鱼，但未有现场证据将其定为本次全停原因；不擅自扩大用户区域。
+
+## 2026-09-09 — 圆形碰撞体不应随鱼旋转成方框
+
+- 旧CaptureFootprint把CircleCollider2D.bounds四角并入局部方框，45度旋转后的半宽从r增至sqrt(2)*r，再加转向余量；LargeFish_Variant世界圆半径0.8132，旧45度方框半宽约1.15，可能使圆外的岩石卡住转向。前一批只检查去重/咬钩距离的替身测试没覆盖真实尺寸的这种几何失真。
+- 现Circle独立圆查询/圆扫掠，保留非中心圆旋转位移与边界检查；其他形状/剪影仍有保守误差。不宣称用户截图已唯一定位；若复测仍停住，须区分转向受阻、移动受阻、头距、竞赛成员与超时，不能继续仅凭截图扩大咬钩范围。
+
+## 2026-09-09 — 已批准鱼头咬钩实现依据
+
+- 用户接受推荐方案后，将竞赛中心距离改为BitePosition到钩的距离；头部取初始剪影Sprite边界中心沿SpriteForwardAngle方向与边界交点，随Transform缩放/旋转到世界空间。不新增Prefab锚点或猜测品种尺寸；无配置旧原型保留中心回退。
+- 追饵目标反推鱼中心，使鱼头停在hookRadius的90%处，留数值余量且不越过钩后掉头；仍使用完整鱼体运动段避障。原hookRadius=0.25与唯一赢家排序不变。ReelingObstacle.BlocksSegment检查两端与Linecast，明确包含Trigger，只拦启用的ReelingObstacle，不让判定容差穿越薄岩石。
+- 源码/Unity数学与Physics替身10项验证近岸头到钩、中心仍在旧半径外、长帧不越过目标、旋转/缩放、受阻/薄岩石分支、未转完不抢、两鱼只一赢家、结束门控。真实碰撞轮廓/保守Bounds误挡仍待Play验证。挂钩后的跟随和揭示保持既有实现，未新增寻路或改写Claude设计文档。
+
+## 2026-09-09 — 靠岸追饵可达性与鱼线门控
+
+- 钩落点ContainsPoint与鱼体Bounds运动检测采用不同足迹，不能从钩落点合法推断鱼中心能到达。竞赛当前中心半径0.25，贴岩石时鱼体可能在进入咬钩范围前被挡；旋转/移动的保守包围盒也可能误挡，需要真实Physics观察，不能直接扩大半径或取消避障作为已批准规则。
+- 用户期望落水等待时仍有鱼线；FishingLineView新增Baiting/Striking到hookRoot的端点，Casting仍到hookVisual、Reeling到挂鱼或空钩。旧“仅Casting/Reeling显示”记录被本次显示修正取代，不改变玩法结果。
+
+## 2026-09-09 — GUID格式漏检更正
+
+- 新FishMovementProfile曾被写成33位GUID，尽管资源与场景字符串相同且唯一，Unity仍不能导入。已修正为生成的32位十六进制GUID并同步引用。旧“静态接线检查通过”仅覆盖当时ID/字符串对应，不证明资源可导入；以后资源引用检查必须包含GUID格式、唯一性与目标引用，而非只搜字符串。
+- BGM现在在GameFeedback启用时开始，独立于玩法runStarted；每个音效Level传给PlayOneShot，不修改共享源来调单个声音，避免影响同时播放的其他音效。真实听感与浏览器自动播放仍需设备验证。
+
+## 2026-09-09 — 场景对象职责纠正
+
+- 此前为复用常驻对象，将暂停/仓库/反馈追加到StrikeTuning，使对象名与职责不符。用户要求先整理组织：现拆为三个独立启用的场景根StrikeTuning、PauseUI、GameFeedback。
+- 保留六个迁移组件的原fileID，仅调整m_GameObject及宿主组件列表。既有按钮事件、调参共享暂停owner、仓库结算订阅和音频素材/音量引用无需重建；源码未依赖旧父对象或名称查找，运行时Canvas/AudioSource将创建到对应的新宿主下。
+- 静态比较确认除宿主外六个组件序列化字段完全一致，其他既有对象块没有变化；1032个ID唯一、本地引用完整。实际Unity重新载入与Play尚待验证。
+
+## 2026-09-09 — 当前分支并行实施依据
+
+- 主代理在当前交接分支完成共享 CatchResult/AttemptFailureResult 契约：每次 EnterCasting 分配 AttemptId，attemptSettled 防重复结算；统一计算实际分、加时并在停用前保存最终 Category/揭示 Sprite。库存通过事件只存结果，不重算分数。收线失败原因目前统一 ReelingFailure，未进一步区分碰撞/断线设备反馈。
+- FishAppearance 的现有四类 Variant 是唯一逻辑大小来源，新增只读 Category/RevealedSprite，不从 scale 或随机 Sprite 推测品种。仅本局逐条库存无需跨局 speciesId。
+- 实际仓库素材为 `Assets/Art Asset Folder/Storage/Fishing-UI-_0001_inventory.png`，73×102、3×4格；独立View使用原比例面板/分页。暂停菜单保持单owner，隐藏面板而不禁用组件，关闭仓库只返回暂停。
+- SessionTimer 以 DefaultExecutionOrder(-100) 先扣时；AddTime 拒绝停止/归零及非正有限输入，无上限但拒绝溢出。HUD在LateUpdate读取结算后时间。仅放大加速增长，边界后的实际横移与衰减不变。
+- Idle 每条鱼保存出生中心、半径2内短程游动；追饵/失败出圈后逐步返回，受阻停住无寻路。移动段与转动范围以保守鱼体Bounds检测；这比生成终点避障覆盖更多，但狭窄处可能停住，需Physics2D试玩。四种剪影原图实际头朝左，Profile spriteForwardAngle=180。Z轴转向当前作为初版，视觉选择仍待用户答复。
+- Android 首版使用 Handheld.Vibrate，时长由系统决定，无第三方依赖；暂停菜单提供本局震动开关，去重且暂停/失焦无新反馈。最后一钩失败允许一次反馈。WebGL无震动实现。
+- 音频目录全量扫描仅24 WAV+1 MP3，WAV为0.08–2.98秒；未试听，不能认定BGM。新3源播放器分离UI/玩法/循环；当前音频槽位空，先完成接入，等待素材。官方参考：https://docs.unity3d.com/6000.3/Documentation/ScriptReference/Handheld.Vibrate.html 、https://docs.unity3d.com/6000.3/Documentation/Manual/webgl-audio.html 、https://developer.mozilla.org/en-US/docs/Web/API/Navigator/vibrate 。
+- 新资产候选（尚非独立验证通用资产）：一次结果快照/去重、本局分页集合、局部转向运动、受状态门控的加时、分平台反馈与音频生命周期。依据为本次脚本/隔离检查；耦合为FishingLoopState/Category/UGUI；适用于本局单玩家，欠真实设备及第二项目接入验证。后续练习：用户重建一次结算消费者并在另一种收集对象用例验证取消/重复/重开，不在当前Prototype扩展框架。
+
+## 2026-09-09 — 五线并行接入调查（交接时）
+
+本轮只读核实：HandleRetrievalCompleted 在 AddScore 后立即停用鱼并清空 HookedFish，仓库/奖励/反馈需要同一成功结果快照；SessionTimer 尚无增加时间接口；FishingPauseController 用单一 owner 管理暂停，仓库关闭不能擅自恢复游戏；FishAppearanceProfile 是四个 Sprite 列表，没有据此确认稳定品种存档方案。Audio 目录已有素材但未试听，仓库素材确切路径待下轮定位。上述是设计接入依据，尚未实施五项新功能。
+
+用户明确授权下一对话采用 subagent 并行；当前未派代理。主代理独占共享协调层、场景与进度文档写入，各模块代理先独立调查，再按批准规则分波次实现。详情见 docs/reference/2026-09-09-parallel-development-handoff.md。
+
 # Fishing Loop Findings
+
+## 可复用技术资产候选台账（2026-09-09 起持续维护）
+
+以下均为候选，不代表已通用化或已完成设备验收。后续每项补充原问题、实现证据、通用部分、项目耦合、边界和验证欠账。
+
+| 候选 / 领域 | 当前依据与可迁移价值 | 主要耦合 / 下一项验证或练习 |
+|---|---|---|
+| 语义输入与平台路由 | FishingInputSource / Router，设备与玩法隔离 | 依赖钓鱼动作命名与 AppRoot；用另一种角色控制验证接口 |
+| 传感器校准与手势检测 | AttitudeCalibrationService、CastGestureDetector，稳定采样/四元数平均/阈值重置 | 平台采样、冷却与生命周期；真实设备延迟、重连和退出回归未完成 |
+| 状态驱动 UI 与转场 | FishingSceneUIController / Entry / Fader，初始化不依赖 Inspector 开关 | 具体场景与校准入口；第二流程验证显隐和输入时序 |
+| 暂停所有权与恢复 | FishingPauseController，共享面板互斥与组件状态快照 | 暂停名单、组件 OnDisable 副作用；验证不同玩法状态恢复 |
+| 动态连线表现 | FishingLineView，世界端点/LateUpdate/视觉和逻辑分离 | FishingLoopState 与 HookedFish；用户从零重建，再连接其他动态对象 |
+| 运行时调参和判定快照 | StrikeWindowProfile / StrikeController，资产默认值与运行副本分离 | 固定参数数组/钓鱼判定；用另一种 Profile 检验数据接口与约束 |
+| 本地排行榜与存档边界 | LocalLeaderboard 与排序/去重检查，持久化与纯数据规则分离 | PlayerPrefs/WebGL 行为；重启保存、坏档、第二种成绩数据迁移 |
+| 运动和风险算法 | HookFlight、实际位移驱动张力/加速计分、倾斜死区与限位 | 坐标与钓鱼规则；提炼数学核心，验证限位/零输入/帧率差异 |
+| 资源配置与外观揭示 | FishAppearanceProfile 分类列表、随机身份缓存、失败恢复 | Fish 类别、生命周期、美术尺寸；第二类实体的配置复用 |
+| 安全施工与验证流程 | GUID 保留、局部 YAML 修改、增量编译、独立源码检查和进度记录 | 检查脚本尚散落临时目录；整理最小工具并明确不能替代 Play/设备验证 |
+| 人物动画状态机（待实现） | 当前教学准备中的状态/动画/移动分工 | 先完成项目用例，再决定值得提炼的动画参数与映射 |
+
+验收目标：在明确领域内可扩展和迁移，而非预先保证任何项目都适用。实现复用与个人理解分别验收。
+
+## 2026-09-09 — 鱼线教学偏好
+
+- 用户首次接触此类 LineRenderer 表现，希望后续完整亲手实现，每次一个可验证步骤。当前只记录复习安排，不影响开发进度；具体清单维护在 task_plan.md，不另建计划文档。用户已反馈当前鱼线效果不错。
+
+## 2026-09-09 — 人物至 Hook / 鱼的视觉连线
+
+- Hook 飞行使用独立 HookVisual 表现虚拟高度，因此 Casting 端点必须引用 HookVisual，不能使用水面位置 Hook 根。Reeling 挂鱼在 FishController.LateUpdate 跟随 Hook，FishingLineView 使用 DefaultExecutionOrder(1000) 的 LateUpdate 后绘制，避免端点落后。
+- 以 Loop.CurrentState 决定 Casting/Reeling 可见性，不用 FishState.Hooked（咬钩即设定，早于提竿成功）。Reeling 无鱼时连接 Hook 根，结算/失败/其他阶段隐藏。复用现有 StrikeRingMaterial、不修改材质；Player 层 order 8，位于人物及 Hook 后，宽度默认 0.035，浅米黄色。起点沿用 HookLaunchPoint，局部 Player Offset 可微调而不改变实际抛竿起点。
+
+## 2026-09-09 — 手机 Strike 延迟与 Cooldown 分层分析
+
+- 实际场景 StrikeDetector 是 CastGestureDetector 第二实例，StrikeTuningProfile 为 X 正向、Trigger 1.25 rad/s、Rearm 0.45、SampleWindow 0.05 s、CooldownDuration 0；场景检测结果展示时长覆盖为 0。Ready 且 armed 时检查原始 DirectedVelocity>=阈值，当帧同步 GestureTriggered，Mobile/Router 转发到 Strike.HandleAttempt，不等待滤波和采样峰值；这是电平条件，并非严格前后帧越阈判断。
+- StrikeWindowProfile 保存 AttemptCooldown=0.35 s，仅判定失败后生效，HandleAttempt 对所有输入统一拦截；冷却期传感器可继续触发事件，但被判定层丢弃且不缓存。检测器已经进入 Sampling、isArmed=false，因此被丢弃挥动仍会消耗采样/状态切换/回落重置周期。再次准备需回落到 Rearm 阈值内；无可用输入反馈容易被理解为延迟。
+- 抛竿另用 CastDetected，等待 0.35 s 峰值采样后才发射；Cast Profile 冷却 0.75 s，结果展示 0.2 s。检测器 OnEnable/ResetDetector 会清空自身冷却；正式一轮结束后的再次抛竿由 Loop.PostAttemptCooldown=0.8 s 控制。Reeling 加速由 UI 按住控制，不消费提竿冷却。
+- GyroscopeReader、检测器、StrikeController、StrikeWindowHUD 均在 Update 读写，没有这条链路的显式执行顺序和传感器时间戳配对。可能读上一帧传感器缓存或环半径，产生帧级时差；当前未做手机性能/传感器端到端采样，不能断言具体延迟毫秒数。运行时调参按 BeginCheck 快照，下次判定生效，静态保存参数不等于当前运行副本值。
+
+## 2026-09-09 — 旧 Gyro / Attitude 测试与当前服务衔接
+
+- 两测试场景各带本地 Reader，且 Reader.OnDisable 会 DisableDevice；与常驻 AppRoot 同时启用会有退出测试影响全局传感器的风险。场景本地 Reader 默认禁用，MotionTestServices 供 CastTestController / CastDebugHUD / GyroscopeDebugHUD / GyroscopeHistoryGraphic / AttitudeCircleController 统一选择全局服务，仅无 AppRoot 时启用已序列化本地 Reader。
+- AttitudeCircleController 原以单帧姿态自动设零，现读取 AttitudeCalibrationService.NeutralAttitude / IsCalibrated，无校准时自动启动同样的稳定采样；按 Calibrate 可重新校准，重复点击不会重启正在进行的采样。退出时取消本测试发起且仍在进行的校准，保留服务既有取消规则和原移动轴/限位/平滑参数。场景新增底部校准状态与 Calibrate，Main Menu 调整到同排。
+- 无 AppRoot 的主菜单入口通过 SceneLoader 保存一次性测试目标、加载 BootStrap，AppRoot.Start 消费目标；普通 Bootstrap 仍进主菜单。现有 AppRoot 直接切测试，返回仍使用 MainMenu → FishingLoopTest，不自动开始新局。Gyro 测试与正式场景引用同一个 CastTuningProfile，未更改其参数。
 
 ## 2026-09-09 — 排行榜按钮样式遗漏
 
@@ -243,3 +354,133 @@
 - 现有正式飞行仍用 minimumCastDistance / maximumCastDistance / flightDuration。用户明确不满意固定飞行时间，但没有确定抛物线方案或可见弧线范围。不要将建议当成获批设计，也不要将独立 CastBallController/GyroscopeCastTest 直接替换正式控制器。
 - 将来虚拟高度仅用于表现时，距离 HUD、倍率和水面逻辑必须读取逻辑坐标，避免把腾空高度算成抛远距离。此项是拟议方案的技术边界，尚未实现。
 - 新计划见 docs/reference/2026-09-07-progress-and-plan.md；旧两日安排不自动延长。技巧奖励数值、时间耗尽的待结算奖励处理和实际截止时间仍有待确定。
+
+
+## 2026-09-09 — 人物抛竿动画与鱼竿显隐
+
+- 当前 PlayerAnimator 的 IsHoldingROd 与脚本 IsHoldingRod 大小写不一致；Cast → Hold 无条件且未开启 Exit Time，会立即跳过动画。已统一名称并设置 Exit Time=1。第二次抛竿症状仍需运行复验，不能仅由静态检查断言唯一原因。独立 FishingPole 显隐由人物表现脚本控制 SpriteRenderer，结合持竿参数与当前/过渡动画，避免动画结束前提前显示重复鱼竿。
+
+
+## 2026-09-09 — 人物动画交接与鱼群设计边界
+
+- HoldRod 只含一个 RodTip 位置关键帧；此前 Cast 末尾 y=3.05、Hold y=3.22，切换产生向上偏移。用户对齐后明确反馈正常，属于用户验证；未独立运行复测。
+- 下一阶段需求及待决规则集中登记于 task_plan.md 最新交接，当前未实现鱼群新行为。捕食替换会影响唯一挂鱼引用、表现、基础分及收线结果，不能仅替换 Sprite；落点障碍检查必须先于 Baiting/竞赛启动。具体实现需以实际代码与 Collider 配置调查为准。
+- 可复用候选：Sprite PPU/Pivot 一致性、序列帧附着点关键帧、玩法事件驱动表现和独立部件显隐。项目耦合为 Animator 名称及鱼竿素材；验证欠账为跨素材/第二用例、重入与中断；后续练习是在另一套人物素材上独立完成接入。
+- Notion 个人技术资产库已创建：https://app.notion.com/p/3d6b8a4f3e3581cf8c8cca1bfd05bf36 ，已有 PPU 笔记、资产数据库和写作模板。当前项目记录仍负责实施证据；原型结束后再集中提炼，不把候选视为已掌握能力。
+
+
+## 2026-09-09 — 合并后 Tutorial 入口布局
+
+- 上次磁盘检查与合并前相同，刷新原因只是推测。本次用户保存后的场景明确显示 TutorialButton 锚点被设为中心 (0.5,0.5)，SizeDelta=100×100，导致入口缩小居中。已仅恢复该 RectTransform 的锚点 (0.2,0.62)～(0.8,0.695)、SizeDelta=0，保留新加第三页教程引用及其他用户修改。静态差异检查完成，未运行 Play Mode。
+
+
+## 2026-09-09 — 生成避障及落点失败依据
+
+- 本轮按推荐规则直接实现生成避障与落点失败：先选鱼品类，再按实例的 SpriteRenderer 和 Collider2D 世界包围盒加 0.05 单位边距检测生成区域和障碍，保留 0.75 中心间距、每鱼 50 次尝试，失败跳过该鱼并汇总告警。落水点命中 ReelingObstacle 时走统一扣钩失败路径，进入 PostAttemptCooldown，不进入 Baiting、不锁倍率；不检查飞行路径。
+- 检测使用带标记的启用 Collider2D，显式包含 Trigger，不依赖新增 Layer。鱼包围盒不包含水花/涟漪 Renderer；按生成 BoxCollider2D 的局部坐标检查四角，支持偏移和旋转。保守包围盒不是像素轮廓，也不是游动路径避障。
+- 场景 98 个障碍标记对应 97 个对象，其中 4 个原本缺 Collider（647159900、1450760607、1690327378、1903091375）。没有同 Sprite 的现成碰撞形状可复用，因此按各 Sprite 实际裁切矩形/PPU、Center Pivot 补齐 BoxCollider2D，沿用现有障碍 Trigger 配置；未改变美术位置或大小。现有重复标记不属于本次修改范围。
+
+
+## 2026-09-09 — 排行榜流程与表现
+
+- 用户明确要求将排行榜改为街机式结算流程：Game Over 展示本局分数，5 秒后自动进入 Leaderboard，点 Play Again 立即重开并取消自动跳转；Settings 和结算页的手动 Leaderboard 入口移除。
+- 检查发现旧 GameOverPanel 只有 Leaderboard 按钮，没有 Play Again，因此复用该按钮并改接 GameOverPresentation.PlayAgain；禁用旧 LeaderboardSaveStatus，倒计时统一显示保存失败提示。移除 Settings 的按钮及其专属组件并重排剩余六项，避免空位。
+- LocalLeaderboard 临时保存最近 sessionId/score/保存结果，跨场景展示使用，不改变 PlayerPrefs 持久化格式。相同分数按 sessionId 识别当前局，未入前十只显示分数及 OUTSIDE TOP 10，不高亮其他局。
+- 最近会话临时状态在 SubsystemRegistration 清空，支持关闭域重载的 Editor Play。新结算组件只接正式 FishingLoopTest，旧实验场景没有批量迁移。
+
+
+## 2026-09-09 — 排行榜入口范围更正
+
+- 用户更正：Settings 中保留 Leaderboard 手动入口；只将 Game Over 的手动进榜改为自动等待进榜。已恢复 Settings 按钮、导航接线与七项布局，保留 5 秒自动跳转和 Play Again 取消逻辑。场景本地引用及唯一 ID 检查通过，未运行 Play Mode。此前“移除 Settings 入口”的记录已被本条取代。
+
+## 2026-09-09 — 新手引导本地进度依据
+
+- LocalPlayerProgress 使用 SevenSeas.TutorialCompleted / SevenSeas.GamesStarted 两个 PlayerPrefs key，每次更新 Save；不缓存第二份布尔值，不改排行榜数据。默认未完成、0次；已存在的玩家若此前没有此标记，也会首次进入教程。
+- TutorialPanelController 区分手动回看与首次开局回调。完成前清理回调再进入开局，重复按钮不会重复启动；关闭回调释放 FishingSceneEntryGuard.isStarting，继续复用原校准流程。教程完成不等于实际开局，计数在过渡结束才记录。
+- DeveloperPanel 使用作者可编辑的场景 UI 与像素字体、蓝色按钮；Developer Names 七项初始为空，显示编号占位。Settings 调整为八项布局；开发者面板由统一 UI 管理器初始化隐藏。
+- 技术资产候选：本地引导进度与可重置调试入口。可迁移部分为完成标记/启动门控/取消语义；项目耦合为三页教程、校准与场景过渡。适用于单设备本地存档，清除应用/浏览器数据会重置，不识别跨设备真实玩家。验证欠账为真实 PlayerPrefs 持久化、移动端校准及第二用例；后续练习独立重建带取消与调试重置的引导。
+
+## 2026-09-09 — 教程关闭即开始（取代 Start Fishing 按钮）
+
+- 用户修正规则：首次教程已翻到最后一页后，点击现有 X 保存 TutorialCompleted 并直接继续校准/开场流程；移除独立 Start Fishing 按钮及其场景组件/引用。已看完后返回前页回看，再点击 X 也算完成。
+- 未看完时 X 仍取消本次开始且不标完成；Settings 手动回看 X 只关闭。回调先清空再执行，重复点击不重复启动。
+- 编译 0 errors、3 条既有警告；6 项隔离检查通过（提前关闭、重开第一页、到末页等待 X、X 完成一次、手动回看只关闭、看完返回前页后完成）。场景 fileID 完整无重复。未运行 Unity Play Mode/设备验证，未提交。
+## 2026-09-09 — 现场确认追饵受阻
+
+- Temp/SevenSeasFishDiagnostics.txt在15:16:13记录5条追饵鱼：3条Special及1条Large的转向或移动方框被obstacles3_0拦截；另1条Large的moveCircle=false，该项同时包含圆碰撞和生成区域限制，不能凭现有输出指定具体原因。鱼头距钩1.7774–2.9370，尚未达到咬钩距离。
+- Editor日志对应同一落钩点(-1.03,12.93)、5候选、等待超时，随后收线触发障碍失败。当前Approaching受阻后反复尝试原直线路径，没有绕行；保守Sprite世界AABB仍可能误挡，需将实际形状与包围框区分验证。未更改追饵设计。
+- Ambient Loop新增ambientFadeInSeconds默认1.5秒，以非缩放时间推进音量包络；暂停/静音清零，恢复重新渐入。实际听感待验收。
+
+## 2026-09-09 — main 集成兼容发现
+
+- 自动合并不保证运行兼容：main根Animator持续写m_Sprite会覆盖FishAppearance揭示图；最小修复只暂停对应Animator并恢复原启用状态，原生8项验证通过。三个鱼Variant同时保留动画引用及胶囊尺寸。字体main已有历史冲突标记，使用完整自洽字体版本修复。详细证据见docs/reference/2026-09-09-main-merge-report.md。
+
+
+## 2026-09-09 — Map fix 与 main 场景文本冲突
+- 本地 99ef369 与合入 84a9a75 的 FishingLoopTest 出现 15 处文本冲突。按共同祖先及 fileID 比较，无双方修改同一对象、无删除/修改冲突、无新增 ID 撞号。
+- 本地修改22、新增26个序列化对象；合入修改58、新增125个。局部修复6段覆盖15处冲突，保留其他原文，最终606个对象逐块匹配预期三方结果，内部 fileID 无重复/缺失。
+- 可复用排错候选：先按 Unity 对象身份比较三方，再局部解决文本冲突并检查引用；并非适用于双方修改同一对象的通用合并器，静态检查不代表运行验收。
+
+## 2026-09-09 — FishingLoopTest接线核对
+
+- 更正目标为main分支的FishingLoopTest，Level 1/2/3修改已撤回。正式场景两Spawner、移动Profile、Layer 6/mask64、生态和震动引用静态完整；需要Unity实际解析结果才能排除导入/内存状态问题。新增只读接线采集，不把静态存在GUID当作运行通过。
+
+
+## 2026-09-09 — UI Select 悬停音效排查
+
+- UI Select 听感排查：FishingLoopTest 的 Select/Confirm/Back 均引用 UI select & firm & back.mp3。解码显示时长0.444秒，包络有多段起伏；不能仅凭波形证明事件重复。UiAudioRouter 使用非循环 PlayOneShot 且合并同帧请求，未发现悬停循环播放代码。先将 Select 单独换为现有 Select 1.wav（一次快速衰减），保留其余音效和音量。运行事件计数及实际听感待验证。
+
+## 2026-09-09 — UI hover 复现补充与修复（更正）
+
+- 用户补充：同一按钮内移动时反复响，前条素材听感假设不足以解释；已恢复原 uiSelect 引用。当前 InputSystem 在命中背景与子文字切换时可能向按钮再次派发 Enter，原组件每次都 Queue；同帧合并无法消除跨帧重复。UiButtonAudioFeedback 以 pointerId 记录悬停，Exit 时检查当前命中是否仍属按钮层级，真实离开才清除；OnDisable 清空，指针 Select 不另播，键盘 Select 保留。
+
+## 2026-09-09 — 随机地图展示时机与开场演出
+
+- 当前随机选择在FishingMapSelector.Awake，碰撞准备后FishSpawner.Start生成；Entry菜单镜头仍看得到本局地图。用户指出这是展示流程冲突，决定引入独立空镜及Start后的地图巡览，不等同于要求改为多个Unity场景或延迟随机算法。
+- 现有TransitionToOverview只切镜头并等待Cinemachine混合；BeginAfterTransition结束才启用Loop，Loop.Start才开始计时。新演出应保留此门控并接回旧流程，避免正常收线/失败ShowOverview被开场逻辑污染。
+- 两图同显曾有现场日志证据：mapContainer空引用导致初始化直接退出；已补场景引用及共同父推导。测试必须覆盖引用缺失，并检查实际导入/运行，不只测有效配置。
+- 技术资产候选：可取消的开场演出与玩法启动交接。当前仅需求/方案候选，尚未实现或验证；可迁移部分为阶段编排、输入计时门控、完成/取消一次性语义，项目耦合为Cinemachine三镜头、教程和手机校准。后续待实现后用独立小场景重建，不能宣称已掌握。
+- 完整交接见docs/reference/2026-09-09-map-intro-camera-handoff.md。三份文档索引冲突状态仍保留，本轮只更新正文。
+
+## 2026-09-09 — 菜单布景与可跳过镜头交接
+
+- 用户最终选定独立菜单场地，用剩余随机地图及活动鱼群，不要人物/平台；取代先前“独立空海面”建议。实际由FishingIntroController在选图后、Spawner.Start前复制地图和水面视觉，给菜单鱼绑定独立移动矩形与无Loop订阅的Spawner。
+- FishEcologyController使用全局FindObjectsByType；仅把鱼移远不足以构成长期隔离，因此交接完成时停用整个菜单场地，再释放正式玩法。物理布景按地图边界与镜头尺寸留出间距。
+- Cinemachine退出镜头在混合期间不能立即重置；开场先对齐Overview位置/Lens，切换后保留退出姿态，原生检查未回跳。
+- 两条异步准备链都需完成：镜头演出结束不代表菜单淡出完成。零时长测试必须等整个Entry交接，不能提前断言计时启动。
+- 可复用候选与边界、调参和验证见docs/reference/2026-09-09-map-intro-camera-implementation.md；当前仅本项目已验证实现，尚未提炼独立资产或验证个人掌握程度。
+
+## 2026-09-09 — 开场视觉未执行的实际原因
+
+- 保存场景EntryGuard.intro再次为空，导致旧fallback直接切Overview；此前调整Survey Seconds/Bar Height并未参与这个调用链。通过同对象组件恢复和有组件但未准备好时阻止启动修复；验证必须故意清空引用再执行入口，不能仅测试有效配置。
+- 独立IntroCamera已实现。Survey改为世界单位/秒匀速，避免SmoothStep下中段速度更快造成调参含义不直观。
+
+## 2026-09-10 — Start透明留白误触与触屏双音
+
+- Start动画100×160图片仅约X21..74/Y84..99可见，但Image以放大后的整张矩形射线检测。实际关闭过滤器可复现透明区命中；新增归一化ICanvasRaycastFilter限定可见按钮附近，保留布局/动画，不需要贴图可读。
+- 触屏Enter与Button.onClick跨帧分别排队Select/Confirm，是按下/抬起双声来源；按ExtendedPointerEventData设备类型排除Touch悬停，保留鼠标和键盘反馈。
+- 可迁移候选、当前美术耦合、边界、测试与后续练习见docs/reference/2026-09-10-mobile-menu-input-fix.md；未扩展为任意Sprite轮廓识别工具。
+
+## 2026-09-10 — GameOver 无声原因
+
+- 结束状态原先只停止音乐/环境/旧音，没有结束音入口；计时结束无AttemptFailed，所以完全没有提示。最后一钩则先StateChanged(GameOver)再AttemptFailed。
+- 现在结束状态统一播一次独立Game Over Clip，结束后的普通失败音跳过，避免两种结算提示重叠。当前复用现有Attempt Failure.mp3，后续可独立换素材；不新增声音资产。
+- 排错经验候选：表现层应核对状态事件与结果事件的先后顺序，避免同一次结算双声。可迁移的是一次性反馈门控；本项目耦合为FishingLoopState与失败事件顺序。原生音源专项通过，设备听感和第二用例未验证，后续练习可重建计时/耗尽两条事件链解释去重。
+
+## 2026-09-10 — 结算Inventory与设置外观
+
+- 用户确认3秒GameOver→本局Inventory→1秒后显示Leaderboard/Play Again，取代5秒自动排行榜。鱼获沿用原CatchInventory，不从展示层生成计分。
+- Developer截图内容未进入磁盘developerNames，原Refresh会以空数组覆盖成占位符；本次保存七人名单并按职位/姓名分行。
+- 极深UI底色在Linear渲染下，即使alpha=0.98仍能明显透出浅色后层按钮；阅读面板改不透明，避免叠字。
+- 配置、设计差异和验证边界见docs/reference/2026-09-10-results-settings-ui.md。继续复用现有UI组件，不新增通用皮肤框架。
+- [2026-09-10 更正] Developer的双行富文本此前仅由Open刷新，Scene保存单行导致预览不一致。本次把七行富文本写入场景，并增加Refresh Credits Preview组件菜单供修改名单后同步；人员顺序仍待用户决定，未调整。
+- [2026-09-10 排序落定] 替代前述“排序待决定”：用户批准程序、设计、美术、技术美术、制作人顺序；姓名采用Shuo Hong (Flynn)。本次仅修改场景名单及对应富文本，静态一致性核对通过。
+- [2026-09-10] 用户明确Developer的Tutorial Completed是开发者隐藏开关；显示状态标签与说明不再适用。场景热区右下角6%×4%，Image透明但保留raycast，状态TMP禁用但引用保留，Refresh不会重新显示。
+- [2026-09-10 最新名单决定] 取代此前程序首位：用户希望Production先、本人其次、美术后技术美术；未指定的设计署名保留末尾，编辑预览与运行数据已同步。
+- [2026-09-10 名单单一来源] Developer Names为唯一维护入口；ExecuteAlways与延迟OnValidate生成编辑预览，Open复用同一格式函数。TMP场景文本仅为自动生成显示，不再手动同步。编辑预览不读取或修改游戏进度，修改/重排和Undo专项通过。
+- [2026-09-10 教程入口更正] 用户强调游戏里应能找到并修改，不要全隐形。改为Developer面板右下角、Close右侧小号Tutorial文本，保持透明背景与无说明；点击仍调用原ToggleTutorialCompleted，组件右键入口只是补充。
+- [2026-09-10 Developer视觉方向更正] 用户否定暗绿/土黄并同意标题隐藏教程入口。Developer单页改深海蓝、清白姓名、青蓝标题/按钮、蓝灰职位；收紧名单、隐藏Games Started与独立Tutorial标签，保留点击DEVELOPER标题切换。其他设置页面本轮未扩展换肤。
+- [2026-09-10] 用户继续否定Settings旧绿色，主设置页配色同步Developer新版；其他子面板尚维持各自当前配色，不能宣称全部面板已改蓝。
+- [2026-09-10 结束流程最新修订] 用户取消GameOver过渡页。GameOverPresentation.OnEnable同步OpenResults，删除Inventory Delay和倒计时逻辑，避免依靠下一帧或零秒延时切换；Actions Delay保留1秒。Inventory仍接收保存状态，结束音由原音频组件负责。
+- [2026-09-10 Settings旧色复现] 当前磁盘Scene的Settings颜色重新变成绿底/米黄字和白色按钮Tint，确实与用户截图一致；不能断言具体是谁回写，可能是已打开的旧场景后来保存。新增MenuSettingsPanel Settings Colors作为颜色维护入口，编辑态延迟OnValidate/OnEnable与每次Open应用，旧Graphic颜色不再决定外观。
+- [2026-09-10 Leaderboard返回入口] 用户澄清：只改Leaderboard的Main Menu按钮。新增一次性Developer菜单请求，SceneLoader仍加载MainMenu/FishingLoopTest并在入口Start打开Developer，Close自然露出菜单；不是修改Inventory导航。请求只在有效MainMenu加载时设置、消费后清空，普通导航重置；含无AppRoot直跑路径。

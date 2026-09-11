@@ -16,6 +16,9 @@ public sealed class ReelingController : MonoBehaviour
     [SerializeField]
     private Transform rightLaneLimit;
 
+    [SerializeField, Tooltip("收线时鱼钩左右移动范围，引用 FishMovementArea。纵向仍向岸边收线，避免被矩形下边界拦住而无法上岸。未配置时兼容原岸边限位。")]
+    private BoxCollider2D movementArea;
+
     [SerializeField]
     private ReelTuningProfile tuningProfile;
 
@@ -26,6 +29,7 @@ public sealed class ReelingController : MonoBehaviour
     private const float LateralSpeedLogInterval = 0.25f;
 
     private float nextLateralSpeedLogTime;
+    private float catchTensionMultiplier = 1f;
 
     public float ActualLateralSpeed { get; private set; }
     public bool IsActive { get; private set; }
@@ -41,8 +45,7 @@ public sealed class ReelingController : MonoBehaviour
     {
         if (shoreTarget == null ||
             inputSource == null ||
-            leftLaneLimit == null ||
-            rightLaneLimit == null ||
+            (movementArea == null && (leftLaneLimit == null || rightLaneLimit == null)) ||
             tuningProfile == null)
         {
             Debug.LogError(
@@ -64,11 +67,21 @@ public sealed class ReelingController : MonoBehaviour
         Tension01 = 0f;
         ActualLateralSpeed = 0f;
         IsActive = false;
+        catchTensionMultiplier = 1f;
+    }
+
+    public void SetCatchTensionMultiplier(float multiplier)
+    {
+        // Changing the hooked fish must not clear accumulated tension.
+        catchTensionMultiplier =
+            multiplier >= 0f && !float.IsNaN(multiplier) && !float.IsInfinity(multiplier)
+                ? multiplier
+                : 1f;
     }
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (!IsActive ||
-            other.GetComponentInParent<ReelingObstacle>() == null)
+            !ReelingObstacle.IsBlockingCollider(other))
         {
             return;
         }
@@ -95,6 +108,7 @@ public sealed class ReelingController : MonoBehaviour
             return;
         }
         float deltaTime = Time.deltaTime;
+        if (deltaTime <= 0f) return;
         
         bool accelerateHeld = inputSource.AccelerateHeld;
 
@@ -115,12 +129,12 @@ public sealed class ReelingController : MonoBehaviour
             tuningProfile.DodgeSpeed *
             deltaTime;
 
-// Clamp the hook to the same world-space lane boundaries.
-        float minimumX = Mathf.Min(
+// Reeling uses the fish area; the player's shore lane remains independent.
+        float minimumX = movementArea != null ? movementArea.bounds.min.x : Mathf.Min(
             leftLaneLimit.position.x,
             rightLaneLimit.position.x);
 
-        float maximumX = Mathf.Max(
+        float maximumX = movementArea != null ? movementArea.bounds.max.x : Mathf.Max(
             leftLaneLimit.position.x,
             rightLaneLimit.position.x);
 
@@ -128,8 +142,7 @@ public sealed class ReelingController : MonoBehaviour
             position.x,
             minimumX,
             maximumX);
-        // Retrieve only along the fishing lane.
-        // Lateral movement will be added in the next step.
+        // Continue to shore even when it lies outside the swimming rectangle.
         position.y = Mathf.MoveTowards(
             position.y,
             shoreTarget.position.y,
@@ -158,7 +171,7 @@ public sealed class ReelingController : MonoBehaviour
         float netRate =
             -tuningProfile.DecayRate +
             (accelerateHeld
-                ? tuningProfile.AccelerateRiseRate
+                ? tuningProfile.AccelerateRiseRate * catchTensionMultiplier
                 : 0f) +
             lateralRate;
 
