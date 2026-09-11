@@ -670,3 +670,8 @@ fetch 后发现本地 main 与 origin/main 分叉（提交前本地独有2、远
 ## 2026-09-11 — 设置菜单垂直布局
 - 按用户反馈，将 SettingsPanel 的 9 个按钮移入 SettingsButtonList，使用已启用的 Vertical Layout Group 统一宽高及间距（64 UI 单位）；标题独立保留。Tutorial 隐藏时不占布局位置，Leaderboard 纳入统一顺序。
 - 仅局部修改场景父子关系和按钮 RectTransform，新增一个容器及布局组件；静态检查确认所有原有按钮组件、标签、事件和引用保持原样，无重复 fileID，git diff --check 通过。未运行本轮 Play Mode/浏览器显示验收；用户当前 Unity 已打开，本轮未操作其运行状态。
+
+## 2026-09-11 — 触屏按钮改为场景对象
+- 按用户明确要求，删除 ReelingButtonHUD 的运行时 UI 生成代码。GamePlayCanvas 下直接保存 TouchLeftButton、TouchRightButton、TouchActionButton，均有 Image、Button、EventTrigger 和 Label（TextMeshProUGUI），可在非 Play 状态手调并保存图片、文字、位置和大小。
+- HUD 改用三个序列化引用，只控制显隐与释放输入。场景为三个按钮分别绑定 PointerDown、PointerUp、PointerExit 到既有 MobileFishingInputSource 的按下/释放方法；图片沿用原 AccelerateButton Sprite，基础位置及尺寸保留。ACTION 字体允许自动缩小到适合按钮的大小。
+- 静态检查通过：新增 30 个唯一 fileID，9 个触屏事件目标和方法、父子关系、HUD 引用正确；除 GamePlayCanvas 子列表和 HUD 引用外，原有场景对象块保持不变。git diff --check 通过。本轮未运行新的 Unity 编译/Play Mode/设备显示验收；用户的打开中 Editor 未被关闭或切换运行状态。

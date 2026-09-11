@@ -632,3 +632,6 @@ fetch 后发现本地 main 与 origin/main 分叉（提交前本地独有2、远
 
 - [x] 2026-09-11：设置菜单改用 Vertical Layout Group，包含 Leaderboard，保留原按钮事件；场景静态检查通过。
 - [ ] 设置菜单本轮自动布局的 Editor/移动端显示验收。
+
+- [x] 2026-09-11：触屏左/右/ACTION 改为场景 Hierarchy 对象，移除运行时 UI 生成，接好 HUD 引用及按下/释放/移出事件；静态接线检查通过。
+- [ ] 本轮场景化触屏 UI 的 Unity 编译、Play Mode 与浏览器显示回归。
