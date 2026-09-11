@@ -13,12 +13,12 @@ MonoBehaviour:
   m_Name: FishingIntroProfile
   m_EditorClassIdentifier: Assembly-CSharp::FishingIntroProfile
   entrySeconds: 2
-  surveySpeed: 4
-  platformHoldSeconds: 0.6
+  surveySpeed: 4.5
+  platformHoldSeconds: 0.1
   handoffSeconds: 0.8
   skipSeconds: 0.35
   barSeconds: 0.35
   barHeight: 0.2
-  surveyOrthographicSize: 7
+  surveyOrthographicSize: 8
   menuVerticalOffset: 55
   sceneryGap: 4

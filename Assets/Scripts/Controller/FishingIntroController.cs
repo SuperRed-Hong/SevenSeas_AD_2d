@@ -28,6 +28,7 @@ public sealed class FishingIntroController : MonoBehaviour
     private Quaternion originalMenuRotation;
     private LensSettings originalMenuLens;
     private Vector3 surveyTop, platformPose;
+    private float surveySize, entryDuration, surveyMoveSpeed, platformHold;
     private bool playing, completed, skipRequested;
     private float bars;
     public bool IsPrepared { get; private set; }
@@ -106,8 +107,25 @@ public sealed class FishingIntroController : MonoBehaviour
         menu.transform.position = originalMenuPosition + offset;
         menu.PreviousStateIsValid = false;
         cameras.ShowMenu();
-        float visibleHalfHeight = profile.surveyOrthographicSize * (1f - 2f * profile.barHeight);
-        surveyTop = new Vector3(area.center.x, area.max.y - visibleHalfHeight, originalMenuPosition.z);
+        // A map may frame its own landmark; the fish area is shared and cannot.
+        var anchor = maps.SelectedMap != null
+            ? maps.SelectedMap.GetComponentInChildren<IntroSurveyAnchor>(true)
+            : null;
+        surveySize = profile.surveyOrthographicSize;
+        entryDuration = profile.entrySeconds;
+        surveyMoveSpeed = profile.surveySpeed;
+        platformHold = profile.platformHoldSeconds;
+        if (anchor != null)
+        {
+            if (anchor.TryGetOrthographicSize(out float anchorSize)) surveySize = anchorSize;
+            if (anchor.TryGetEntrySeconds(out float anchorEntry)) entryDuration = anchorEntry;
+            if (anchor.TryGetSurveySpeed(out float anchorSpeed)) surveyMoveSpeed = anchorSpeed;
+            if (anchor.TryGetPlatformHoldSeconds(out float anchorHold)) platformHold = anchorHold;
+        }
+        float visibleHalfHeight = surveySize * (1f - 2f * profile.barHeight);
+        surveyTop = anchor != null && anchor.TryGetStop(out Vector2 anchorStop)
+            ? new Vector3(anchorStop.x, anchorStop.y, originalMenuPosition.z)
+            : new Vector3(area.center.x, area.max.y - visibleHalfHeight, originalMenuPosition.z);
         platformPose = new Vector3(shorePlayer.position.x,
             shorePlayer.position.y + visibleHalfHeight * 0.45f, originalMenuPosition.z);
         BuildOverlay();
@@ -129,14 +147,14 @@ public sealed class FishingIntroController : MonoBehaviour
         yield return cameras.BeginIntro();
         HasStartedMovement = true;
         MovementStarted?.Invoke();
-        yield return MoveTo(surveyTop, profile.surveyOrthographicSize, profile.entrySeconds, false);
+        yield return MoveTo(surveyTop, surveySize, entryDuration, false);
         if (!skipRequested)
         {
             yield return AnimateBars(profile.barHeight, profile.barSeconds, true);
             yield return SurveyTo(platformPose);
         }
         float held = 0f;
-        while (!skipRequested && held < profile.platformHoldSeconds)
+        while (!skipRequested && held < platformHold)
         {
             held += Time.unscaledDeltaTime;
             yield return null;
@@ -162,7 +180,7 @@ public sealed class FishingIntroController : MonoBehaviour
         while (shot.transform.position != target)
         {
             if (skipRequested) yield break;
-            float speed = Mathf.Max(0.01f, profile.surveySpeed);
+            float speed = Mathf.Max(0.01f, surveyMoveSpeed);
             shot.transform.position = Vector3.MoveTowards(shot.transform.position, target,
                 speed * Time.unscaledDeltaTime);
             yield return null;
