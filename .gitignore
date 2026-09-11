@@ -50,3 +50,14 @@ sysinfo.txt
 # Addressables build data
 [Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/*.bin*
 UserSettings/Layouts/CurrentMaximizeLayout.dwlt
+
+# WebGL build published to GitHub Pages.
+# Unity names its output folder "Build", which the [Bb]uild/ rule above would
+# swallow. These negations must stay last so they win. A directory has to be
+# re-included before anything inside it can be.
+!webgl-dist/
+!webgl-dist/Build/
+!webgl-dist/**
+
+# Regenerated from index.html on demand
+docs/motion-diagnostics/*.zip

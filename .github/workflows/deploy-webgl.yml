@@ -1,0 +1,74 @@
+name: Deploy WebGL to Pages
+
+# Publishes whatever is in webgl-dist/ to GitHub Pages.
+# Drop the Unity WebGL build output there (index.html + Build/ + TemplateData/),
+# commit, push to main — the site updates itself.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'webgl-dist/**'
+      - '.github/workflows/deploy-webgl.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # The repo's .gitignore excludes [Bb]uild/, which is exactly what Unity
+      # names its output folder. If the negation rules are ever lost, the push
+      # silently contains no game — fail loudly here instead of shipping a blank page.
+      - name: Verify the build actually made it into the repo
+        run: |
+          if [ ! -f webgl-dist/index.html ]; then
+            echo "::error::webgl-dist/index.html is missing. Did you copy the Unity build output into webgl-dist/?"
+            exit 1
+          fi
+          if [ -z "$(ls -A webgl-dist/Build 2>/dev/null)" ]; then
+            echo "::error::webgl-dist/Build/ is empty or missing."
+            echo "::error::This is almost always .gitignore's [Bb]uild/ rule swallowing it."
+            echo "::error::Check: git check-ignore -v webgl-dist/Build/WebGL.loader.js"
+            exit 1
+          fi
+          echo "Shipping:"
+          ls -la webgl-dist webgl-dist/Build
+
+      # Unity emits .br / .gz files. Pages serves them as plain bytes with no
+      # Content-Encoding, so the build MUST have Decompression Fallback enabled
+      # (Player Settings > Publishing Settings). Warn if the loader looks unprepared.
+      - name: Check decompression fallback
+        run: |
+          if ls webgl-dist/Build/*.br >/dev/null 2>&1; then
+            if ! grep -q "decompress\|unityFileSystem\|Brotli\|brotli" webgl-dist/Build/*.loader.js 2>/dev/null; then
+              echo "::warning::Brotli files present but the loader has no decompressor."
+              echo "::warning::Enable Player Settings > Publishing Settings > Decompression Fallback and rebuild,"
+              echo "::warning::otherwise the game will fail to load on GitHub Pages."
+            fi
+          fi
+
+      - name: Disable Jekyll processing
+        run: touch webgl-dist/.nojekyll
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: webgl-dist
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
